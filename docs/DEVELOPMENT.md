@@ -68,29 +68,28 @@ design; `⬜` = not started in this build.
   scripts in `ml/evaluation/`; `--api-url` optionally records results into the
   `evaluation_runs` table via `POST /api/v1/evaluation-runs`, keeping `ml/` isolated from
   backend internals — it talks to the same public API a frontend would)
-- ✅ Docker Compose files exist and are structurally valid (`docker-compose.yml` + 3
-  Dockerfiles); **not run against live Docker in this session** — Docker was not
-  confirmed available in this environment (see below)
-- ✅ Tests pass (32 backend + 6 ml, `pytest`)
+- 🟡 Docker Compose: the backend image (GDAL/rasterio/geopandas + all deps) was verified
+  to build and export successfully against a real Docker Desktop instance. Full
+  `docker compose up` (all 6 services healthy) and `alembic upgrade head` against the
+  Postgres container were **not** completed — see `docs/HANDOFF.md` for exactly why and
+  what's left.
+- ✅ Tests pass (43 backend + 6 ml, `pytest`)
 - 🟡 Documentation exists (this file + ARCHITECTURE/MODELS/DATASETS/README are real and
   current; API/DEPLOYMENT/SECURITY/EVALUATION/TROUBLESHOOTING are present but brief)
 
 ## Docker
 
-`docker-compose.yml`, `docker/backend.Dockerfile`, `docker/worker.Dockerfile`, and
-`docker/frontend.Dockerfile` were written per the architecture plan but could not be
-verified against a running Docker daemon in this environment (Docker was reported
-installed mid-session but never became reachable from this shell — likely a PATH refresh
-that needs a new terminal/session). **Before relying on the Docker path, run
-`docker compose up --build` yourself and confirm all 6 services become healthy** — the
-SQLite/local-storage/inline-task path has been verified thoroughly as the fallback.
+See `docs/HANDOFF.md` for the full story — short version: the backend image builds and
+exports cleanly against a real Docker daemon, three real bugs found during that attempt
+are already fixed (missing `.dockerignore`s, missing `frontend/public/`, obsolete
+`version` key), but the full stack was never brought up end-to-end because the build
+machine ran out of disk space on its system drive mid-build. The SQLite/local-storage/
+inline-task path has been verified thoroughly as the fallback and is what all 43 tests
+and the Playwright smoke test ran against.
 
 ## Suggested next steps, in priority order
 
-1. Verify `docker compose up --build` end-to-end against Postgres/Redis/MinIO. Docker was
-   confirmed working in the user's own terminal (`docker --version` succeeded) but
-   remained unreachable from every tool session available to build this repo, including
-   with sandboxing disabled — a stale-PATH issue in the process tree that launched that
-   session, not a code problem. Needs to be run and verified by a human, or from a fresh
-   Claude Code session if its shell inherits the updated PATH.
+1. Free real disk space (20GB+) on whatever machine runs Docker, then
+   `docker compose up --build` and `docker compose exec backend alembic upgrade head` —
+   see `docs/HANDOFF.md` for exact commands and what to check.
 2. Real model integration, one adapter at a time, per `docs/MODELS.md`.
