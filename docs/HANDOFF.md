@@ -168,39 +168,267 @@ qualitative labels (`input_quality`, `evidence_quality`, `overall_level`).
 
 ---
 
-## What's fully done
+## What's fully done — detailed feature breakdown
 
-See `docs/DEVELOPMENT.md` for the exhaustive checklist (✅/🟡/⬜ against the original spec).
-Condensed version — all ✅ and verified via tests unless noted:
+Every feature below is real code, wired end-to-end, and covered by at least one automated
+test unless stated otherwise. This section walks the same path a request actually takes.
 
-- **Backend**: FastAPI, all `/api/v1` endpoints from the spec, SQLAlchemy models + Alembic
-  migrations (SQLite verified, Postgres+PostGIS migration written but not yet run — see
-  Docker section above)
-- **Agent**: mock Qwen3-style rule/keyword parser (en/hi/hinglish) producing a validated
-  `TaskPlan`; the LLM output is never trusted/executed directly — a separate deterministic
-  Policy Validator + capability-based Compatibility Matrix decides what's allowed to run
-- **All 5 model adapters** (Agent, RS-VLM, Prithvi, ChangeFormer, CROMA): real interface,
-  deterministic mocks that inspect real pixel data, swappable via `.env` model paths
-- **Input validation**: real GDAL/rasterio inspection, modality detection (optical/
-  multispectral/SAR), CRS/band/NaN checks, never assumes a TIFF is georeferenced
-- **Preprocessing**: real reprojection/co-registration, every operation recorded for
-  the transparency view
-- **Satellite retrieval**: real Copernicus (CDSE) + USGS (M2M) availability checks,
-  Bhoonidhi placeholder, pair-aware deterministic scene ranking, mock provider using a
-  small synthetic demo dataset (`scripts/generate_demo_data.py`)
-- **Evidence, confidence, audit, transparency**: all real, all wired end-to-end; confidence
-  never fabricates a number in demo mode
-- **PDF/GeoJSON export**: real ReportLab PDF with embedded evidence images; real
-  pixel→WGS84 CRS reprojection for exported geometry (verified: exported coordinates land
-  in the correct geographic range for the source UTM zone, not raw pixel/UTM values)
-- **Multi-turn caching**: Redis-backed when configured, in-process fallback otherwise,
-  proven via test to actually skip re-reading the raster on follow-up queries
-- **Evaluation framework**: real metrics (exact-match, token-F1, bbox IoU, change-mask
-  precision/recall/F1/IoU) in `ml/evaluation/`, isolated from the serving path, optionally
-  posts results to `POST /api/v1/evaluation-runs`
-- **Frontend**: Next.js three-column layout (sidebar / chat+upload / evidence+transparency),
-  wired to the real API, verified live via Playwright (upload → ask → evidence → export,
-  zero console errors)
+### 1. Agent Controller & task understanding (`backend/app/agents/`, `model_adapters/agent_adapter.py`)
+
+A user's raw text query (English, Hindi, or Hinglish) goes through `AgentController.
+understand_query()`. The "agent" is a deterministic rule/keyword parser standing in for a
+real Qwen3 model — it:
+- **Detects language**: Devanagari script → `hi`; ≥2 Hindi-word hints in Latin script
+  (`hai`, `kya`, `pichle saal`, `badha`, etc.) → `hinglish`; else `en`.
+- **Classifies task**: keyword rules map the query to one of `vqa`, `captioning`,
+  `grounding`, `change_vqa`, `optical_sar_analysis`, or `satellite_retrieval`.
+- **Infers modalities**: e.g. "vegetation"/"NDVI" → `multispectral`, "radar"/"through
+  cloud" → `sar`, optical+SAR phrasing → both.
+- **Extracts a structured location** (`LocationRequest`: place name / lat-lon / bbox /
+  polygon / radius — never a bare string) via regex around "around/near/in <place>".
+- **Extracts a date range** from phrases like "last year" or two years mentioned in text.
+- Produces a raw dict, which `AgentController` then validates into the `TaskPlan` Pydantic
+  schema (`schemas/task_plan.py`). **If it doesn't validate, the request is rejected right
+  there** — nothing downstream ever executes on unvalidated agent output.
+
+This is the most important architectural decision in the whole system: the agent (real or
+mock) is only ever allowed to produce this one structured object. It cannot name a Python
+function, a model, or a tool. Swapping in a real Qwen3 model later means replacing
+`AgentAdapter.predict()`'s mock branch — the rest of the pipeline doesn't change.
+
+### 2. Policy Validator & Compatibility Matrix (`agents/policy_validator.py`, `model_registry/compatibility.py`)
+
+Two separate deterministic layers sit between the agent's `TaskPlan` and any model
+execution — neither is LLM-driven, both are plain Python rules:
+
+- **`resolve_capability(task, modalities)`**: maps a task+modality combination to a
+  *capability string* (`vqa`, `change_detection`, `optical_sar_fusion`, etc.), never to a
+  hardcoded model name. E.g. bi-temporal change (optical *or* multispectral) resolves to
+  `change_detection` directly — ChangeFormer is NOT chained through Prithvi features in
+  this build, since that integration was never validated (Prithvi is instead an
+  independent representation path, used only when a task explicitly needs a multispectral
+  embedding). SAR-only change detection resolves as **unsupported** with an explicit
+  message, since no SAR-compatible change model is registered.
+- **`validate_task(plan, image_validations)`**: given the resolved capability and the
+  *actual* images available (with their detected modality from real file inspection), this
+  decides pass/fail before any model runs. This is what implements two of the ten MVP
+  acceptance tests directly:
+  - One image + change-analysis question → `REQUIRES_USER_INPUT`, exact message: *"This
+    analysis requires two images of the same area from different dates..."* — **ChangeFormer
+    is never invoked.**
+  - Two optical images + an optical+SAR question → detected via each image's real
+    `detected_modality`, rejected with *"I found two images, but detected their modalities
+    as: optical, optical. This analysis requires one optical and one SAR image..."* —
+    never silently misused.
+  - If a `LocationRequest` + date range are present instead of enough images, it routes to
+    satellite retrieval rather than failing outright.
+
+Tested in `backend/tests/test_compatibility.py` and `test_policy_validator.py`.
+
+### 3. Model Registry (`model_registry/models.yaml`, `registry.py`)
+
+`models.yaml` is the single source of truth mapping `capability → adapter class`, with
+`version`, `fallback`, `enabled`, `resource_requirement`. `ModelManager.get_for_capability()`
+resolves a capability to a live adapter instance, lazily instantiating and caching it
+(models are never loaded at server startup). If the primary adapter for a capability
+reports `UNAVAILABLE` via its `health_check()`, the manager tries the registry-declared
+`fallback` — and if that's used, every downstream result carries
+`model_provenance.fallback_used=true` + the exact reason, logged to the audit trail. **No
+silent model switching ever happens.** `TerraMind` is registered but `enabled: false` per
+spec (resource-heavy, optional, off by default).
+
+### 4. The five model adapters (`model_adapters/`)
+
+All five implement `BaseModelAdapter` (`load()`, `health_check()`, `validate_input()`,
+`predict()`, `explain_metadata()`, `estimate_quality()`) and are mock-backed until a
+`*_MODEL_PATH` env var is set (see `docs/MODELS.md`). Every mock genuinely inspects the
+input it's given — none fabricate output from nothing:
+
+- **Agent** (`agent_adapter.py`) — described above.
+- **RS-VLM** (`rsvlm_adapter.py`, target: InternVL3-1B) — handles `vqa`/`captioning`/
+  `grounding`. The mock runs real OpenCV HSV-threshold segmentation on the actual uploaded
+  pixels to estimate water/vegetation/built-up coverage fractions, then answers using those
+  real numbers (e.g. *"Approximately 12.4% of the visible scene shows water-like spectral
+  characteristics"*). For grounding, it finds the largest contour of the relevant mask and
+  returns a genuine pixel bounding box.
+- **Prithvi** (`prithvi_adapter.py`, target: Prithvi-EO-2.0) — multispectral
+  *representation* only, deliberately not used for change detection. Mock computes real
+  per-band mean/std/min/max as a stand-in embedding.
+- **ChangeFormer** (`change_adapter.py`) — bi-temporal change detection, run independently
+  (not fed by Prithvi). Mock does real grayscale absolute-difference + Gaussian blur +
+  Otsu threshold + morphological open/close between the two aligned images — a genuine,
+  if simple, change-detection algorithm, not a fabricated mask.
+- **CROMA** (`croma_adapter.py`) — optical+SAR fusion *representation*. Mock computes real
+  optical brightness-fraction and real SAR backscatter-intensity-fraction, then cross-checks
+  them for a genuine agreement/disagreement signal (feeds directly into confidence's
+  `modality_agreement` field).
+
+### 5. Input Validation & modality detection (`validation/`)
+
+`InputValidationService.validate_file()` runs **before any model executes**. For
+GeoTIFF/TIFF (`raster_inspector.py`, real rasterio/GDAL): band count, CRS, bounds,
+resolution, band descriptions, and a genuine NaN/Infinite-fraction check on actual pixel
+values. For PNG/JPEG: explicitly treated as non-georeferenced — no CRS, acquisition date,
+or GSD is ever invented for these, per the spec's core rule against fabricated satellite
+metadata. `modality_detector.py` is a standalone step (not folded into routing): inspects
+band count/descriptions for SAR/multispectral hints, and for single/dual-band files with no
+metadata hints, uses a real coefficient-of-variation heuristic (SAR speckle has
+characteristically higher local variance than optical panchromatic) — falling back to
+`"unknown"` rather than guessing when evidence is weak. Tested in `test_validation.py`.
+
+### 6. Preprocessing (`preprocessing/pipeline.py`)
+
+Real rasterio-based reprojection (`rasterio.warp.reproject`, bilinear resampling) when a
+before/after pair has mismatched CRS, and real co-registration (cropping both images to a
+common pixel grid). Every operation actually performed is appended to a list that flows
+straight into `DataProvenance.processing_applied` — the transparency view can never claim
+a step that didn't run. Single-image reads are cached by content checksum (see caching,
+below).
+
+### 7. Orchestration Engine — the execution state machine (`orchestration/engine.py`)
+
+This is the file that ties everything above together. `WorkflowEngine.run()` drives a
+real state machine, writing one `execution_steps` row per transition:
+
+```
+QUEUED → BASIC_VALIDATION → QUERY_UNDERSTANDING → TASK_PLANNING → TASK_VALIDATION
+  → [DATA_RETRIEVAL if needed] → PREPROCESSING → MODEL_SELECTION → RUNNING
+  → RESULT_INTEGRATION → EVIDENCE_GENERATION → CONFIDENCE_CALIBRATION → COMPLETED
+```
+with `REQUIRES_USER_INPUT` and `FAILED` exits at any validation/execution point. Three
+capability-specific execution paths exist (`_run_single_image_task`,
+`_run_change_task`, `_run_optical_sar_task`), each doing real preprocessing → real adapter
+call → real evidence rendering → real confidence scoring → real provenance construction,
+then persisting the full `ExecutionResult` to the `executions` table.
+
+### 8. Satellite retrieval (`satellite/`)
+
+`ProviderManager` — the *only* thing that talks to providers (the agent never calls one
+directly) — tries providers in configured priority order (`copernicus,bhoonidhi,usgs`,
+falling back to the mock/demo provider only in `DEMO_MODE`):
+- **Copernicus** (`providers/copernicus.py`) — real OAuth2 client-credentials flow +
+  real OData catalogue query against the actual Copernicus Data Space Ecosystem API,
+  activated only when `COPERNICUS_CLIENT_ID/SECRET` are set.
+- **USGS** (`providers/usgs.py`) — real M2M API availability check.
+- **Bhoonidhi** (`providers/bhoonidhi.py`) — honest placeholder; reports *"Bhoonidhi access
+  is not configured in this deployment"* since it has no public open API to integrate
+  against yet.
+- **Mock/demo** (`providers/mock.py`) — serves the synthetic dataset under `data/demo/`
+  (generated by `scripts/generate_demo_data.py`), every scene explicitly labeled
+  `demo_mode: true` and `sensor: "synthetic_demo"` — never presented as real satellite data.
+
+`scene_ranker.py` scores candidates deterministically across 9 factors (coverage, temporal
+fit, quality, cloud, modality, resolution, CRS/sensor compatibility, provider
+availability) and — critically — for bi-temporal requests scores **compatible pairs**
+jointly (`rank_pairs()`), not two independent nearest-date lookups. Tested in
+`test_scene_ranker.py`.
+
+### 9. Evidence rendering (`evidence/renderer.py`, `evidence/geo_transform.py`)
+
+Real OpenCV/PIL rendering: bounding-box overlays, change-mask overlays (red highlight
+blended over the "before" image), before/after side-by-side composites, and plain
+"original" previews — all stored as real PNGs via the storage abstraction. Separately,
+`geo_transform.py` does real pixel→geographic conversion: a grounding bounding box's pixel
+coordinates are converted to real-world coordinates using the source raster's actual affine
+transform, then reprojected to WGS84 via `pyproj` if the source CRS isn't already
+EPSG:4326. This is what makes the GeoJSON export (below) trustworthy rather than
+decorative. Tested in `test_geo_transform.py` with a real UTM-zone sanity check.
+
+### 10. Confidence (`confidence/service.py`)
+
+Deliberately **never shows a fabricated number in demo mode**. Returns a `ConfidenceReport`
+with four independent fields — `model_confidence` (only ever set for a real calibrated
+model, `None` in demo mode), `input_quality` (derived from real validation
+errors/warnings), `evidence_quality` (derived from the actual evidence produced), and
+`modality_agreement` (`agree`/`disagree`/`not_applicable`, only meaningful when 2+
+modalities were used — e.g. CROMA's optical/SAR cross-check feeds this directly). When
+modalities disagree, `overall_level` is pulled down and a note is added — never silently
+averaged away.
+
+### 11. Audit trail & transparency (`audit/service.py`, `GET /analysis/{id}/transparency`)
+
+Every state transition and every fallback event is written to `execution_steps`/
+`audit_logs`. The transparency endpoint surfaces task, model+version, `DataProvenance`
+(provider, scene ID, acquisition date, CRS, resolution, processing steps actually applied),
+`ModelProvenance` (model, version, capability, fallback status), confidence, and warnings —
+structured metadata only, **never** hidden chain-of-thought reasoning.
+
+### 12. PDF & GeoJSON export (`reports/pdf_generator.py`, `reports/geojson_generator.py`)
+
+- **PDF** (ReportLab): query, task, model+provenance, data provenance, answer, confidence
+  breakdown, every evidence image actually generated (fetched from storage and embedded,
+  correctly scaled), warnings, execution summary. Verified live: the response starts with
+  a real `%PDF` header and is 300-400KB with embedded images, not a stub.
+- **GeoJSON** (GeoPandas/Shapely): a real `FeatureCollection` built only from geometry
+  that's already been reprojected to EPSG:4326 (§9) — pixel-space or un-reprojected
+  source-CRS coordinates never leak into the output. Verified live: exported coordinates
+  for a UTM-zone-43N source image land at ~75°E/19.9°N, not raw UTM meters mislabeled as
+  degrees. 409 if the execution isn't `completed` yet.
+
+### 13. Multi-turn caching (`storage/cache.py`, wired into `PreprocessingPipeline.load_single`)
+
+Redis-backed when `REDIS_URL` is set, an in-process dict fallback otherwise (so caching
+never requires Redis to function). Rasters are cached by the image's SHA-256 content
+checksum. **Proven by test, not just structurally implied**: `test_caching.py` patches
+`read_array` and asserts it's genuinely not called on a second `load_single()` with the
+same checksum, plus a full HTTP-level test asking three follow-up questions on the same
+uploaded image and confirming the 2nd/3rd response's `data_provenance.processing_applied`
+contains `"reused cached decode"`.
+
+### 14. Database & persistence (`backend/app/models/`, `alembic/`)
+
+Every table from the original spec exists (`users`, `sessions`, `messages`, `images`,
+`image_metadata`, `satellite_scenes`, `queries`, `task_plans`, `executions`,
+`execution_steps`, `model_registry`, `model_versions`, `evidence`, `reports`,
+`audit_logs`, `evaluation_runs`). Geometry columns (`bounds_geojson`, `bbox_geojson`) are
+stored as portable JSON so the exact same ORM code works against SQLite (verified) and
+Postgres (migration written, not yet run — see Docker section). A second migration
+(`0002_postgis_geometry.py`) conditionally adds real PostGIS `geometry` columns + GIST
+spatial indexes only when the target DB is Postgres — a no-op on SQLite by design.
+
+### 15. API layer (`api/v1/`)
+
+All endpoints from the original spec's list are implemented: sessions, image upload,
+query/analysis submission (`POST /query` and `POST /analysis` share one underlying
+`submit_analysis()` so there's no duplicated orchestration logic), evidence/transparency/
+report/geojson sub-resources, model registry + health, satellite search/retrieve/provider
+status, system health, plus `evaluation-runs` (added later, §16). Errors are normalized to
+`{detail: <safe user-facing message>}`; nothing internal leaks to the client.
+
+### 16. Evaluation framework (`ml/evaluation/`)
+
+Real metrics only — exact-match accuracy, mean token-F1 (VQA/captioning), mean bounding-box
+IoU (grounding, metric exists, no CLI yet), and pixel-wise precision/recall/F1/IoU (change
+detection). `evaluate_vqa.py` and `evaluate_change.py` score predictions you already
+generated (they don't run inference themselves, keeping evaluation reproducible) and can
+optionally `POST` their result to `/api/v1/evaluation-runs` via `--api-url` — over plain
+HTTP, so `ml/` never imports `backend/app` directly, preserving the isolation the spec
+calls for between training/eval code and the serving path. **No run against real
+BigEarthNet/VRSBench/RSVQA/CDVQA data has happened** — see "What's NOT done".
+
+### 17. Frontend (`frontend/`)
+
+Next.js (App Router) + TypeScript + Tailwind, three-column layout: session sidebar, center
+chat/upload panel, right-hand evidence+transparency+export panel — matching the spec's
+information architecture, not a generic chatbot-with-upload-button layout. Talks to the
+real backend via Axios/React Query (`lib/api.ts`), polls `GET /analysis/{id}` for
+completion, renders evidence images directly from the storage endpoint, and links to
+`/report` and `/geojson` for real file downloads. Verified live via Playwright: full
+upload→ask→evidence→confidence→transparency→export flow with zero browser console errors.
+
+### 18. Testing
+
+49 automated tests, all passing:
+- **43 backend** (`pytest`): validation, modality detection, pair compatibility, the
+  compatibility matrix, the policy validator, scene ranking (including pair-aware
+  ranking), area calculation (both georeferenced and the exact non-georeferenced caveat
+  message), pixel→WGS84 geo-transform, PDF/GeoJSON generation, the caching behavior (both
+  unit-level and full HTTP-level), evaluation-runs persistence, and one end-to-end test per
+  MVP acceptance scenario (`test_end_to_end.py`) run through the real HTTP API, not mocked
+  at the API boundary.
+- **6 ml** (`pytest`): the real metric implementations in `ml/evaluation/metrics.py`.
+- **1 manual Playwright browser run**: the full upload→ask→evidence→export flow, live,
+  with console-error monitoring.
 
 ## What's NOT done, in priority order
 
