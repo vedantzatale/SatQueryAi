@@ -26,12 +26,15 @@ python -m ml.evaluation.evaluate_change --predictions-dir out/masks --references
 Matches predicted/reference change masks by filename and reports aggregated
 precision/recall/F1/IoU across all matched pairs.
 
+Pass `--api-url http://localhost:8000/api/v1` to either script to also record the result
+into the backend's `evaluation_runs` table via `POST /api/v1/evaluation-runs`
+(`ml/evaluation/reporting.py`) — this talks to the public API only, so `ml/` never imports
+backend internals directly.
+
 ## What's not done
 
 - No `evaluate_grounding.py` CLI yet (the metric function exists in `metrics.py`, wiring a
   script around it is a follow-up).
-- Results aren't yet written into the `evaluation_runs` table — each script only prints/
-  writes a JSON file. Wiring that in is listed in `docs/DEVELOPMENT.md`.
 - No actual runs against VRSBench/RSVQA/CDVQA have been performed in this session (no real
   model weights, no downloaded datasets) — see `docs/DATASETS.md`. **Any benchmark numbers
   quoted for SatQuery AI outside of this repository's own test suite should be treated as

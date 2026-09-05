@@ -18,6 +18,7 @@ import numpy as np
 from PIL import Image
 
 from ml.evaluation.metrics import change_mask_metrics
+from ml.evaluation.reporting import post_evaluation_result
 
 
 def _load_mask(path: Path) -> np.ndarray:
@@ -32,6 +33,9 @@ def main() -> None:
     parser.add_argument("--model-id", default="unknown")
     parser.add_argument("--model-version", default="unknown")
     parser.add_argument("--output", default=None)
+    parser.add_argument(
+        "--api-url", default=None, help="Backend API base URL (e.g. http://localhost:8000/api/v1) to record this run"
+    )
     args = parser.parse_args()
 
     predictions_dir = Path(args.predictions_dir)
@@ -80,6 +84,8 @@ def main() -> None:
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
+    if args.api_url:
+        post_evaluation_result(args.api_url, result)
 
 
 if __name__ == "__main__":

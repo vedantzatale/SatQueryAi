@@ -24,6 +24,8 @@ detail is only ever in structured logs.
 | `GET /satellite/providers/status` | Availability of each configured provider |
 | `GET /models` | Registry listing (capability, modalities, version, enabled) |
 | `GET /models/{id}/health` | `healthy` / `degraded` / `unavailable` + whether it's a mock |
+| `POST /evaluation-runs` | Records a real evaluation result (see `ml/evaluation/`) — never computed here, only persisted |
+| `GET /evaluation-runs` | Lists recorded evaluation runs, newest first |
 | `GET /system/health` | Database/Redis/storage component health + `demo_mode` flag |
 | `GET /storage/{key}` | Serves a stored evidence/report object (local backend passthrough) |
 

@@ -64,8 +64,10 @@ design; `⬜` = not started in this build.
   `PreprocessingPipeline.load_single` keyed by image checksum)
 - ✅ Fallback works (`ModelManager.get_for_capability`, audit-logged, never silent)
 - ✅ Model versioning works (`version` field on every adapter + registry entry)
-- 🟡 Evaluation framework works (real metric implementations + dataset adapters + CLI
-  scripts in `ml/evaluation/`; not integrated with the `evaluation_runs` DB table yet)
+- ✅ Evaluation framework works (real metric implementations + dataset adapters + CLI
+  scripts in `ml/evaluation/`; `--api-url` optionally records results into the
+  `evaluation_runs` table via `POST /api/v1/evaluation-runs`, keeping `ml/` isolated from
+  backend internals — it talks to the same public API a frontend would)
 - ✅ Docker Compose files exist and are structurally valid (`docker-compose.yml` + 3
   Dockerfiles); **not run against live Docker in this session** — Docker was not
   confirmed available in this environment (see below)
@@ -85,7 +87,10 @@ SQLite/local-storage/inline-task path has been verified thoroughly as the fallba
 
 ## Suggested next steps, in priority order
 
-1. Verify `docker compose up --build` end-to-end against Postgres/Redis/MinIO once Docker
-   is reachable; run `alembic upgrade head` against the Postgres container.
-2. Wire `ml/evaluation` results into the `evaluation_runs` table.
-3. Real model integration, one adapter at a time, per `docs/MODELS.md`.
+1. Verify `docker compose up --build` end-to-end against Postgres/Redis/MinIO. Docker was
+   confirmed working in the user's own terminal (`docker --version` succeeded) but
+   remained unreachable from every tool session available to build this repo, including
+   with sandboxing disabled — a stale-PATH issue in the process tree that launched that
+   session, not a code problem. Needs to be run and verified by a human, or from a fresh
+   Claude Code session if its shell inherits the updated PATH.
+2. Real model integration, one adapter at a time, per `docs/MODELS.md`.

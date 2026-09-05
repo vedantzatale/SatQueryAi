@@ -17,6 +17,7 @@ import sys
 from datetime import datetime, timezone
 
 from ml.evaluation.metrics import exact_match_accuracy, mean_token_f1
+from ml.evaluation.reporting import post_evaluation_result
 from ml.training.train_internvl import _DATASET_ADAPTERS, load_dataset
 
 
@@ -28,6 +29,9 @@ def main() -> None:
     parser.add_argument("--model-id", default="unknown")
     parser.add_argument("--model-version", default="unknown")
     parser.add_argument("--output", default=None, help="Where to write the EvaluationResult JSON")
+    parser.add_argument(
+        "--api-url", default=None, help="Backend API base URL (e.g. http://localhost:8000/api/v1) to record this run"
+    )
     args = parser.parse_args()
 
     try:
@@ -68,6 +72,8 @@ def main() -> None:
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
+    if args.api_url:
+        post_evaluation_result(args.api_url, result)
 
 
 if __name__ == "__main__":
