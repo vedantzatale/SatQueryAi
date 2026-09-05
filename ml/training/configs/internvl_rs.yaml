@@ -1,0 +1,22 @@
+# Training configuration for adapting InternVL3-1B to remote sensing.
+# LoRA/QLoRA is optional -- set lora.enabled: false for full fine-tuning
+# (not recommended without a real GPU budget).
+
+base_model: "OpenGVLab/InternVL3-1B"
+dataset:
+  adapter: "bigearthnet"        # bigearthnet | vrsbench | rsvqa | cdvqa
+  root_dir: "data/training/bigearthnet"
+  modality: "multispectral"
+
+learning_rate: 2.0e-4
+batch_size: 8
+epochs: 3
+validation_split: 0.1
+output_dir: "ml/training/output/internvl_rs"
+
+lora:
+  enabled: true
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "v_proj"]

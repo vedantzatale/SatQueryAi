@@ -1,0 +1,57 @@
+# Environment
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+backend/.venv/
+*.db
+*.sqlite3
+
+# Node / frontend
+node_modules/
+.next/
+out/
+frontend/.env*.local
+npm-debug.log*
+
+# Build artifacts
+dist/
+build/
+*.egg-info
+
+# Local data / storage
+data/local_storage/
+data/demo/**/*.tif
+data/demo/**/*.tiff
+!data/demo/**/.gitkeep
+storage/
+
+# Model weights (never commit)
+models/weights/
+*.ckpt
+*.pt
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Alembic
+backend/alembic/versions/__pycache__/

@@ -1,0 +1,117 @@
+{
+  "notice": "All scenes in this manifest are SYNTHETIC demo data, procedurally generated for local development and demonstration. They are not real satellite imagery.",
+  "scenes": [
+    {
+      "scene_id": "demo-optical-001",
+      "product_id": "SYNTHETIC-OPTICAL-001",
+      "modality": "optical",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": 5.0,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/single/optical/sample_optical.tif"
+    },
+    {
+      "scene_id": "demo-multispectral-001",
+      "product_id": "SYNTHETIC-MULTISPECTRAL-001",
+      "modality": "multispectral",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": 8.0,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/single/multispectral/sample_multispectral.tif"
+    },
+    {
+      "scene_id": "demo-sar-001",
+      "product_id": "SYNTHETIC-SAR-001",
+      "modality": "sar",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": null,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/single/sar/sample_sar.tif"
+    },
+    {
+      "scene_id": "demo-optical-before-001",
+      "product_id": "SYNTHETIC-OPTICAL-BEFORE-001",
+      "modality": "optical",
+      "acquisition_time": "2024-06-15T00:00:00+00:00",
+      "cloud_percentage": 4.0,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/temporal/before/sample_before.tif"
+    },
+    {
+      "scene_id": "demo-optical-after-001",
+      "product_id": "SYNTHETIC-OPTICAL-AFTER-001",
+      "modality": "optical",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": 6.0,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/temporal/after/sample_after.tif"
+    },
+    {
+      "scene_id": "demo-fusion-optical-001",
+      "product_id": "SYNTHETIC-FUSION-OPTICAL-001",
+      "modality": "optical",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": 5.0,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/fusion/optical/sample_fusion_optical.tif"
+    },
+    {
+      "scene_id": "demo-fusion-sar-001",
+      "product_id": "SYNTHETIC-FUSION-SAR-001",
+      "modality": "sar",
+      "acquisition_time": "2025-06-15T00:00:00+00:00",
+      "cloud_percentage": null,
+      "bbox": [
+        500000.0,
+        2197440.0,
+        502560.0,
+        2200000.0
+      ],
+      "crs": "EPSG:32643",
+      "resolution": 10.0,
+      "file_path": "data/demo/fusion/sar/sample_fusion_sar.tif"
+    }
+  ]
+}

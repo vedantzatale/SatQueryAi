@@ -1,0 +1,63 @@
+# SatQuery AI model registry.
+#
+# The agent and orchestration layer NEVER reference a model by name --
+# they ask for a `capability` (see app/model_registry/compatibility.py),
+# and this file is the only place that says which concrete adapter class
+# satisfies it, at which version, with which fallback.
+#
+# `enabled: false` means the entry is never selected even if requested.
+
+models:
+  qwen_agent:
+    adapter_class: app.model_adapters.agent_adapter.AgentAdapter
+    capability: [task_planning]
+    modalities: []
+    version: "0.1.0-mock"
+    fallback: null
+    enabled: true
+    resource_requirement: low
+
+  internvl_rs:
+    adapter_class: app.model_adapters.rsvlm_adapter.RSVLMAdapter
+    capability: [vqa, captioning, grounding]
+    modalities: [optical, multispectral]
+    version: "0.1.0-mock"
+    fallback: null
+    enabled: true
+    resource_requirement: medium
+
+  prithvi:
+    adapter_class: app.model_adapters.prithvi_adapter.PrithviAdapter
+    capability: [multispectral_representation]
+    modalities: [multispectral]
+    version: "2.0-pretrained-mock"
+    fallback: null
+    enabled: true
+    resource_requirement: medium
+
+  changeformer:
+    adapter_class: app.model_adapters.change_adapter.ChangeDetectionAdapter
+    capability: [change_detection]
+    modalities: [optical, multispectral]
+    version: "0.1.0-mock"
+    fallback: null
+    enabled: true
+    resource_requirement: medium
+
+  croma:
+    adapter_class: app.model_adapters.croma_adapter.CromaAdapter
+    capability: [optical_sar_fusion]
+    modalities: [optical, sar]
+    version: "0.1.0-mock"
+    fallback: null
+    enabled: true
+    resource_requirement: high
+
+  terramind:
+    adapter_class: null
+    capability: [multimodal_representation, cross_modal_analysis]
+    modalities: [optical, multispectral, sar]
+    version: "unreleased"
+    fallback: null
+    enabled: false
+    resource_requirement: high

@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.models.execution import Execution, ExecutionStep
+from app.schemas.execution import ExecutionResult
+from app.services.analysis_service import submit_analysis
+
+router = APIRouter(prefix="/analysis", tags=["analysis"])
+
+
+class RunAnalysisRequest(BaseModel):
+    session_id: str | None = None
+    query_text: str
+    image_ids: list[str] = []
+
+
+class RunAnalysisResponse(BaseModel):
+    execution_id: str
+    status: str
+
+
+def _load_result(execution: Execution) -> ExecutionResult:
+    data = dict(execution.result_json or {})
+    data["execution_id"] = execution.id
+    data["status"] = execution.status
+    data["latency_ms"] = execution.latency_ms
+    return ExecutionResult(**data)
+
+
+@router.post("", response_model=RunAnalysisResponse)
+def run_analysis(body: RunAnalysisRequest, db: Session = Depends(get_db)) -> RunAnalysisResponse:
+    execution_id = submit_analysis(db, body.session_id, body.query_text, body.image_ids)
+    execution = db.get(Execution, execution_id)
+    return RunAnalysisResponse(execution_id=execution_id, status=execution.status if execution else "queued")
+
+
+@router.get("/{execution_id}", response_model=ExecutionResult)
+def get_analysis(execution_id: str, db: Session = Depends(get_db)) -> ExecutionResult:
+    execution = db.get(Execution, execution_id)
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Execution not found.")
+    return _load_result(execution)
+
+
+@router.get("/{execution_id}/evidence")
+def get_evidence(execution_id: str, db: Session = Depends(get_db)) -> dict:
+    execution = db.get(Execution, execution_id)
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Execution not found.")
+    return {"evidence": (execution.result_json or {}).get("evidence", [])}
+
+
+@router.get("/{execution_id}/transparency")
+def get_transparency(execution_id: str, db: Session = Depends(get_db)) -> dict:
+    """"How Was This Analyzed?" -- safe structured metadata only, never
+    hidden chain-of-thought."""
+    execution = db.get(Execution, execution_id)
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Execution not found.")
+    steps = (
+        db.query(ExecutionStep)
+        .filter_by(execution_id=execution_id)
+        .order_by(ExecutionStep.created_at.asc())
+        .all()
+    )
+    result = execution.result_json or {}
+    return {
+        "task": result.get("task"),
+        "model": result.get("model"),
+        "model_version": result.get("model_version"),
+        "data_provenance": result.get("data_provenance"),
+        "model_provenance": result.get("model_provenance"),
+        "confidence": result.get("confidence"),
+        "warnings": result.get("warnings", []),
+        "processing_steps": [
+            {"step": s.step_name, "status": s.status, "detail": s.detail_json} for s in steps
+        ],
+    }
