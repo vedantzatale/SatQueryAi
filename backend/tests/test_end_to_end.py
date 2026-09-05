@@ -65,8 +65,9 @@ def test_mvp_3_grounding_returns_evidence(client: TestClient, demo_data_dir: Pat
     result = _ask(client, session_id, "Where is the water?", [image_id])
     assert result["status"] == "completed"
     assert result["task"] == "grounding"
-    assert len(result["evidence"]) == 1
-    assert result["evidence"][0]["type"] == "bounding_box"
+    evidence_types = [e["type"] for e in result["evidence"]]
+    assert "original" in evidence_types
+    assert "bounding_box" in evidence_types
 
 
 def test_mvp_4_5_change_detection_with_quantification(client: TestClient, demo_data_dir: Path):

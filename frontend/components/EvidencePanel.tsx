@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { evidenceImageUrl, getTransparency } from "@/lib/api";
+import { evidenceImageUrl, getTransparency, reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import type { TransparencyResponse } from "@/lib/types";
 
@@ -161,9 +161,24 @@ export function EvidencePanel() {
         )}
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-400">
-        PDF and GeoJSON export are not yet implemented in this build.
-      </div>
+      {result.status === "completed" && (
+        <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+          <a
+            href={reportPdfUrl(result.execution_id)}
+            download
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-center text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Export PDF
+          </a>
+          <a
+            href={reportGeoJsonUrl(result.execution_id)}
+            download
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-center text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Export GeoJSON
+          </a>
+        </div>
+      )}
     </aside>
   );
 }

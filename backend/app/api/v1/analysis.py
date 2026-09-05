@@ -1,13 +1,20 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.execution import Execution, ExecutionStep
+from app.models.report import Report
+from app.reports.geojson_generator import generate_analysis_geojson
+from app.reports.pdf_generator import generate_analysis_pdf
 from app.schemas.execution import ExecutionResult
 from app.services.analysis_service import submit_analysis
+from app.storage.object_storage import get_storage_backend
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -52,6 +59,52 @@ def get_evidence(execution_id: str, db: Session = Depends(get_db)) -> dict:
     if execution is None:
         raise HTTPException(status_code=404, detail="Execution not found.")
     return {"evidence": (execution.result_json or {}).get("evidence", [])}
+
+
+def _completed_execution_or_404(execution_id: str, db: Session) -> Execution:
+    execution = db.get(Execution, execution_id)
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Execution not found.")
+    if execution.status != "completed":
+        raise HTTPException(
+            status_code=409,
+            detail="A report can only be generated for a completed analysis.",
+        )
+    return execution
+
+
+@router.get("/{execution_id}/report")
+def get_report(execution_id: str, db: Session = Depends(get_db)) -> Response:
+    execution = _completed_execution_or_404(execution_id, db)
+    pdf_bytes = generate_analysis_pdf(db, execution)
+
+    storage = get_storage_backend()
+    storage_key = f"reports/{execution_id}.pdf"
+    storage.put_bytes(storage_key, pdf_bytes, content_type="application/pdf")
+    if not db.query(Report).filter_by(execution_id=execution_id, type="pdf").first():
+        db.add(Report(execution_id=execution_id, type="pdf", storage_key=storage_key))
+        db.commit()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="satquery_{execution_id[:8]}.pdf"'},
+    )
+
+
+@router.get("/{execution_id}/geojson")
+def get_geojson(execution_id: str, db: Session = Depends(get_db)) -> JSONResponse:
+    execution = _completed_execution_or_404(execution_id, db)
+    geojson = generate_analysis_geojson(execution)
+
+    storage = get_storage_backend()
+    storage_key = f"reports/{execution_id}.geojson"
+    storage.put_bytes(storage_key, json.dumps(geojson).encode("utf-8"), content_type="application/geo+json")
+    if not db.query(Report).filter_by(execution_id=execution_id, type="geojson").first():
+        db.add(Report(execution_id=execution_id, type="geojson", storage_key=storage_key))
+        db.commit()
+
+    return JSONResponse(content=geojson, media_type="application/geo+json")
 
 
 @router.get("/{execution_id}/transparency")

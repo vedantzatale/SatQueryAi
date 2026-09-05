@@ -44,9 +44,10 @@ export interface ImageUploadResponse {
 }
 
 export interface Evidence {
-  type: "bounding_box" | "polygon" | "change_mask" | "overlay" | "before_after";
+  type: "original" | "bounding_box" | "polygon" | "change_mask" | "overlay" | "before_after";
   storage_key: string | null;
   coordinates: number[] | null;
+  geo_geometry: Record<string, unknown> | null;
   label: string | null;
   score: number | null;
   area_m2: number | null;

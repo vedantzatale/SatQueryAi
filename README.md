@@ -19,14 +19,16 @@ and is swappable for a real model purely via `.env` — see [docs/MODELS.md](doc
 Working end-to-end (verified via the real HTTP API and a Playwright browser smoke test):
 single-image VQA/captioning/grounding, bi-temporal change detection with real area
 quantification, optical+SAR fusion, satellite retrieval (synthetic demo provider) feeding
-into change analysis, multi-turn chat/session persistence, and the "How Was This Analyzed?"
-transparency view. See `backend/tests/test_end_to_end.py` for the MVP acceptance tests this
-covers.
+into change analysis, multi-turn chat/session persistence, the "How Was This Analyzed?"
+transparency view, and PDF/GeoJSON export (with real pixel-to-WGS84 CRS reprojection for
+exported bounding boxes — never raw pixel or source-CRS coordinates mislabeled as
+geographic). See `backend/tests/test_end_to_end.py` and `backend/tests/test_reports.py`
+for the MVP acceptance tests this covers.
 
 **Not yet implemented** (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the full
-checklist): Redis-backed feature caching for follow-up queries, PDF/GeoJSON report export,
-real model weight integration, Kubernetes manifests, and the full evaluation framework
-against VRSBench/RSVQA/CDVQA.
+checklist): real model weight integration, Kubernetes manifests, and the full evaluation
+framework against VRSBench/RSVQA/CDVQA (dataset adapters + metrics exist in `ml/`, but no
+run against real weights/datasets has been performed in this environment).
 
 ## Running locally (no Docker required)
 

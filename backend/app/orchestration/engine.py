@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from app.agents.controller import TaskUnderstandingError, get_agent_controller
 from app.agents.policy_validator import validate_task
 from app.audit.service import AuditTrailService
+from app.evidence.geo_transform import pixel_bbox_to_geojson, reproject_geojson_to_wgs84
 from app.evidence.renderer import get_evidence_renderer
 from app.confidence.service import build_confidence_report
 from app.model_registry.registry import get_model_manager
@@ -37,7 +38,9 @@ from app.services.area_calculation import calculate_change_area
 _preprocessor = PreprocessingPipeline()
 
 
-def _build_data_provenance(contexts: list[ImageContext], processing_applied: list[str]) -> DataProvenance:
+def _build_data_provenance(
+    contexts: list[ImageContext], processing_applied: list[str], aoi: dict | None = None
+) -> DataProvenance:
     """Built from what actually happened to each image -- retrieved scenes
     report their real provider/scene_id/acquisition/retrieved_at; uploaded
     images honestly report provider="user_upload"."""
@@ -49,6 +52,7 @@ def _build_data_provenance(contexts: list[ImageContext], processing_applied: lis
             scene_id=retrieved.source_scene_id,
             acquisition_date=retrieved.source_acquisition_time.date() if retrieved.source_acquisition_time else None,
             sensor=primary.validation.metadata.sensor,
+            aoi=aoi,
             crs=primary.validation.metadata.crs,
             resolution=primary.validation.metadata.resolution_x,
             processing_applied=processing_applied,
@@ -56,6 +60,7 @@ def _build_data_provenance(contexts: list[ImageContext], processing_applied: lis
         )
     return DataProvenance(
         provider="user_upload",
+        aoi=aoi,
         crs=primary.validation.metadata.crs,
         resolution=primary.validation.metadata.resolution_x,
         processing_applied=processing_applied,
@@ -193,7 +198,7 @@ class WorkflowEngine:
     def _run_single_image_task(
         self, plan: TaskPlan, ctx: ImageContext, audit: AuditTrailService, execution_id: str
     ) -> ExecutionResult:
-        raster = _preprocessor.load_single(ctx.local_path)
+        raster = _preprocessor.load_single(ctx.local_path, cache_key=ctx.image.checksum)
         audit.record_step(execution_id, "preprocessing", "ok", {"operations": raster.operations})
 
         adapter, fallback_used, fallback_reason = self.model_manager.get_for_capability(
@@ -208,33 +213,41 @@ class WorkflowEngine:
         output = adapter.predict(task=task_name, image_array=raster.array, question=plan.raw_query)
         audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id})
 
-        evidence_list: list[Evidence] = []
+        evidence_list: list[Evidence] = [
+            Evidence(type="original", storage_key=self.evidence_renderer.render_original(raster.array))
+        ]
         for ev in output.get("evidence", []):
             storage_key = None
+            geo_geometry = None
             if ev.get("type") == "bounding_box" and ev.get("coordinates"):
                 storage_key = self.evidence_renderer.render_bbox_overlay(
                     raster.array, tuple(ev["coordinates"]), ev.get("label", "region")
                 )
+                geo_geometry = pixel_bbox_to_geojson(tuple(ev["coordinates"]), raster.transform, raster.crs)
             evidence_list.append(
                 Evidence(
                     type=ev.get("type", "bounding_box"),
                     storage_key=storage_key,
                     coordinates=ev.get("coordinates"),
+                    geo_geometry=geo_geometry,
                     label=ev.get("label"),
                     score=ev.get("score"),
                 )
             )
         audit.record_step(execution_id, "evidence_generation", "ok", {"evidence_count": len(evidence_list)})
 
+        analytical_evidence_count = sum(1 for e in evidence_list if e.type != "original")
         confidence = build_confidence_report(
             is_mock=adapter.is_mock,
             validations=[ctx.validation],
             evidence_score=output.get("score"),
-            evidence_count=len(evidence_list),
+            evidence_count=analytical_evidence_count,
         )
         audit.record_step(execution_id, "confidence_calibration", "ok", {"level": confidence.overall_level})
 
-        data_provenance = _build_data_provenance([ctx], raster.operations)
+        data_provenance = _build_data_provenance(
+            [ctx], raster.operations, aoi=plan.location.to_geojson() if plan.location else None
+        )
         model_provenance = ModelProvenance(
             model_id=adapter.model_id,
             version=adapter.version,
@@ -297,6 +310,9 @@ class WorkflowEngine:
             Evidence(
                 type="change_mask",
                 storage_key=overlay_key,
+                geo_geometry=reproject_geojson_to_wgs84(
+                    before_ctx.validation.metadata.bounds_geojson, before_ctx.validation.metadata.crs
+                ),
                 area_m2=area.area_m2,
                 area_percentage=area.area_percentage,
             ),
@@ -328,7 +344,9 @@ class WorkflowEngine:
             warnings.append(area.caveat)
 
         data_provenance = _build_data_provenance(
-            [before_ctx, after_ctx], before_raster.operations + after_raster.operations
+            [before_ctx, after_ctx],
+            before_raster.operations + after_raster.operations,
+            aoi=plan.location.to_geojson() if plan.location else None,
         )
         model_provenance = ModelProvenance(
             model_id=adapter.model_id,
@@ -359,8 +377,8 @@ class WorkflowEngine:
         optical_ctx = next(c for c in contexts if c.validation.detected_modality in ("optical", "multispectral"))
         sar_ctx = next(c for c in contexts if c.validation.detected_modality == "sar")
 
-        optical_raster = _preprocessor.load_single(optical_ctx.local_path)
-        sar_raster = _preprocessor.load_single(sar_ctx.local_path)
+        optical_raster = _preprocessor.load_single(optical_ctx.local_path, cache_key=optical_ctx.image.checksum)
+        sar_raster = _preprocessor.load_single(sar_ctx.local_path, cache_key=sar_ctx.image.checksum)
         audit.record_step(
             execution_id, "preprocessing", "ok",
             {"optical_operations": optical_raster.operations, "sar_operations": sar_raster.operations},
@@ -374,6 +392,11 @@ class WorkflowEngine:
         output = adapter.predict(optical_array=optical_raster.array, sar_array=sar_raster.array, question=plan.raw_query)
         audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id})
 
+        evidence_list = [
+            Evidence(type="original", storage_key=self.evidence_renderer.render_original(optical_raster.array), label="optical"),
+            Evidence(type="original", storage_key=self.evidence_renderer.render_original(sar_raster.array), label="sar"),
+        ]
+
         modality_agreement = output.get("agreement", "not_applicable")
         confidence = build_confidence_report(
             is_mock=adapter.is_mock,
@@ -385,7 +408,9 @@ class WorkflowEngine:
         audit.record_step(execution_id, "confidence_calibration", "ok", {"level": confidence.overall_level})
 
         data_provenance = _build_data_provenance(
-            [optical_ctx, sar_ctx], optical_raster.operations + sar_raster.operations
+            [optical_ctx, sar_ctx],
+            optical_raster.operations + sar_raster.operations,
+            aoi=plan.location.to_geojson() if plan.location else None,
         )
         model_provenance = ModelProvenance(
             model_id=adapter.model_id,
@@ -403,7 +428,7 @@ class WorkflowEngine:
             model=adapter.model_id,
             model_version=adapter.version,
             answer=output.get("answer"),
-            evidence=[],
+            evidence=evidence_list,
             confidence=confidence,
             data_provenance=data_provenance,
             model_provenance=model_provenance,

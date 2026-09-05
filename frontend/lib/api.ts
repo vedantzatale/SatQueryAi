@@ -63,3 +63,11 @@ export async function getTransparency(executionId: string): Promise<Transparency
 export function evidenceImageUrl(storageKey: string): string {
   return `${API_BASE_URL}/storage/${storageKey}`;
 }
+
+export function reportPdfUrl(executionId: string): string {
+  return `${API_BASE_URL}/analysis/${executionId}/report`;
+}
+
+export function reportGeoJsonUrl(executionId: string): string {
+  return `${API_BASE_URL}/analysis/${executionId}/geojson`;
+}

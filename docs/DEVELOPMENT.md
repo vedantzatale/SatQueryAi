@@ -51,12 +51,17 @@ design; `⬜` = not started in this build.
   evidence/agreement — `backend/tests/test_end_to_end.py`)
 - ✅ Audit trail works (`execution_steps` + `audit_logs`, one row per state transition)
 - ✅ Transparency panel works (`GET /analysis/{id}/transparency`, rendered in the frontend)
-- ⬜ PDF export (`app/reports/` not yet implemented)
-- ⬜ GeoJSON export (not yet implemented)
+- ✅ PDF export (`app/reports/pdf_generator.py`, ReportLab, embeds real evidence images —
+  `backend/tests/test_reports.py`)
+- ✅ GeoJSON export (`app/reports/geojson_generator.py`, GeoPandas/Shapely, real pixel→WGS84
+  reprojection via `app/evidence/geo_transform.py` — never exports un-reprojected or
+  pixel-space coordinates as if they were geographic)
 - ✅ Multi-turn chat works (session/message persistence, verified — MVP Test 10)
-- 🟡 Chat history works (sidebar + session restore implemented; Redis feature caching for
-  follow-up queries — reusing preprocessing across turns — is not yet implemented)
-- ⬜ Caching (Redis-backed feature/preprocessing cache — Slice 6, not started)
+- ✅ Chat history works (sidebar + session restore, plus follow-up queries on the same
+  image reuse cached preprocessing — `backend/tests/test_caching.py`)
+- ✅ Caching works (`app/storage/cache.py`: Redis-backed when `REDIS_URL` is set, an
+  in-process fallback otherwise so it never requires Redis to function; wired into
+  `PreprocessingPipeline.load_single` keyed by image checksum)
 - ✅ Fallback works (`ModelManager.get_for_capability`, audit-logged, never silent)
 - ✅ Model versioning works (`version` field on every adapter + registry entry)
 - 🟡 Evaluation framework works (real metric implementations + dataset adapters + CLI
@@ -82,7 +87,5 @@ SQLite/local-storage/inline-task path has been verified thoroughly as the fallba
 
 1. Verify `docker compose up --build` end-to-end against Postgres/Redis/MinIO once Docker
    is reachable; run `alembic upgrade head` against the Postgres container.
-2. Redis-backed feature caching for multi-turn follow-ups (Slice 6 in the build plan).
-3. PDF (ReportLab) + GeoJSON (GeoPandas/Shapely) export endpoints (Slice 8).
-4. Wire `ml/evaluation` results into the `evaluation_runs` table.
-5. Real model integration, one adapter at a time, per `docs/MODELS.md`.
+2. Wire `ml/evaluation` results into the `evaluation_runs` table.
+3. Real model integration, one adapter at a time, per `docs/MODELS.md`.

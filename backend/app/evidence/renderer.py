@@ -18,6 +18,10 @@ class EvidenceRenderer:
     def __init__(self) -> None:
         self._storage = get_storage_backend()
 
+    def render_original(self, image_array: np.ndarray) -> str:
+        bgr = to_uint8_bgr(image_array)
+        return self._store_png(bgr, prefix="evidence_original")
+
     def render_bbox_overlay(self, image_array: np.ndarray, bbox: tuple[int, int, int, int], label: str) -> str:
         bgr = to_uint8_bgr(image_array).copy()
         x1, y1, x2, y2 = bbox

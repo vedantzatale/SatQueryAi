@@ -17,6 +17,8 @@ detail is only ever in structured logs.
 | `GET /analysis/{id}` | Full `ExecutionResult` (answer, evidence, confidence, provenance, warnings) |
 | `GET /analysis/{id}/evidence` | Just the evidence list |
 | `GET /analysis/{id}/transparency` | "How Was This Analyzed?" — task, model, provenance, confidence, processing steps. Never chain-of-thought. |
+| `GET /analysis/{id}/report` | Generates and returns a PDF report (ReportLab), 409 if the execution isn't `completed` |
+| `GET /analysis/{id}/geojson` | Generates and returns a GeoJSON `FeatureCollection` of AOI + spatial evidence, reprojected to EPSG:4326 |
 | `POST /satellite/search` | `{location, date_from, date_to, modality}` → ranked scene candidates + provider statuses |
 | `POST /satellite/retrieve` | `{provider, scene_id}` → direct download (mainly for debugging; the orchestrated retrieval path is internal to `/query`/`/analysis`) |
 | `GET /satellite/providers/status` | Availability of each configured provider |
@@ -24,9 +26,6 @@ detail is only ever in structured logs.
 | `GET /models/{id}/health` | `healthy` / `degraded` / `unavailable` + whether it's a mock |
 | `GET /system/health` | Database/Redis/storage component health + `demo_mode` flag |
 | `GET /storage/{key}` | Serves a stored evidence/report object (local backend passthrough) |
-
-Not yet implemented (see `docs/DEVELOPMENT.md`): `GET /analysis/{id}/report`,
-`GET /analysis/{id}/geojson` (PDF/GeoJSON export).
 
 ## Example: single-image VQA
 

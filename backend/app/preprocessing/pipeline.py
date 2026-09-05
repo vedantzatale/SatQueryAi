@@ -2,15 +2,25 @@
 resampling, co-registration/alignment, and AOI cropping. Every operation
 actually performed is recorded, feeding DataProvenance.processing_applied
 so the transparency view never claims a step that didn't run.
+
+Single-image reads are cached by the image's content checksum (see
+app/storage/cache.py) so a multi-turn follow-up question on the same
+already-uploaded image reuses the decoded raster instead of re-reading
+and re-decoding the file from disk -- this is what backs MVP Test 10.
 """
 from __future__ import annotations
 
+import pickle
 from dataclasses import dataclass, field
 
 import cv2
 import numpy as np
 import rasterio
 from rasterio.warp import Resampling, calculate_default_transform, reproject
+
+from app.storage.cache import get_cache_backend
+
+_RASTER_CACHE_TTL_SECONDS = 3600
 
 
 @dataclass
@@ -95,6 +105,25 @@ class PreprocessingPipeline:
             PreprocessedRaster(array=after_arr, crs=after_crs, transform=after_transform, operations=ops_after),
         )
 
-    def load_single(self, path: str) -> PreprocessedRaster:
+    def __init__(self) -> None:
+        self._cache = get_cache_backend()
+
+    def load_single(self, path: str, cache_key: str | None = None) -> PreprocessedRaster:
+        if cache_key:
+            cached_bytes = self._cache.get_bytes(f"raster:{cache_key}")
+            if cached_bytes is not None:
+                cached = pickle.loads(cached_bytes)
+                return PreprocessedRaster(
+                    array=cached.array,
+                    crs=cached.crs,
+                    transform=cached.transform,
+                    operations=[*cached.operations, "reused cached decode (same image, no re-read)"],
+                )
+
         array, crs, transform = read_array(path)
-        return PreprocessedRaster(array=array, crs=crs, transform=transform, operations=["read raster"])
+        raster = PreprocessedRaster(array=array, crs=crs, transform=transform, operations=["read raster"])
+
+        if cache_key:
+            self._cache.set_bytes(f"raster:{cache_key}", pickle.dumps(raster), ttl_seconds=_RASTER_CACHE_TTL_SECONDS)
+
+        return raster
