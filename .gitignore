@@ -33,7 +33,7 @@ data/local_storage/
 data/demo/**/*.tif
 data/demo/**/*.tiff
 !data/demo/**/.gitkeep
-storage/
+/storage/
 
 # Model weights (never commit)
 models/weights/
