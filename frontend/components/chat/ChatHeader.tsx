@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Globe, Menu, Share2, Shield, ShieldAlert } from "lucide-react";
+import { Download, FileJson, Globe, Menu, Share2, Shield } from "lucide-react";
 import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 
@@ -83,18 +83,33 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
           <span className="hidden sm:inline">Share</span>
         </button>
 
-        {/* PDF Export Download shortcut if execution exists */}
+        {/* Export shortcuts if a completed execution exists. The backend
+            itself refuses (409) a GeoJSON export for an execution with no
+            real georeferenced geometry -- no need to duplicate that check
+            here, just don't pretend export always succeeds silently. */}
         {lastResult?.execution_id && (
-          <a
-            href={reportPdfUrl(lastResult.execution_id)}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 font-medium text-black hover:bg-neutral-200 transition-colors"
-            title="Download PDF Dossier"
-          >
-            <Download className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">PDF</span>
-          </a>
+          <>
+            <a
+              href={reportGeoJsonUrl(lastResult.execution_id)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-neutral-200 hover:bg-white/10 hover:text-white transition-colors"
+              title="Download GeoJSON"
+            >
+              <FileJson className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">GeoJSON</span>
+            </a>
+            <a
+              href={reportPdfUrl(lastResult.execution_id)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 font-medium text-black hover:bg-neutral-200 transition-colors"
+              title="Download PDF Dossier"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">PDF</span>
+            </a>
+          </>
         )}
       </div>
     </header>
