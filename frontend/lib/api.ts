@@ -99,3 +99,14 @@ export async function getModelHealth(modelId: string): Promise<ModelHealth> {
   const { data } = await apiClient.get<ModelHealth>(`/models/${modelId}/health`);
   return data;
 }
+
+export interface ProviderStatus {
+  provider: string;
+  status: "healthy" | "unavailable_no_credentials" | "unavailable_error";
+  message: string | null;
+}
+
+export async function getProviderStatus(): Promise<ProviderStatus[]> {
+  const { data } = await apiClient.get<{ providers: ProviderStatus[] }>("/satellite/providers/status");
+  return data.providers;
+}

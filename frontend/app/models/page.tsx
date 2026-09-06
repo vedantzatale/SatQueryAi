@@ -1,7 +1,8 @@
-import { ArrowRight, Cpu } from "lucide-react";
+import { ArrowRight, Cpu, Satellite } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/marketing/Footer";
 import { LiveModelRegistry } from "@/components/marketing/LiveModelRegistry";
+import { LiveProviderStatus } from "@/components/marketing/LiveProviderStatus";
 import { Navbar } from "@/components/marketing/Navbar";
 import { SmoothScroll } from "@/components/marketing/SmoothScroll";
 
@@ -36,6 +37,16 @@ export default function ModelsPage() {
             {/* Model Cards -- live status fetched from the real model registry
                 and per-model health check, not hardcoded copy */}
             <LiveModelRegistry />
+
+            {/* Satellite Data Providers -- live status from the real
+                provider-manager health check, not a static claim */}
+            <div className="mt-20 mb-8 flex items-center gap-2">
+              <Satellite className="h-4 w-4 text-neutral-400" />
+              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-300">
+                Satellite Data Providers
+              </h2>
+            </div>
+            <LiveProviderStatus />
 
             {/* Integrity Disclosure Alert */}
             <div className="mt-12 rounded-2xl border border-white/10 bg-[#0d0d0d] p-6 font-mono text-xs text-neutral-400 space-y-2">
