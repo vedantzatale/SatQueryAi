@@ -15,30 +15,28 @@ export function Navbar() {
   const [isVisible, setIsVisible] = useState(pathname !== "/");
 
   useEffect(() => {
-    if (pathname !== "/") {
-      setIsVisible(true);
-      return;
-    }
-
     let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0;
     let ticking = false;
     let scrollTimeout: NodeJS.Timeout | null = null;
 
     const handleScroll = () => {
       if (scrollTimeout) clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const heroEl =
-          document.getElementById("home") ||
-          document.getElementById("overview") ||
-          document.querySelector(".section-one");
-        if (heroEl) {
-          const rect = heroEl.getBoundingClientRect();
-          // When scroll settles at the top of Hero section, show navbar
-          if (rect.top <= 40 && rect.top >= -35) {
-            setIsVisible(true);
+
+      if (pathname === "/") {
+        scrollTimeout = setTimeout(() => {
+          const heroEl =
+            document.getElementById("home") ||
+            document.getElementById("overview") ||
+            document.querySelector(".section-one");
+          if (heroEl) {
+            const rect = heroEl.getBoundingClientRect();
+            // When scroll settles at the top of Hero section, show navbar
+            if (rect.top <= 40 && rect.top >= -35) {
+              setIsVisible(true);
+            }
           }
-        }
-      }, 120);
+        }, 120);
+      }
 
       if (ticking) return;
       ticking = true;
@@ -46,29 +44,44 @@ export function Navbar() {
       requestAnimationFrame(() => {
         const currentScrollY = window.scrollY;
 
-        // Strictly detect if the user is still in AirlockHero (above Hero section)
-        const heroEl =
-          document.getElementById("home") ||
-          document.getElementById("overview") ||
-          document.querySelector(".section-one");
+        if (pathname === "/") {
+          // Strictly detect if the user is still in AirlockHero (above Hero section)
+          const heroEl =
+            document.getElementById("home") ||
+            document.getElementById("overview") ||
+            document.querySelector(".section-one");
 
-        const heroRect = heroEl ? heroEl.getBoundingClientRect() : null;
+          const heroRect = heroEl ? heroEl.getBoundingClientRect() : null;
 
-        // 1. Strict: Never show while inside AirlockHero (hero section is still below top threshold)
-        if (!heroRect || heroRect.top > 40) {
-          setIsVisible(false);
+          // 1. Strict: Never show while inside AirlockHero (hero section is still below top threshold)
+          if (!heroRect || heroRect.top > 40) {
+            setIsVisible(false);
+          } else {
+            // User is on or below Hero section
+            const delta = currentScrollY - lastScrollY;
+
+            // 2. Immediately after scroll down -> navbar goes up (hides)
+            if (delta > 1.5) {
+              setIsVisible(false);
+            } else if (delta < -1.5) {
+              // 3. Scroll up -> navbar shows up (reveals)
+              setIsVisible(true);
+            } else if (heroRect.top <= 40 && heroRect.top >= -35) {
+              // 4. Exactly resting at Hero section top: show navbar
+              setIsVisible(true);
+            }
+          }
         } else {
-          // User is on or below Hero section
+          // All subpages (/models, /about, /features, /contact, etc.)
           const delta = currentScrollY - lastScrollY;
-
-          // 2. Immediately after scroll down -> navbar goes up (hides)
-          if (delta > 1.5) {
+          if (currentScrollY <= 40) {
+            // At top of page: always visible
+            setIsVisible(true);
+          } else if (delta > 1.5) {
+            // Immediately after scroll down -> navbar goes up (hides)
             setIsVisible(false);
           } else if (delta < -1.5) {
-            // 3. Scroll up -> navbar shows up (reveals)
-            setIsVisible(true);
-          } else if (heroRect.top <= 40 && heroRect.top >= -35) {
-            // 4. Exactly resting at Hero section top: show navbar
+            // Scroll up -> navbar shows up (reveals)
             setIsVisible(true);
           }
         }

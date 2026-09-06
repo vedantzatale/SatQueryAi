@@ -87,7 +87,7 @@ export function LiveModelRegistry() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-6 font-mono text-xs text-neutral-400">
+      <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-7 text-sm sm:text-[15px] font-sans text-neutral-300 leading-relaxed">
         Live registry status is unavailable right now (backend unreachable) — showing no
         status rather than a guess.
       </div>
@@ -119,47 +119,47 @@ export function LiveModelRegistry() {
           ? entry.health.status
           : "Unknown";
         const statusColor = !entry.enabled
-          ? "text-neutral-500"
+          ? "text-neutral-400"
           : entry.health?.status === "healthy" || entry.health?.status === "available"
           ? "text-emerald-400"
           : entry.health?.status
           ? "text-amber-400"
-          : "text-neutral-500";
+          : "text-neutral-400";
 
         return (
           <div
             key={entry.model_id}
-            className="tech-card rounded-2xl p-7 flex flex-col md:flex-row md:items-center justify-between gap-6"
+            className="tech-card rounded-2xl p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/10 bg-[#0c0c0c] hover:border-white/20 transition-all"
           >
-            <div className="space-y-2 max-w-2xl">
+            <div className="space-y-2.5 max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">
-                <h2 className="font-mono text-base font-semibold tracking-wide text-white">
+                <h2 className="font-mono text-base sm:text-lg font-bold tracking-wide text-white">
                   {copy.name}
                 </h2>
-                <span className="font-mono text-[10px] text-neutral-400 border border-white/10 bg-white/5 px-2 py-0.5 rounded">
+                <span className="font-mono text-xs text-neutral-300 border border-white/15 bg-white/5 px-2.5 py-0.5 rounded-md">
                   {copy.tag}
                 </span>
                 {entry.health?.is_mock && (
-                  <span className="font-mono text-[10px] text-neutral-500 border border-neutral-700 px-2 py-0.5 rounded">
+                  <span className="font-mono text-xs text-neutral-400 border border-neutral-700 px-2 py-0.5 rounded-md">
                     mock mode
                   </span>
                 )}
               </div>
-              <p className="text-sm text-neutral-300 leading-relaxed">{copy.role}</p>
-              <div className="font-mono text-xs text-neutral-400">
-                Technology: <span className="text-neutral-300">{copy.underlying}</span>
+              <p className="text-[15px] sm:text-[15.5px] text-neutral-200 leading-relaxed font-normal">{copy.role}</p>
+              <div className="font-mono text-xs sm:text-[13px] text-neutral-400">
+                Technology: <span className="text-neutral-200 font-medium">{copy.underlying}</span>
               </div>
             </div>
 
-            <div className="flex md:flex-col items-start md:items-end justify-between border-t md:border-t-0 border-white/10 pt-4 md:pt-0 font-mono text-[11px] text-neutral-400">
-              <div className={`flex items-center gap-1.5 font-medium ${statusColor}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${statusColor.replace("text-", "bg-")}`} />
+            <div className="flex md:flex-col items-start md:items-end justify-between border-t md:border-t-0 border-white/10 pt-4 md:pt-0 font-mono text-xs text-neutral-300 shrink-0">
+              <div className={`flex items-center gap-2 font-medium ${statusColor}`}>
+                <span className={`h-2 w-2 rounded-full ${statusColor.replace("text-", "bg-")}`} />
                 <span>{statusLabel}</span>
               </div>
-              <div className="mt-1 text-neutral-400 text-[10px]">
-                Fallback: {entry.fallback ?? "none registered"}
+              <div className="mt-1 text-neutral-300 text-xs">
+                Fallback: <span className="text-neutral-200">{entry.fallback ?? "none registered"}</span>
               </div>
-              <div className="mt-1 text-neutral-500 text-[10px]">v{entry.version}</div>
+              <div className="mt-1 text-neutral-400 text-xs">v{entry.version}</div>
             </div>
           </div>
         );

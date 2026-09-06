@@ -54,16 +54,16 @@ export default function FeaturesPage() {
       <div className="min-h-screen bg-[#080808] text-neutral-100 flex flex-col font-sans selection:bg-white selection:text-black">
         <Navbar />
 
-        <main className="flex-1 pt-32 pb-24">
+        <main className="flex-1 pt-36 sm:pt-44 pb-28">
           <div className="max-w-[1140px] mx-auto px-6 sm:px-8">
-            <div className="max-w-3xl mb-16 space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 font-mono text-[11px] tracking-wider uppercase text-neutral-300">
+            <div className="max-w-3xl mb-16 space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 font-mono text-xs tracking-wider uppercase text-neutral-300">
                 <span>CAPABILITIES & ARCHITECTURE</span>
               </div>
-              <h1 className="text-[clamp(36px,5vw,60px)] font-medium leading-[1.05] tracking-tight text-white">
+              <h1 className="text-[clamp(38px,5.2vw,62px)] font-bold sm:font-semibold leading-[1.08] tracking-tight text-white">
                 Engineered for Earth observation.
               </h1>
-              <p className="text-[17px] leading-relaxed text-neutral-400">
+              <p className="text-[18px] sm:text-[19px] leading-relaxed text-neutral-200 font-normal">
                 SatQuery AI bridges remote sensing expertise and natural-language intelligence.
                 Explore the modular tools and specialist algorithms that drive the platform.
               </p>
@@ -72,20 +72,20 @@ export default function FeaturesPage() {
             {/* Grid of features */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featureList.map((item, idx) => (
-                <div key={idx} className="tech-card rounded-2xl p-8 flex flex-col justify-between">
+                <div key={idx} className="tech-card rounded-2xl p-8 flex flex-col justify-between border border-white/10 bg-[#0c0c0c] hover:border-white/20 transition-all">
                   <div>
-                    <div className="font-mono text-[11px] text-neutral-400 uppercase tracking-wider mb-2">
+                    <div className="font-mono text-xs text-neutral-400 uppercase tracking-wider mb-2 font-medium">
                       {item.subtitle}
                     </div>
-                    <h2 className="text-xl font-medium text-white mb-3 tracking-tight">{item.title}</h2>
-                    <p className="text-sm leading-relaxed text-neutral-400">{item.desc}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">{item.title}</h2>
+                    <p className="text-[15px] sm:text-[15.5px] leading-relaxed text-neutral-200 font-normal">{item.desc}</p>
                   </div>
 
-                  <div className="mt-8 pt-4 border-t border-white/5 flex flex-wrap gap-2">
+                  <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap gap-2">
                     {item.tags.map((tag, tIdx) => (
                       <span
                         key={tIdx}
-                        className="rounded border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-neutral-300"
+                        className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-neutral-200"
                       >
                         {tag}
                       </span>
@@ -97,16 +97,16 @@ export default function FeaturesPage() {
 
             {/* Bottom CTA */}
             <div className="mt-20 rounded-2xl border border-white/10 bg-[#0d0d0d] p-10 text-center space-y-4">
-              <h2 className="text-2xl font-medium text-white">Experience SatQuery in action</h2>
-              <p className="text-sm text-neutral-400 max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">Experience SatQuery in action</h2>
+              <p className="text-[15.5px] text-neutral-200 max-w-md mx-auto">
                 Try out these capabilities directly in the conversational workspace.
               </p>
-              <div className="pt-2">
+              <div className="pt-3">
                 <Link
                   href="/app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-medium text-black hover:bg-neutral-200 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm sm:text-base font-semibold text-black hover:bg-neutral-200 transition-all shadow-lg hover:shadow-white/10"
                 >
                   <span>Open SatQuery Workspace</span>
                   <ArrowRight className="h-4 w-4" />
