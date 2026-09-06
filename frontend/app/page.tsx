@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Compass, FileCheck, Layers, Sparkles } from "lucide-react";
 import AirlockHero from "@/components/marketing/AirlockHero";
 import { ChangeShowcase } from "@/components/marketing/ChangeShowcase";
+import { FAQ } from "@/components/marketing/FAQ";
 import { Footer } from "@/components/marketing/Footer";
 import { Hero } from "@/components/marketing/Hero";
 import { MultimodalShowcase } from "@/components/marketing/MultimodalShowcase";
@@ -133,6 +134,8 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          {/* FAQ Luxury Inquiries Section */}
+          <FAQ />
         </main>
 
         <Footer />
