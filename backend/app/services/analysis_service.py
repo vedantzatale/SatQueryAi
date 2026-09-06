@@ -24,13 +24,23 @@ def submit_analysis(
 
         execution = db.get(Execution, execution_id)
         if execution and execution.result_json and execution.result_json.get("answer"):
-            db.add(Message(session_id=session_id, role="assistant", content=execution.result_json["answer"]))
-        elif execution and execution.status == "requires_user_input":
             db.add(
                 Message(
                     session_id=session_id,
                     role="assistant",
-                    content=(execution.result_json or {}).get("user_message", "Additional input is required."),
+                    content=execution.result_json["answer"],
+                    execution_id=execution_id,
+                )
+            )
+        elif execution and execution.status in ("requires_user_input", "failed"):
+            db.add(
+                Message(
+                    session_id=session_id,
+                    role="assistant",
+                    content=(execution.result_json or {}).get(
+                        "user_message", "Additional input is required."
+                    ),
+                    execution_id=execution_id,
                 )
             )
         db.commit()

@@ -10,6 +10,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  execution_id: string | null;
 }
 
 export interface SessionDetail extends SessionSummary {

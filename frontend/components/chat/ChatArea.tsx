@@ -59,15 +59,38 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
       return;
     }
 
-    // Try fetching from real backend
+    // Try fetching from real backend. Guards against a stale response
+    // overwriting a newer session's state if the user switches sessions
+    // again before this resolves.
+    let cancelled = false;
     getSession(sessionId)
-      .then((detail) => {
-        setMessages(detail.messages.map((m) => ({ ...m })));
+      .then(async (detail) => {
+        if (cancelled) return;
+        // Restore the full result (evidence, confidence, transparency, map)
+        // for every message that has one, not just plain text.
+        const withResults = await Promise.all(
+          detail.messages.map(async (m) => {
+            if (!m.execution_id) return { ...m, result: null } as MessageWithMeta;
+            try {
+              const result = await getAnalysis(m.execution_id);
+              return { ...m, result } as MessageWithMeta;
+            } catch {
+              return { ...m, result: null } as MessageWithMeta;
+            }
+          })
+        );
+        if (cancelled) return;
+        setMessages(withResults);
         setActiveSessionTitle(detail.title);
+        const lastWithResult = [...withResults].reverse().find((m) => m.result);
+        setLastResult(lastWithResult?.result ?? null);
       })
       .catch(() => {
         // Handled silently
       });
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, initialSessionId, setSessionId, setActiveSessionTitle, setLastResult]);
 
   async function ensureSession(): Promise<string> {
@@ -122,6 +145,27 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setLoadingStatus(null);
   }
 
+  // Mirrors the backend's own priority for what a result "says": a real
+  // completed answer, else the real explanation for why it couldn't
+  // complete (REQUIRES_USER_INPUT / FAILED carry this in user_message, not
+  // answer) -- see app/services/analysis_service.py, which persists
+  // messages the same way. Never a fabricated status string.
+  function appendAssistantMessage(result: ExecutionResult) {
+    const content = result.answer ?? result.user_message ?? "The analysis did not return a message.";
+    setLastResult(result);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `asst-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        role: "assistant",
+        content,
+        created_at: new Date().toISOString(),
+        execution_id: result.execution_id,
+        result,
+      },
+    ]);
+  }
+
   async function handleSend(text: string) {
     const currentSessionId = await ensureSession();
     const attachmentsSnapshot = [...pendingAttachments];
@@ -129,10 +173,11 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
 
     // Append user message immediately
     const userMsg: MessageWithMeta = {
-      id: `user-${Date.now()}`,
+      id: `user-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       role: "user",
       content: text || "Analyze attached satellite imagery.",
       created_at: new Date().toISOString(),
+      execution_id: null,
       attachments: attachmentsSnapshot.map((a) => ({ name: a.name, type: a.type })),
     };
 
@@ -146,17 +191,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
       setLoadingStatus("Generating grounded evidence...");
       const analysisResult = await getAnalysis(execution_id);
 
-      setLastResult(analysisResult);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `asst-${Date.now()}`,
-          role: "assistant",
-          content: analysisResult.answer ?? "Analysis finished.",
-          created_at: new Date().toISOString(),
-          result: analysisResult,
-        },
-      ]);
+      appendAssistantMessage(analysisResult);
       setIsLoading(false);
       setLoadingStatus(null);
       return;
@@ -176,17 +211,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
           demoResult = MOCK_SESSIONS[3].result;
         }
 
-        setLastResult(demoResult);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `asst-${Date.now()}`,
-            role: "assistant",
-            content: demoResult.answer ?? "Analysis completed.",
-            created_at: new Date().toISOString(),
-            result: demoResult,
-          },
-        ]);
+        appendAssistantMessage(demoResult);
         setIsLoading(false);
         setLoadingStatus(null);
       }, 1200);

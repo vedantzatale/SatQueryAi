@@ -23,12 +23,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
       messages: [
         {
           id: "m-1",
+          execution_id: null,
           role: "user",
           content: "What changed between these two Sentinel-2 images of Pune peri-urban region?",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
         },
         {
           id: "m-2",
+          execution_id: "exec-pune-001",
           role: "assistant",
           content:
             "Built-up development increased significantly across the northern portion of the area of interest (+12.4 hectares). Agricultural parcels transitioned into construction staging and compacted impervious surfaces between January 2024 and December 2024.",
@@ -131,12 +133,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
       messages: [
         {
           id: "m-flood-1",
+          execution_id: null,
           role: "user",
           content: "Where are the inundated water bodies in this post-monsoon imagery?",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
         },
         {
           id: "m-flood-2",
+          execution_id: "exec-flood-002",
           role: "assistant",
           content:
             "Surface water inundation is concentrated in the eastern floodplain. Approximately 28.6% of the surveyed zone exhibits water-like spectral characteristics with high NDWI values (>0.35).",
@@ -214,12 +218,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
       messages: [
         {
           id: "m-sar-1",
+          execution_id: null,
           role: "user",
           content: "Use both optical and SAR images to identify coastal built-up areas through persistent cloud cover.",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 80).toISOString(),
         },
         {
           id: "m-sar-2",
+          execution_id: "exec-sar-003",
           role: "assistant",
           content:
             "By fusing Sentinel-1 C-band SAR VV/VH double-bounce backscatter with clear cloud-gap optical imagery, port infrastructure and high-density settlements along the peninsula are verified with 92% cross-modal agreement.",
@@ -300,12 +306,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
       messages: [
         {
           id: "m-agri-1",
+          execution_id: null,
           role: "user",
           content: "What crop phenology changes occurred in this irrigation basin?",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
         },
         {
           id: "m-agri-2",
+          execution_id: "exec-agri-004",
           role: "assistant",
           content:
             "NDVI time-series analysis shows active vegetative vigor in 64.2% of circular pivot irrigation plots. Fallow parcels show dry soil spectra with NDVI < 0.18.",

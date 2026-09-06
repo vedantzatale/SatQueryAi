@@ -28,6 +28,7 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     created_at: str
+    execution_id: str | None = None
 
 
 class SessionDetailResponse(SessionResponse):
@@ -67,7 +68,13 @@ def get_session(session_id: str, db: Session = Depends(get_db)) -> SessionDetail
         language=session.language,
         created_at=session.created_at.isoformat(),
         messages=[
-            MessageResponse(id=m.id, role=m.role, content=m.content, created_at=m.created_at.isoformat())
+            MessageResponse(
+                id=m.id,
+                role=m.role,
+                content=m.content,
+                created_at=m.created_at.isoformat(),
+                execution_id=m.execution_id,
+            )
             for m in messages
         ],
     )

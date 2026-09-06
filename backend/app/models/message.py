@@ -12,3 +12,4 @@ class Message(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     session_id: Mapped[str] = mapped_column(ForeignKey("sessions.id"), index=True)
     role: Mapped[str] = mapped_column(String(20))  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text)
+    execution_id: Mapped[str | None] = mapped_column(ForeignKey("executions.id"), nullable=True)
