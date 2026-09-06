@@ -152,7 +152,7 @@ export function Hero() {
 
             {/* Placeholder Text */}
             <div className="text-[#aeaeae] text-[clamp(1rem,1.35vw,1.35rem)] font-normal select-none">
-              Break down a decision, problem, or idea…
+              Break down a satellite scene, AOI change, or raster query…
             </div>
 
             {/* Controls Row */}
@@ -261,11 +261,11 @@ export function Hero() {
         {/* Section 2 Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
           <h2 className="text-[clamp(1.8rem,4.1vw,3.3rem)] font-normal leading-[1.11] tracking-[-0.02em] text-[#ffffff]">
-            <span className="block">Built for human thinking.</span>
-            <span className="block text-neutral-300">Powered by structured intelligence.</span>
+            <span className="block">Built for Earth intelligence.</span>
+            <span className="block text-neutral-300">Powered by structured spatial models.</span>
           </h2>
           <p className="mt-4 text-[clamp(0.85rem,1.25vw,1.125rem)] text-[#8b8b8d] leading-relaxed">
-            Ask complex questions. Explore multiple perspectives.
+            Ask complex geospatial questions. Explore multi-sensor perspectives.
             <br className="hidden sm:inline" /> Get structured, reliable answers — instantly.
           </p>
         </div>
@@ -276,7 +276,7 @@ export function Hero() {
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md px-3.5 py-1 text-xs font-medium text-[#0b0c07] border border-black/10">
               <span className="h-2 w-2 rounded-full bg-[#23d92c] shadow-[0_0_8px_rgba(45,220,55,0.8)] animate-pulse" />
-              <span className="text-white font-mono text-[11px] tracking-wide">Live reasoning</span>
+              <span className="text-white font-mono text-[11px] tracking-wide">Live spatial reasoning</span>
             </div>
 
             <Link
@@ -293,7 +293,7 @@ export function Hero() {
             {/* Message 1: User */}
             <div className="flex items-start justify-end gap-2.5">
               <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
-                Should we expand into the European market next quarter?
+                What changed between these two Sentinel-2 images of northern Pune?
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -314,21 +314,21 @@ export function Hero() {
                 <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_4px_white]" />
               </div>
               <div className="max-w-[82%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm space-y-2">
-                <p>Let&#39;s evaluate this across four dimensions:</p>
+                <p>Let&#39;s evaluate the spectral change across four spatial dimensions:</p>
                 <ul className="space-y-1 pl-1 text-neutral-300">
-                  <li>• Market demand & competition</li>
-                  <li>• Regulatory complexity</li>
-                  <li>• Operational cost impact</li>
-                  <li>• Long-term strategic value</li>
+                  <li>• Built-up urban expansion (+12.4 ha)</li>
+                  <li>• Agricultural plot conversion</li>
+                  <li>• Vegetation canopy index (NDVI)</li>
+                  <li>• Surface moisture &amp; runoff (NDWI)</li>
                 </ul>
-                <p className="pt-1 text-white font-medium">Would you like to prioritize speed or profitability?</p>
+                <p className="pt-1 text-white font-medium">Would you like to prioritize SAR radar or optical multispectral evidence?</p>
               </div>
             </div>
 
             {/* Message 3: User */}
             <div className="flex items-start justify-end gap-2.5">
               <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
-                Analyze the Q3 sales data. Why did revenue drop in August?
+                Analyze the Mumbai coastal SAR data. Did flood inundation rise in August?
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -349,14 +349,14 @@ export function Hero() {
                 <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_4px_white]" />
               </div>
               <div className="max-w-[82%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
-                I&#39;ve reviewed the Q3 database. The drop in August correlates with a 15% decrease in enterprise renewals. I&#39;ve drafted a retention strategy below.
+                I&#39;ve coregistered the Sentinel-1 C-SAR pass. The flood extent in August increased by 14.2 hectares across low-lying estuaries. I&#39;ve drafted a calibrated change report below.
               </div>
             </div>
 
             {/* Message 5: User (Final) */}
             <div className="flex items-start justify-end gap-2.5">
               <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
-                Analyze our churn rate for February and draft a re-engagement email for inactive users
+                Quantify deforestation across Sector 4B and export a GeoJSON polygon mask for GIS
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -372,7 +372,7 @@ export function Hero() {
                 href="/app"
                 className="flex items-center justify-between rounded-full bg-[#fdfdfd] px-4 py-2 sm:py-2.5 shadow-md hover:bg-white transition-colors cursor-text text-left"
               >
-                <span className="text-[#6b6b6d] text-xs sm:text-sm font-normal">What should we build today?</span>
+                <span className="text-[#6b6b6d] text-xs sm:text-sm font-normal">Ask a question about the satellite imagery…</span>
                 <div className="flex items-center gap-2">
                   <Mic className="h-4 w-4 text-[#111111]" />
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0c0c0c] text-white">

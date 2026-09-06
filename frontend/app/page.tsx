@@ -7,7 +7,6 @@ import { Footer } from "@/components/marketing/Footer";
 import { Hero } from "@/components/marketing/Hero";
 import { MultimodalShowcase } from "@/components/marketing/MultimodalShowcase";
 import { Navbar } from "@/components/marketing/Navbar";
-import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { SmoothScroll } from "@/components/marketing/SmoothScroll";
 import { Workflow } from "@/components/marketing/Workflow";
 
@@ -21,11 +20,8 @@ export default function HomePage() {
           {/* Airlock Interactive Scroll-Locked Video Hero */}
           <AirlockHero />
 
-          {/* Hero Section */}
+          {/* Hero Section (2-Section Design) */}
           <Hero />
-
-          {/* Product Preview Section */}
-          <ProductPreview />
 
           {/* Editorial Section: One interface for difficult imagery */}
           <section className="py-24 border-t border-white/10 bg-[#0a0a0a]" id="features">
