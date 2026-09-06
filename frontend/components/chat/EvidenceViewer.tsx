@@ -83,7 +83,7 @@ export function EvidenceViewer({ evidence, executionId }: EvidenceViewerProps) {
                 <div className="h-44 w-full rounded-lg bg-tech-grid border border-white/5 flex flex-col items-center justify-center p-4 text-center font-mono text-xs text-neutral-400">
                   <span className="uppercase text-[10px] text-neutral-400 tracking-wider">Spatial Vector</span>
                   <span className="text-white mt-1 font-medium">{displayLabel}</span>
-                  {ev.area_m2 && (
+                  {ev.area_m2 != null && (
                     <span className="text-emerald-400 text-[11px] mt-1">
                       {ev.area_m2.toLocaleString()} m² ({ev.area_percentage?.toFixed(1)}%)
                     </span>
