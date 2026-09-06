@@ -207,13 +207,15 @@ export function Footer() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
+              <form onSubmit={handleSubmit} suppressHydrationWarning className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
+                  suppressHydrationWarning
+                  autoComplete="email"
                   className="flex-1 rounded-xl px-4 py-2.5 text-xs font-mono bg-white/[0.04] text-white placeholder:text-neutral-500 border border-white/15 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all"
                 />
                 <button

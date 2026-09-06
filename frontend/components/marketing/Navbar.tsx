@@ -19,16 +19,15 @@ export function Navbar() {
       return;
     }
 
+    let ticking = false;
     const checkVisibility = () => {
-      const overviewEl = document.getElementById("overview");
-      if (overviewEl) {
-        const rect = overviewEl.getBoundingClientRect();
-        // The navbar becomes visible once the overview ("Talk to satellite imagery") section enters the viewport
-        const hasPassedAirlock = rect.top <= window.innerHeight * 0.6 || window.scrollY > 200;
-        setIsVisible(hasPassedAirlock);
-      } else {
-        setIsVisible(window.scrollY > 200);
-      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const visible = window.scrollY > 200;
+        setIsVisible(visible);
+        ticking = false;
+      });
     };
 
     checkVisibility();
@@ -36,17 +35,9 @@ export function Navbar() {
     window.addEventListener("scroll", checkVisibility, { passive: true });
     window.addEventListener("resize", checkVisibility, { passive: true });
 
-    const lenis = (window as unknown as { __lenis?: { on: (evt: string, cb: () => void) => void; off: (evt: string, cb: () => void) => void } }).__lenis;
-    if (lenis) {
-      lenis.on("scroll", checkVisibility);
-    }
-
     return () => {
       window.removeEventListener("scroll", checkVisibility);
       window.removeEventListener("resize", checkVisibility);
-      if (lenis) {
-        lenis.off("scroll", checkVisibility);
-      }
     };
   }, [pathname]);
 
@@ -79,7 +70,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed top-4 sm:top-5 left-0 right-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-[1240px] px-2 sm:px-4 pointer-events-none transition-all duration-500 ease-out ${
+      className={`fixed top-4 sm:top-5 left-0 right-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-[1240px] px-2 sm:px-4 pointer-events-none transition-[opacity,transform] duration-300 ease-out ${
         isVisible
           ? "opacity-100 translate-y-0 visible"
           : "opacity-0 -translate-y-8 pointer-events-none invisible"

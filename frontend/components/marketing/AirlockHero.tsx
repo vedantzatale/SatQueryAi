@@ -119,8 +119,8 @@ export default function AirlockHero({
     scrollHint = "SCROLL",
     tagline = "Everything you know fits in one half of the frame.",
     signature = false,
-    scrubDistance = 3200,
-    holdDistance = 1100,
+    scrubDistance = 2600,
+    holdDistance = 180,
     theme = "vacuum",
     skipLabel = "Skip intro",
     className,
@@ -216,18 +216,16 @@ export default function AirlockHero({
                 const t = titleAlpha
                 titleRef.current.style.opacity = String(t)
                 titleRef.current.style.transform = `translateY(${(1 - t) * -24}px) scale(${0.96 + t * 0.04})`
-                titleRef.current.style.filter = `blur(${(1 - t) * 10}px)`
+                titleRef.current.style.filter = t >= 0.99 || t <= 0.01 ? "none" : `blur(${(1 - t) * 10}px)`
             }
             if (hintRef.current) {
                 hintRef.current.style.opacity = moved ? "0" : "1"
             }
             if (taglineRef.current) {
-                // Mirrors the headline's blur-focus move, timed as the payoff
-                // once the reveal is nearly done.
                 const t = taglineAlpha
                 taglineRef.current.style.opacity = String(t)
                 taglineRef.current.style.transform = `translateY(${(1 - t) * 20}px) scale(${0.97 + t * 0.03})`
-                taglineRef.current.style.filter = `blur(${(1 - t) * 8}px)`
+                taglineRef.current.style.filter = t >= 0.99 || t <= 0.01 ? "none" : `blur(${(1 - t) * 8}px)`
             }
             if (barRef.current) {
                 barRef.current.style.transform = `scaleX(${p})`
@@ -290,17 +288,17 @@ export default function AirlockHero({
             }
         }
 
+        let maxScrolledY = 0
+
         /**
          * Spends a gesture on the scrub. Returns true when the hero used it,
          * which is the caller's cue to swallow the event. Once the scrub is
-         * finished and the reader is still pushing forward, the page is handed
-         * back and the gesture falls through untouched.
+         * finished and the reader is still pushing forward, the page smoothly
+         * transitions directly to the next section.
          */
         function consume(deltaY: number) {
             if (!locked) return false
-            // Wait for the picture to catch up with the input before letting go,
-            // otherwise a single hard flick throws the page on a half-played shot.
-            if (target >= 1 && shown > 0.98 && deltaY > 0) {
+            if (target >= 1 && deltaY > 0) {
                 releaseLock()
                 return false
             }
@@ -312,6 +310,7 @@ export default function AirlockHero({
         /* --- Input --------------------------------------------------------- */
 
         const onWheel = (e: WheelEvent) => {
+            if (!locked) return
             if (consume(e.deltaY)) {
                 e.preventDefault()
                 e.stopPropagation()
@@ -319,10 +318,12 @@ export default function AirlockHero({
         }
 
         const onTouchStart = (e: TouchEvent) => {
+            if (!locked) return
             touchY = e.touches[0]?.clientY ?? 0
         }
 
         const onTouchMove = (e: TouchEvent) => {
+            if (!locked) return
             const y = e.touches[0]?.clientY ?? touchY
             const deltaY = touchY - y
             touchY = y
@@ -339,17 +340,20 @@ export default function AirlockHero({
         }
 
         /**
-         * Climbing back into the hero takes the lock again, at the last frame,
-         * so the sequence runs backwards. Direction matters: sitting at the top
-         * of the page is not on its own a reason to seize the wheel, or the hero
-         * would grab it the moment it mounts.
+         * Climbing back into the hero takes the lock again at the last frame
+         * only when the user has scrolled down into content and deliberately
+         * climbed all the way back to the very top.
          */
         const onScroll = () => {
             if (locked || !released) return
             const y = window.scrollY
             const climbing = y < lastY
             lastY = y
-            if (climbing && y <= (section?.offsetTop ?? 0) + 10) {
+            if (y > maxScrolledY) {
+                maxScrolledY = y
+            }
+            if (climbing && y <= 5 && maxScrolledY > 200) {
+                maxScrolledY = 0
                 target = shown = 1
                 paint(1)
                 engageLock()
@@ -381,9 +385,16 @@ export default function AirlockHero({
             window.addEventListener("keydown", onKeyDown)
             window.addEventListener("scroll", onScroll, { passive: true })
 
+            let prevShown = -1
             const frame = () => {
-                shown += (target - shown) * 0.16
-                paint(shown)
+                shown += (target - shown) * 0.22
+                if (Math.abs(target - shown) < 0.0005) {
+                    shown = target
+                }
+                if (Math.abs(shown - prevShown) > 0.0001) {
+                    prevShown = shown
+                    paint(shown)
+                }
                 rafId = requestAnimationFrame(frame)
             }
             rafId = requestAnimationFrame(frame)
