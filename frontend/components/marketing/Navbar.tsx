@@ -19,25 +19,55 @@ export function Navbar() {
       return;
     }
 
+    let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0;
     let ticking = false;
-    const checkVisibility = () => {
+
+    const handleScroll = () => {
       if (ticking) return;
       ticking = true;
+
       requestAnimationFrame(() => {
-        const visible = window.scrollY > 200;
-        setIsVisible(visible);
+        const currentScrollY = window.scrollY;
+
+        // Strictly detect if the user is still in AirlockHero (above Hero section)
+        const heroEl =
+          document.getElementById("home") ||
+          document.getElementById("overview") ||
+          document.querySelector(".section-one");
+
+        const isInsideAirlock = heroEl
+          ? heroEl.getBoundingClientRect().top > 80
+          : currentScrollY < window.innerHeight * 0.75;
+
+        // 1. Strict: Never show while inside AirlockHero (above the Hero section)
+        if (isInsideAirlock) {
+          setIsVisible(false);
+        } else {
+          // 2. From Hero section and downward:
+          // Scroll down -> navbar goes up (hides)
+          // Scroll up -> navbar shows up (reveals)
+          const delta = currentScrollY - lastScrollY;
+          if (delta > 5) {
+            setIsVisible(false);
+          } else if (delta < -5) {
+            setIsVisible(true);
+          }
+        }
+
+        lastScrollY = currentScrollY;
         ticking = false;
       });
     };
 
-    checkVisibility();
+    // Initial check
+    handleScroll();
 
-    window.addEventListener("scroll", checkVisibility, { passive: true });
-    window.addEventListener("resize", checkVisibility, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", checkVisibility);
-      window.removeEventListener("resize", checkVisibility);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [pathname]);
 
@@ -68,12 +98,14 @@ export function Navbar() {
     }
   };
 
+  const shouldShow = isVisible || mobileMenuOpen;
+
   return (
     <header
       className={`fixed top-4 sm:top-5 left-0 right-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-[1240px] px-2 sm:px-4 pointer-events-none transition-[opacity,transform] duration-300 ease-out ${
-        isVisible
+        shouldShow
           ? "opacity-100 translate-y-0 visible"
-          : "opacity-0 -translate-y-8 pointer-events-none invisible"
+          : "opacity-0 -translate-y-12 pointer-events-none invisible"
       }`}
     >
       <div className="flex h-12 sm:h-14 w-full items-center justify-between">
