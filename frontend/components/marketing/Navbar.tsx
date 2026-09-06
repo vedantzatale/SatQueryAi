@@ -109,11 +109,11 @@ export function Navbar() {
           : "opacity-0 -translate-y-12 pointer-events-none invisible"
       }`}
     >
-      <div className="flex h-12 sm:h-14 w-full items-center justify-between">
+      <div className="flex h-14 sm:h-16 w-full items-center justify-between">
         {/* Left: Brand wordmark */}
         <div className="flex-1 flex items-center justify-start pointer-events-auto">
           <SpecularButton
-            size="sm"
+            size="md"
             radius={9999}
             backgroundColor="#090909"
             textColor="#f0f0f0"
@@ -127,27 +127,26 @@ export function Navbar() {
             proximity={250}
             autoAnimate={false}
             href="/"
-            className="group !px-3.5 !py-0 !h-[38px]"
+            className="group !px-4 sm:!px-4.5 !py-0 !h-[46px]"
           >
             <Image
               src="/logo/satquertlogo.png"
               alt="SatQuery AI Logo"
-              width={20}
-              height={20}
-              className="h-5 w-5 rounded-[4px] object-contain mr-1 shadow-sm shrink-0"
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded-[5px] object-contain mr-2 shadow-sm shrink-0"
               priority
             />
-            <span className="font-mono tracking-tight text-[13px] text-neutral-100 uppercase">
+            <span className="font-mono tracking-tight text-[14px] sm:text-[14.5px] text-neutral-100 uppercase">
               SATQUERY<span className="text-neutral-500 ml-1">AI</span>
             </span>
           </SpecularButton>
         </div>
 
-        {/* Center: Dedicated floating box for Product, Features, Models, About only */}
+        {/* Center: Dedicated floating box for Features, Models, About only */}
         <div className="hidden md:flex items-center justify-center pointer-events-auto">
           <PillNav
             items={[
-              { label: "Product", href: "/#product" },
               { label: "Features", href: "/#features" },
               { label: "Models", href: "/models" },
               { label: "About", href: "/about" },
@@ -168,7 +167,7 @@ export function Navbar() {
         {/* Right: Contact & Action CTA */}
         <div className="flex-1 hidden md:flex items-center justify-end gap-3 pointer-events-auto">
           <SpecularButton
-            size="sm"
+            size="md"
             radius={9999}
             backgroundColor="#090909"
             textColor="#f0f0f0"
@@ -182,6 +181,7 @@ export function Navbar() {
             proximity={250}
             autoAnimate={false}
             href="/contact"
+            className="!h-[46px] !px-5 text-[14px] font-medium"
           >
             Contact
           </SpecularButton>
@@ -189,10 +189,10 @@ export function Navbar() {
             label="Try SatQuery AI"
             href="/app"
             target="_blank"
-            height={38}
-            width={156}
+            height={46}
+            width={176}
             textColor="#ffffff"
-            icon={<ArrowUpRight className="h-3.5 w-3.5 text-neutral-300" />}
+            icon={<ArrowUpRight className="h-4 w-4 text-neutral-300" />}
           />
         </div>
 
@@ -200,7 +200,7 @@ export function Navbar() {
         <div className="flex md:hidden items-center pointer-events-auto">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center justify-center h-9 w-9 rounded-full border border-white/15 bg-[#0e0e0e]/90 text-neutral-300 hover:text-white shadow-md transition-colors"
+            className="flex items-center justify-center h-11 w-11 rounded-full border border-white/15 bg-[#0e0e0e]/90 text-neutral-300 hover:text-white shadow-md transition-colors"
             aria-label="Toggle Navigation"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -212,13 +212,6 @@ export function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden mt-2 border border-white/15 bg-[#0c0c0c]/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl animate-fade-in pointer-events-auto">
           <nav className="flex flex-col gap-3">
-            <Link
-              href="/#product"
-              onClick={(e) => handleMobileClick(e, "/#product")}
-              className="text-sm font-medium text-neutral-300 py-1.5 hover:text-white transition-colors"
-            >
-              Product
-            </Link>
             <Link
               href="/#features"
               onClick={(e) => handleMobileClick(e, "/#features")}
