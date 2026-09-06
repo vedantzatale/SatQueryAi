@@ -34,10 +34,19 @@ def health(db: Session = Depends(get_db)) -> dict:
 
     if settings.storage_backend == "minio":
         try:
-            from app.storage.object_storage import get_storage_backend
+            from app.storage.object_storage import LocalStorage, MinIOStorage, get_storage_backend
 
-            get_storage_backend()
-            components["storage"] = "healthy (minio)"
+            backend = get_storage_backend()
+            if isinstance(backend, LocalStorage):
+                # get_storage_backend() already tried MinIO and silently
+                # degraded to local disk -- report that truthfully instead
+                # of the configured intent.
+                components["storage"] = "degraded: minio configured but unavailable, using local filesystem"
+            elif isinstance(backend, MinIOStorage):
+                # Live probe, not just "construction succeeded once" --
+                # the cached singleton doesn't retry on every call.
+                backend.client.bucket_exists(backend.bucket)
+                components["storage"] = "healthy (minio)"
         except Exception as exc:  # noqa: BLE001
             components["storage"] = f"unavailable: {exc}"
     else:

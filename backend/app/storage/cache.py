@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import time
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from functools import lru_cache
 
-from app.core.config import Settings
+from app.core.config import get_settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -67,6 +67,11 @@ class RedisCacheBackend(CacheBackend):
         import redis
 
         self._client = redis.from_url(redis_url)
+        # redis.from_url() connects lazily -- ping eagerly so an unreachable
+        # Redis fails construction here and get_cache_backend() actually
+        # falls back to in-memory, instead of silently caching a client
+        # that will fail on every subsequent call.
+        self._client.ping()
 
     def get_bytes(self, key: str) -> bytes | None:
         try:
@@ -94,27 +99,17 @@ class RedisCacheBackend(CacheBackend):
             logger.warning("redis_cache_clear_failed", error=str(exc))
 
 
-_cache_instance: CacheBackend | None = None
-
-
-def get_cache_backend(settings: Settings | None = None) -> CacheBackend:
-    global _cache_instance
-    if _cache_instance is not None:
-        return _cache_instance
-
-    if settings is None:
-        from app.core.config import Settings
-
-        settings = Settings()
+@lru_cache
+def get_cache_backend() -> CacheBackend:
+    settings = get_settings()
 
     if settings.redis_url:
         try:
-            _cache_instance = RedisCacheBackend(settings.redis_url)
+            backend = RedisCacheBackend(settings.redis_url)
             logger.info("cache_backend_initialized", backend="redis", url=settings.redis_url)
-            return _cache_instance
+            return backend
         except Exception as exc:
             logger.warning("redis_init_failed_fallback_in_memory", error=str(exc))
 
-    _cache_instance = InMemoryCacheBackend()
     logger.info("cache_backend_initialized", backend="in_memory")
-    return _cache_instance
+    return InMemoryCacheBackend()
