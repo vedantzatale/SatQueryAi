@@ -55,7 +55,6 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
         }))
       );
       setLastResult(mock.result);
-      setActiveSessionTitle(mock.title);
       return;
     }
 
@@ -81,17 +80,22 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
         );
         if (cancelled) return;
         setMessages(withResults);
-        setActiveSessionTitle(detail.title);
+        if (detail.title) {
+          setActiveSessionTitle(detail.title);
+        }
         const lastWithResult = [...withResults].reverse().find((m) => m.result);
         setLastResult(lastWithResult?.result ?? null);
       })
       .catch(() => {
-        // Handled silently
+        if (cancelled) return;
+        setMessages([]);
+        setLastResult(null);
       });
     return () => {
       cancelled = true;
     };
   }, [sessionId, initialSessionId, setSessionId, setActiveSessionTitle, setLastResult]);
+
 
   async function ensureSession(): Promise<string> {
     if (sessionId) return sessionId;
@@ -230,24 +234,45 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
   return (
     <div className="flex flex-1 flex-col h-full overflow-hidden bg-[#000000]">
       {messages.length === 0 ? (
-        <EmptyState onSelectPrompt={(prompt) => handleSend(prompt)} />
-      ) : (
-        <MessageList
-          messages={messages}
-          isLoading={isLoading}
-          loadingStatus={loadingStatus}
-        />
-      )}
+        <div className="flex flex-1 flex-col items-center justify-center -mt-16 px-4 w-full max-w-[840px] mx-auto animate-fade-in">
+          <h1 className="text-3xl sm:text-4xl md:text-[34px] font-semibold tracking-tight text-white mb-8 text-center font-sans select-none">
+            What&#39;s on your mind today?
+          </h1>
 
-      {/* Persistent Bottom Composer */}
-      <div className="w-full bg-[#000000] pb-2">
-        <Composer
-          onSend={handleSend}
-          onUploadFiles={handleUploadFiles}
-          isLoading={isLoading}
-        />
-      </div>
+          <div className="w-full">
+            <Composer
+              onSend={handleSend}
+              onUploadFiles={handleUploadFiles}
+              isLoading={isLoading}
+              isCentered
+            />
+          </div>
+
+          <div className="mt-4 text-center font-sans text-xs text-neutral-400">
+            SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
+          </div>
+        </div>
+      ) : (
+
+        <>
+          <MessageList
+            messages={messages}
+            isLoading={isLoading}
+            loadingStatus={loadingStatus}
+          />
+
+          {/* Persistent Bottom Composer */}
+          <div className="w-full bg-[#000000] pb-2 pt-1 border-t border-white/[0.08]">
+            <Composer
+              onSend={handleSend}
+              onUploadFiles={handleUploadFiles}
+              isLoading={isLoading}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
 

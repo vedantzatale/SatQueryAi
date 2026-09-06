@@ -1,18 +1,26 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowUp, Image as ImageIcon, Paperclip, X } from "lucide-react";
-import { useAppStore, type PendingAttachment } from "@/lib/store";
+import { ArrowUp, Brain, Image as ImageIcon, Mic, Plus, X } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface ComposerProps {
   onSend: (text: string) => void;
   onUploadFiles: (files: File[]) => void;
   isLoading: boolean;
   placeholder?: string;
+  isCentered?: boolean;
 }
 
-export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: ComposerProps) {
+export function Composer({
+  onSend,
+  onUploadFiles,
+  isLoading,
+  placeholder,
+  isCentered = false,
+}: ComposerProps) {
   const [text, setText] = useState("");
+  const [thinkingMode, setThinkingMode] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,7 +74,7 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
       }}
       onDragLeave={() => setDragActive(false)}
       onDrop={handleDrop}
-      className={`w-full max-w-3xl mx-auto px-4 pb-4 pt-2 transition-all ${
+      className={`w-full max-w-3xl mx-auto px-4 transition-all ${
         dragActive ? "opacity-90" : ""
       }`}
     >
@@ -95,17 +103,17 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
             return (
               <div
                 key={att.id}
-                className="flex items-center gap-2.5 rounded-xl border border-white/15 bg-[#121212] p-2 pr-3 shadow-lg"
+                className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-[#1e1e1e] p-2 pr-3 shadow-lg"
               >
                 {att.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={att.previewUrl}
                     alt={att.name}
-                    className="h-9 w-9 rounded-lg object-cover border border-white/10"
+                    className="h-9 w-9 rounded-xl object-cover border border-white/10"
                   />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-800 text-neutral-400">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-800 text-neutral-400">
                     <ImageIcon className="h-4 w-4" />
                   </div>
                 )}
@@ -130,16 +138,16 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
         </div>
       )}
 
-      {/* Main Composer Box */}
-      <div className="relative flex items-end gap-2 rounded-2xl border border-white/15 bg-[#121212] p-2 sm:p-2.5 shadow-2xl focus-within:border-white/40 transition-colors">
-        {/* Attachment Upload Button */}
+      {/* Main ChatGPT Style Pill Input Bar */}
+      <div className="relative flex items-center gap-3 rounded-[32px] border border-white/[0.14] bg-[#212121] px-4 py-3 sm:py-3.5 shadow-2xl focus-within:border-white/40 transition-all">
+        {/* Attachment + Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all"
-          title="Upload satellite imagery (GeoTIFF, PNG, JPEG)"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
+          title="Attach satellite imagery or GeoTIFF"
         >
-          <Paperclip className="h-4 w-4" />
+          <Plus className="h-5 w-5" />
         </button>
 
         {/* Textarea Input */}
@@ -149,30 +157,61 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
           value={text}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? "Ask questions about Earth observation data, compare dates, or inspect features..."}
-          className="flex-1 max-h-44 min-h-[28px] bg-transparent py-1 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none font-sans leading-relaxed"
+          placeholder={placeholder ?? "Ask anything"}
+          className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[16px] text-white placeholder:text-[16px] placeholder-neutral-400 focus:outline-none resize-none font-sans leading-relaxed"
         />
 
-        {/* Submit / Send Button */}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={(!text.trim() && pendingAttachments.length === 0) || isLoading}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
-            (text.trim() || pendingAttachments.length > 0) && !isLoading
-              ? "bg-white text-black hover:bg-neutral-200 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
-              : "bg-white/5 text-neutral-500 cursor-not-allowed"
-          }`}
-          aria-label="Send message"
-        >
-          <ArrowUp className="h-4 w-4" />
-        </button>
+        {/* Right Action Icons: Think, Mic, Send */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Think Toggle */}
+          <button
+            type="button"
+            onClick={() => setThinkingMode(!thinkingMode)}
+            className={`hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-[13px] font-medium transition-colors ${
+              thinkingMode
+                ? "bg-white/20 text-white"
+                : "text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+            }`}
+            title="Toggle Deep Co-registration & Reasoning"
+          >
+            <Brain className="h-4 w-4" />
+            <span>Think</span>
+          </button>
+
+          {/* Microphone Voice Icon */}
+          <button
+            type="button"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-white/10 transition-colors"
+            title="Voice query"
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+
+          {/* Submit / Send Button */}
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={(!text.trim() && pendingAttachments.length === 0) || isLoading}
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
+              (text.trim() || pendingAttachments.length > 0) && !isLoading
+                ? "bg-white text-black hover:bg-neutral-200 shadow-md scale-100"
+                : "bg-white/[0.08] text-neutral-500 cursor-not-allowed"
+            }`}
+            aria-label="Send message"
+          >
+            <ArrowUp className="h-5 w-5 stroke-[2.5]" />
+          </button>
+        </div>
       </div>
 
-      <div className="mt-2 text-center font-sans text-[11px] text-neutral-500">
-        SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
-      </div>
+      {!isCentered && (
+        <div className="mt-2.5 text-center font-sans text-xs text-neutral-400">
+          SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
+        </div>
+      )}
     </div>
   );
 }
+
+
 

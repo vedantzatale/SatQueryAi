@@ -13,7 +13,9 @@ import { useAppStore } from "@/lib/store";
 export default function WorkspacePage() {
   const sessionId = useAppStore((s) => s.sessionId);
   const setSessionId = useAppStore((s) => s.setSessionId);
+  const setActiveSessionTitle = useAppStore((s) => s.setActiveSessionTitle);
   const resetConversationState = useAppStore((s) => s.resetConversationState);
+
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
@@ -66,18 +68,38 @@ export default function WorkspacePage() {
 
   function handleSelectConversation(id: string) {
     setSessionId(id);
+    const found = conversations.find((c) => c.id === id);
+    if (found) {
+      setActiveSessionTitle(found.title);
+    }
     setMobileSidebarOpen(false);
   }
 
   function handleNewChat() {
+    // If the top session is already an empty/untouched "New Satellite Query", reuse it
+    if (conversations.length > 0 && conversations[0].title === "New Satellite Query" && sessionId === conversations[0].id) {
+      resetConversationState();
+      setActiveSessionTitle("New Satellite Query");
+      setMobileSidebarOpen(false);
+      return;
+    }
+
+    const newId = `session-${Date.now()}`;
+    const newTitle = "New Satellite Query";
     resetConversationState();
+    setSessionId(newId);
+    setActiveSessionTitle(newTitle);
+    setConversations((prev) => [
+      { id: newId, title: newTitle, category: "Today" },
+      ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
+    ]);
     setMobileSidebarOpen(false);
   }
 
   function handleDeleteConversation(id: string) {
     setConversations((prev) => prev.filter((c) => c.id !== id));
     if (sessionId === id) {
-      resetConversationState();
+      handleNewChat();
     }
   }
 
@@ -85,7 +107,11 @@ export default function WorkspacePage() {
     setConversations((prev) =>
       prev.map((c) => (c.id === id ? { ...c, title: newTitle } : c))
     );
+    if (sessionId === id) {
+      setActiveSessionTitle(newTitle);
+    }
   }
+
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#000000] text-neutral-100 font-sans selection:bg-white selection:text-black">
