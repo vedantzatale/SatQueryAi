@@ -99,10 +99,10 @@ export function Footer() {
         viewport={{ once: true, margin: "-80px" }}
         variants={containerVariants}
       >
-        <div className="flex flex-col lg:flex-row gap-4 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-white/15 bg-[#0c0c0c] overflow-hidden shadow-2xl">
           {/* Left Carbon Card: SatQuery Theme */}
           <motion.div
-            className="relative w-full lg:w-1/3 min-h-[340px] lg:min-h-[580px] overflow-hidden rounded-2xl bg-gradient-to-b from-[#141414] via-[#0f0f0f] to-[#090909] border border-white/15 flex flex-col justify-between p-8 md:p-10 shadow-2xl"
+            className="lg:col-span-4 relative overflow-hidden bg-gradient-to-b from-[#141414] via-[#0f0f0f] to-[#090909] border-b lg:border-b-0 lg:border-r border-white/15 flex flex-col justify-between p-8 md:p-10 lg:p-12"
             variants={itemVariants}
           >
             {/* SVG Noise Overlay */}
@@ -164,7 +164,7 @@ export function Footer() {
 
           {/* Right Card: Dark theme categories grid & dispatch */}
           <motion.div
-            className="w-full lg:w-2/3 rounded-2xl bg-[#0c0c0c] border border-white/10 p-8 md:p-12 flex flex-col justify-between min-h-[500px] lg:min-h-[580px] shadow-2xl"
+            className="lg:col-span-8 bg-[#0c0c0c] p-8 md:p-10 lg:p-12 flex flex-col justify-between"
             variants={itemVariants}
           >
             {/* Top Categories Grid */}
