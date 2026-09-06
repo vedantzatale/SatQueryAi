@@ -22,8 +22,24 @@ export function Navbar() {
 
     let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0;
     let ticking = false;
+    let scrollTimeout: NodeJS.Timeout | null = null;
 
     const handleScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const heroEl =
+          document.getElementById("home") ||
+          document.getElementById("overview") ||
+          document.querySelector(".section-one");
+        if (heroEl) {
+          const rect = heroEl.getBoundingClientRect();
+          // When scroll settles at the top of Hero section, show navbar
+          if (rect.top <= 40 && rect.top >= -35) {
+            setIsVisible(true);
+          }
+        }
+      }, 120);
+
       if (ticking) return;
       ticking = true;
 
@@ -36,21 +52,23 @@ export function Navbar() {
           document.getElementById("overview") ||
           document.querySelector(".section-one");
 
-        const isInsideAirlock = heroEl
-          ? heroEl.getBoundingClientRect().top > 80
-          : currentScrollY < window.innerHeight * 0.75;
+        const heroRect = heroEl ? heroEl.getBoundingClientRect() : null;
 
-        // 1. Strict: Never show while inside AirlockHero (above the Hero section)
-        if (isInsideAirlock) {
+        // 1. Strict: Never show while inside AirlockHero (hero section is still below top threshold)
+        if (!heroRect || heroRect.top > 40) {
           setIsVisible(false);
         } else {
-          // 2. From Hero section and downward:
-          // Scroll down -> navbar goes up (hides)
-          // Scroll up -> navbar shows up (reveals)
+          // User is on or below Hero section
           const delta = currentScrollY - lastScrollY;
-          if (delta > 5) {
+
+          // 2. Immediately after scroll down -> navbar goes up (hides)
+          if (delta > 1.5) {
             setIsVisible(false);
-          } else if (delta < -5) {
+          } else if (delta < -1.5) {
+            // 3. Scroll up -> navbar shows up (reveals)
+            setIsVisible(true);
+          } else if (heroRect.top <= 40 && heroRect.top >= -35) {
+            // 4. Exactly resting at Hero section top: show navbar
             setIsVisible(true);
           }
         }
@@ -67,6 +85,7 @@ export function Navbar() {
     window.addEventListener("resize", handleScroll, { passive: true });
 
     return () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
     };
