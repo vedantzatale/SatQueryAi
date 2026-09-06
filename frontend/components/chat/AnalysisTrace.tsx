@@ -12,18 +12,20 @@ interface AnalysisTraceProps {
 export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const task = result?.task ?? transparency?.task ?? "Remote Sensing Analysis";
-  const model = result?.model ?? transparency?.model ?? "SatQuery Specialist";
-  const provider = result?.data_provenance?.provider ?? transparency?.data_provenance?.provider ?? "Copernicus Sentinel-2";
-  const acquisitionDate = result?.data_provenance?.acquisition_date ?? transparency?.data_provenance?.acquisition_date ?? "Recent Acquisition";
-  const crs = result?.data_provenance?.crs ?? transparency?.data_provenance?.crs ?? "EPSG:4326";
-  const resolution = result?.data_provenance?.resolution ?? transparency?.data_provenance?.resolution ?? 10;
-  const processingApplied = result?.data_provenance?.processing_applied ?? transparency?.data_provenance?.processing_applied ?? [
-    "Input Validation & GDAL Metadata Check",
-    "Spectral Band Co-registration",
-    "Model Inference & Contour Extraction",
-    "CRS Affine Reprojection to WGS84",
-  ];
+  // Every field here reflects the real execution record. When a value is
+  // genuinely absent (e.g. no CRS on a non-georeferenced upload, or no
+  // processing steps recorded yet), it's shown as "not available" rather
+  // than backfilled with a plausible-looking placeholder -- this panel's
+  // entire purpose is truthful disclosure of what actually happened.
+  const status = result?.status ?? null;
+  const task = result?.task ?? transparency?.task ?? null;
+  const model = result?.model ?? transparency?.model ?? null;
+  const provenance = result?.data_provenance ?? transparency?.data_provenance ?? null;
+  const provider = provenance?.provider ?? null;
+  const acquisitionDate = provenance?.acquisition_date ?? null;
+  const crs = provenance?.crs ?? null;
+  const resolution = provenance?.resolution ?? null;
+  const processingApplied = provenance?.processing_applied ?? [];
 
   return (
     <div className="border-t border-white/10 pt-3 text-xs font-mono">
@@ -40,42 +42,59 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-b border-white/5 pb-3">
             <div>
               <span className="text-neutral-400 block text-[10px] uppercase">Task</span>
-              <span className="text-white text-xs font-medium">{task}</span>
+              <span className="text-white text-xs font-medium">{task ?? "not available"}</span>
             </div>
             <div>
               <span className="text-neutral-400 block text-[10px] uppercase">Input Imagery</span>
-              <span className="text-white text-xs font-medium">{provider}</span>
+              <span className="text-white text-xs font-medium">{provider ?? "not available"}</span>
             </div>
             <div>
               <span className="text-neutral-400 block text-[10px] uppercase">Date / Sensor</span>
-              <span className="text-white text-xs font-medium">{acquisitionDate}</span>
+              <span className="text-white text-xs font-medium">{acquisitionDate ?? "not available"}</span>
             </div>
             <div>
               <span className="text-neutral-400 block text-[10px] uppercase">Spatial Reference</span>
-              <span className="text-white text-xs font-medium">{crs} · {resolution}m GSD</span>
+              <span className="text-white text-xs font-medium">
+                {crs ?? "no CRS (ungeoreferenced)"}
+                {resolution != null ? ` · ${resolution}m GSD` : ""}
+              </span>
             </div>
           </div>
 
           <div>
             <span className="text-neutral-400 block text-[10px] uppercase mb-1.5">Observable Pipeline Steps</span>
             <div className="space-y-1">
-              {processingApplied.map((step, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-[11px] text-neutral-300">
-                  <Check className="h-3 w-3 text-emerald-400 shrink-0" />
-                  <span>{step}</span>
-                </div>
-              ))}
+              {processingApplied.length > 0 ? (
+                processingApplied.map((step, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-[11px] text-neutral-300">
+                    <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                    <span>{step}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[11px] text-neutral-500">No processing steps recorded</span>
+              )}
             </div>
           </div>
 
           <div className="border-t border-white/5 pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-neutral-400">
             <div>
               <span className="text-neutral-400">MODELS: </span>
-              <span className="text-neutral-300">{model}</span>
+              <span className="text-neutral-300">{model ?? "not available"}</span>
             </div>
             <div>
               <span className="text-neutral-400">STATUS: </span>
-              <span className="text-emerald-400 uppercase font-medium">COMPLETED</span>
+              <span
+                className={`uppercase font-medium ${
+                  status === "completed"
+                    ? "text-emerald-400"
+                    : status === "failed"
+                    ? "text-red-400"
+                    : "text-amber-400"
+                }`}
+              >
+                {status ?? "unknown"}
+              </span>
             </div>
           </div>
         </div>
