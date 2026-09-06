@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, Cpu, Layers } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronRight } from "lucide-react";
 import type { ExecutionResult, TransparencyResponse } from "@/lib/types";
 
 interface AnalysisTraceProps {
@@ -26,6 +26,7 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
   const crs = provenance?.crs ?? null;
   const resolution = provenance?.resolution ?? null;
   const processingApplied = provenance?.processing_applied ?? [];
+  const modelProvenance = result?.model_provenance ?? transparency?.model_provenance ?? null;
 
   return (
     <div className="border-t border-white/10 pt-3 text-xs font-mono">
@@ -80,7 +81,10 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
           <div className="border-t border-white/5 pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-neutral-400">
             <div>
               <span className="text-neutral-400">MODELS: </span>
-              <span className="text-neutral-300">{model ?? "not available"}</span>
+              <span className="text-neutral-300">
+                {model ?? "not available"}
+                {modelProvenance?.version ? ` (v${modelProvenance.version})` : ""}
+              </span>
             </div>
             <div>
               <span className="text-neutral-400">STATUS: </span>
@@ -97,6 +101,17 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
               </span>
             </div>
           </div>
+
+          {modelProvenance?.fallback_used && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[11px] text-amber-300">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                The primary model for this capability was unavailable; a registered fallback
+                ran instead.
+                {modelProvenance.fallback_reason ? ` Reason: ${modelProvenance.fallback_reason}` : ""}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

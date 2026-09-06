@@ -71,3 +71,31 @@ export function reportPdfUrl(executionId: string): string {
 export function reportGeoJsonUrl(executionId: string): string {
   return `${API_BASE_URL}/analysis/${executionId}/geojson`;
 }
+
+export interface ModelRegistryEntry {
+  model_id: string;
+  capability: string[];
+  modalities: string[];
+  version: string;
+  enabled: boolean;
+  resource_requirement: string;
+  fallback: string | null;
+}
+
+export async function listModels(): Promise<ModelRegistryEntry[]> {
+  const { data } = await apiClient.get<{ models: ModelRegistryEntry[] }>("/models");
+  return data.models;
+}
+
+export interface ModelHealth {
+  model_id: string;
+  status: string;
+  is_mock?: boolean;
+  version?: string;
+  reason?: string;
+}
+
+export async function getModelHealth(modelId: string): Promise<ModelHealth> {
+  const { data } = await apiClient.get<ModelHealth>(`/models/${modelId}/health`);
+  return data;
+}
