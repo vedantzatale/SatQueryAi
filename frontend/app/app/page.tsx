@@ -89,10 +89,13 @@ export default function WorkspacePage() {
     resetConversationState();
     setSessionId(newId);
     setActiveSessionTitle(newTitle);
-    setConversations((prev) => [
-      { id: newId, title: newTitle, category: "Today" },
-      ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
-    ]);
+    const isTemp = useAppStore.getState().isTemporaryChat;
+    if (!isTemp) {
+      setConversations((prev) => [
+        { id: newId, title: newTitle, category: "Today" },
+        ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
+      ]);
+    }
     setMobileSidebarOpen(false);
   }
 

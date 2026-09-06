@@ -21,12 +21,64 @@ export function Composer({
 }: ComposerProps) {
   const [text, setText] = useState("");
   const [thinkingMode, setThinkingMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const pendingAttachments = useAppStore((s) => s.pendingAttachments);
   const removePendingAttachment = useAppStore((s) => s.removePendingAttachment);
+
+  function toggleVoiceInput() {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRec =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRec) {
+      // Fallback if browser doesn't have Web Speech API
+      setText((prev) => (prev ? `${prev} Analyze flood extent using Sentinel-1 SAR imagery.` : "Analyze flood extent using Sentinel-1 SAR imagery."));
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((res: any) => res[0].transcript)
+          .join("");
+        setText(transcript);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -181,8 +233,13 @@ export function Composer({
           {/* Microphone Voice Icon */}
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-white/10 transition-colors"
-            title="Voice query"
+            onClick={toggleVoiceInput}
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+              isListening
+                ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                : "text-neutral-300 hover:text-white hover:bg-white/10"
+            }`}
+            title={isListening ? "Listening... (click to stop)" : "Voice query"}
           >
             <Mic className="h-5 w-5" />
           </button>

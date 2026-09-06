@@ -82,14 +82,18 @@ export function ChatHeader({
         {/* Temporary Toggle */}
         <button
           onClick={() => setIsTemporaryChat(!isTemporaryChat)}
-          className={`flex items-center gap-1.5 px-2 py-1 transition-colors text-xs ${
-            isTemporaryChat ? "text-amber-400 font-medium" : "text-neutral-400 hover:text-white"
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors border ${
+            isTemporaryChat
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-300 font-medium shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+              : "border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
           }`}
-          title={isTemporaryChat ? "Temporary chat enabled" : "Toggle temporary chat"}
+          title={isTemporaryChat ? "Temporary chat enabled (not saved in history)" : "Enable temporary chat"}
         >
-          <span className={`text-[12px] leading-none ${isTemporaryChat ? "text-amber-400" : "text-neutral-500"}`}>
-            •
-          </span>
+          <span
+            className={`h-1.5 w-1.5 rounded-full transition-colors ${
+              isTemporaryChat ? "bg-amber-400 shadow-[0_0_6px_#f59e0b]" : "bg-neutral-500"
+            }`}
+          />
           <span>Temporary</span>
         </button>
 
