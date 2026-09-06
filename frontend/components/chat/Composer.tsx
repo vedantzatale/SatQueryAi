@@ -262,8 +262,8 @@ export function Composer({
       </div>
 
       {!isCentered && (
-        <div className="mt-2.5 text-center font-sans text-xs text-neutral-400">
-          SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
+        <div className="mt-2 text-center font-sans text-[11.5px] text-neutral-400 select-none">
+          SatQuery AI can make mistakes. Check important info.
         </div>
       )}
     </div>

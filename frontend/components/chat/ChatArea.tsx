@@ -262,7 +262,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
           />
 
           {/* Persistent Bottom Composer */}
-          <div className="w-full bg-[#000000] pb-2 pt-1 border-t border-white/[0.08]">
+          <div className="w-full bg-[#000000] pb-4 pt-2">
             <Composer
               onSend={handleSend}
               onUploadFiles={handleUploadFiles}

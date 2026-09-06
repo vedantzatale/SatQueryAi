@@ -42,7 +42,7 @@ export function MessageList({ messages, isLoading, loadingStatus }: MessageListP
                     ))}
                   </div>
                 )}
-                <div className="max-w-xl rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-sm leading-relaxed text-neutral-100">
+                <div className="max-w-xl rounded-[24px] bg-[#212121] px-5 py-3 text-[15.5px] leading-relaxed text-[#ececec]">
                   {msg.content}
                 </div>
               </div>

@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Download, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Layers,
+  MoreHorizontal,
+  RefreshCw,
+  Share2,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 import { AnalysisTrace } from "./AnalysisTrace";
 import { EvidenceViewer } from "./EvidenceViewer";
 import type { ExecutionResult } from "@/lib/types";
@@ -13,6 +24,7 @@ interface AssistantMessageProps {
 
 export function AssistantMessage({ content, result }: AssistantMessageProps) {
   const [copied, setCopied] = useState(false);
+  const [liked, setLiked] = useState<boolean | null>(null);
 
   const answer = result?.answer ?? content ?? "Analysis completed.";
   const confidence = result?.confidence;
@@ -27,73 +39,83 @@ export function AssistantMessage({ content, result }: AssistantMessageProps) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch(() => {
-        // Clipboard permission denied or unavailable -- don't claim success.
-      });
+      .catch(() => {});
   }
 
   return (
-    <div className="flex flex-col items-start gap-3.5 w-full max-w-3xl animate-fade-in">
-      {/* Top Identity & Badges */}
-      <div className="flex flex-wrap items-center gap-2.5 text-xs">
-        <div className="flex h-5 w-5 items-center justify-center rounded-[4px] border border-white/20 bg-white/10 font-mono text-[10px] text-white font-bold">
+    <div className="flex flex-col items-start gap-3 w-full max-w-3xl animate-fade-in font-sans">
+      {/* Top Metadata Header (Clean Model Tag) */}
+      <div className="flex items-center gap-2 text-xs text-neutral-400">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 font-mono text-[9px] text-white font-bold border border-white/20">
           SQ
         </div>
-        <span className="font-medium text-white">SatQuery AI</span>
-
-        {task && (
-          <span className="rounded border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-neutral-300">
-            {task}
-          </span>
-        )}
-
+        <span className="font-medium text-white text-xs">SatQuery AI</span>
         {confidence && (
-          <div className="flex items-center gap-1 rounded bg-white/5 border border-white/10 px-2 py-0.5 font-mono text-[10px] text-neutral-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>
-              Confidence: {confidence.overall_level}
-              {confidence.model_confidence != null ? ` · ${(confidence.model_confidence * 100).toFixed(0)}%` : ""}
-            </span>
-          </div>
-        )}
-
-        {isDemo && (
-          <span className="rounded bg-neutral-900 border border-neutral-700 px-2 py-0.5 font-mono text-[10px] text-neutral-400">
-            Demo Mode
+          <span className="text-[11px] text-neutral-400 font-mono">
+            • {confidence.overall_level} confidence
+            {confidence.model_confidence != null
+              ? ` (${(confidence.model_confidence * 100).toFixed(0)}%)`
+              : ""}
           </span>
         )}
       </div>
 
-      {/* Answer Body */}
-      <div className="w-full rounded-2xl border border-white/10 bg-[#0d0d0d] p-5 sm:p-6 space-y-4">
-        <p className="text-sm sm:text-[15px] leading-relaxed text-neutral-200 whitespace-pre-wrap">
-          {answer}
-        </p>
+      {/* Main Response Text (Clean ChatGPT Typography) */}
+      <div className="w-full text-[15.5px] leading-[1.65] text-[#ececec] whitespace-pre-wrap font-normal">
+        {answer}
+      </div>
 
-        {/* Evidence Visualizations */}
-        {result && result.evidence && result.evidence.length > 0 && (
+      {/* Evidence Visualizations (If Present) */}
+      {result && result.evidence && result.evidence.length > 0 && (
+        <div className="w-full mt-2">
           <EvidenceViewer evidence={result.evidence} executionId={result.execution_id} />
-        )}
-
-        {/* Observable Analysis Trace */}
-        {result && <AnalysisTrace result={result} />}
-
-        {/* Action Toolbar */}
-        <div className="flex items-center justify-between border-t border-white/5 pt-3 text-[11px] font-mono text-neutral-400">
-          <div className="text-neutral-400 truncate max-w-xs">
-            Model: {modelName}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1 hover:text-white transition-colors"
-            >
-              {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-              <span>{copied ? "Copied" : "Copy"}</span>
-            </button>
-          </div>
         </div>
+      )}
+
+      {/* Observable Analysis Trace */}
+      {result && (
+        <div className="w-full mt-1">
+          <AnalysisTrace result={result} />
+        </div>
+      )}
+
+      {/* ChatGPT-style Action Toolbar */}
+      <div className="flex items-center gap-2 pt-2 text-neutral-400">
+        <button
+          onClick={handleCopy}
+          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+          title="Copy response"
+        >
+          {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+        </button>
+
+        <button
+          onClick={() => setLiked(liked === true ? null : true)}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${
+            liked === true ? "text-white bg-white/10" : "hover:text-white"
+          }`}
+          title="Good response"
+        >
+          <ThumbsUp className="h-4 w-4" />
+        </button>
+
+        <button
+          onClick={() => setLiked(liked === false ? null : false)}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${
+            liked === false ? "text-white bg-white/10" : "hover:text-white"
+          }`}
+          title="Bad response"
+        >
+          <ThumbsDown className="h-4 w-4" />
+        </button>
+
+        <button
+          onClick={handleCopy}
+          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+          title="Regenerate response"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

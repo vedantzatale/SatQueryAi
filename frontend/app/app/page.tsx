@@ -67,6 +67,10 @@ export default function WorkspacePage() {
   }, []);
 
   function handleSelectConversation(id: string) {
+    if (useAppStore.getState().isTemporaryChat) {
+      resetConversationState();
+      useAppStore.getState().setIsTemporaryChat(false);
+    }
     setSessionId(id);
     const found = conversations.find((c) => c.id === id);
     if (found) {
@@ -76,6 +80,10 @@ export default function WorkspacePage() {
   }
 
   function handleNewChat() {
+    if (useAppStore.getState().isTemporaryChat) {
+      resetConversationState();
+      useAppStore.getState().setIsTemporaryChat(false);
+    }
     // If the top session is already an empty/untouched "New Satellite Query", reuse it
     if (conversations.length > 0 && conversations[0].title === "New Satellite Query" && sessionId === conversations[0].id) {
       resetConversationState();
@@ -89,13 +97,10 @@ export default function WorkspacePage() {
     resetConversationState();
     setSessionId(newId);
     setActiveSessionTitle(newTitle);
-    const isTemp = useAppStore.getState().isTemporaryChat;
-    if (!isTemp) {
-      setConversations((prev) => [
-        { id: newId, title: newTitle, category: "Today" },
-        ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
-      ]);
-    }
+    setConversations((prev) => [
+      { id: newId, title: newTitle, category: "Today" },
+      ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
+    ]);
     setMobileSidebarOpen(false);
   }
 
