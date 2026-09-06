@@ -21,7 +21,7 @@ export function ProductPreview() {
   const [traceOpen, setTraceOpen] = useState(true);
 
   return (
-    <section className="relative w-full max-w-[1200px] mx-auto px-4 sm:px-8 pb-20">
+    <section className="relative w-full max-w-[1200px] mx-auto px-4 sm:px-8 pb-20" id="product">
       <div className="rounded-2xl border border-white/15 bg-[#0e0e0e] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.95)] overflow-hidden">
         {/* Window Top Bar */}
         <div className="flex items-center justify-between border-b border-white/10 bg-[#121212] px-4 py-3">
