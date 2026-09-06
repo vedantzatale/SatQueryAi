@@ -40,8 +40,8 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  sessionId: null,
-  activeSessionTitle: "New Analysis",
+  sessionId: "session-new",
+  activeSessionTitle: "New Satellite Query",
   imageIds: [],
   pendingAttachments: [],
   lastResult: null,
@@ -70,11 +70,13 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveEvidenceImage: (img) => set({ activeEvidenceImage: img }),
   resetConversationState: () =>
     set({
-      sessionId: null,
-      activeSessionTitle: "New Analysis",
+      sessionId: "session-new",
+      activeSessionTitle: "New Satellite Query",
       imageIds: [],
       pendingAttachments: [],
       lastResult: null,
       isTemporaryChat: false,
     }),
 }));
+
+

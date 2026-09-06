@@ -9,16 +9,57 @@ export interface MockSessionItem extends SessionSummary {
 
 export const MOCK_SESSIONS: MockSessionItem[] = [
   {
+    id: "session-new",
+    title: "New Satellite Query",
+    language: "en",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: "Today",
+    detail: {
+      id: "session-new",
+      title: "New Satellite Query",
+      language: "en",
+      created_at: new Date().toISOString(),
+      messages: [],
+    },
+    result: {
+      execution_id: "",
+      status: "completed",
+      task: "vqa",
+      model: "SatQuery Vision (GeoChat-7B)",
+      model_version: "1.4.0",
+      answer: "",
+      evidence: [],
+      confidence: {
+        mode: "calibrated",
+        overall_level: "high",
+        model_confidence: 0.95,
+        input_quality: "good",
+        evidence_quality: "strong",
+        modality_agreement: "not_applicable",
+        notes: [],
+      },
+      data_provenance: null,
+      model_provenance: null,
+      warnings: [],
+      user_message: null,
+      actions: [],
+      latency_ms: 0,
+    },
+  },
+  {
     id: "session-pune-growth",
-    title: "Pune Urban Growth",
+    title: "Pune Urban Expansion",
     language: "en",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     category: "Today",
     detail: {
       id: "session-pune-growth",
-      title: "Pune Urban Growth",
+      title: "Pune Urban Expansion",
       language: "en",
+
+
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
       messages: [
         {
@@ -120,14 +161,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
   },
   {
     id: "session-flood-assessment",
-    title: "Flood Assessment",
+    title: "Mumbai SAR Flood Assessment",
     language: "en",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
     category: "Yesterday",
     detail: {
       id: "session-flood-assessment",
-      title: "Flood Assessment",
+      title: "Mumbai SAR Flood Assessment",
       language: "en",
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
       messages: [
@@ -205,14 +246,14 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
   },
   {
     id: "session-mumbai-sar",
-    title: "Mumbai SAR Analysis",
+    title: "Gujarat Agricultural Shift",
     language: "en",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 80).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 80).toISOString(),
     category: "Previous 7 Days",
     detail: {
       id: "session-mumbai-sar",
-      title: "Mumbai SAR Analysis",
+      title: "Gujarat Agricultural Shift",
       language: "en",
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 80).toISOString(),
       messages: [
@@ -293,15 +334,16 @@ export const MOCK_SESSIONS: MockSessionItem[] = [
   },
   {
     id: "session-agri-review",
-    title: "Agricultural Land Review",
+    title: "Bangalore Lake Encroachment",
     language: "en",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
     category: "Older",
     detail: {
       id: "session-agri-review",
-      title: "Agricultural Land Review",
+      title: "Bangalore Lake Encroachment",
       language: "en",
+
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
       messages: [
         {

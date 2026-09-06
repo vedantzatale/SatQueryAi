@@ -20,8 +20,10 @@ backend/.venv/
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 frontend/.env*.local
 npm-debug.log*
+
 
 # Build artifacts
 dist/

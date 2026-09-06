@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileJson, Globe, Menu, Share2, Shield } from "lucide-react";
+import { Download, FileJson, Globe, Menu, Share2 } from "lucide-react";
 import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 
@@ -17,7 +17,7 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
   const lastResult = useAppStore((s) => s.lastResult);
 
   return (
-    <header className="flex h-14 w-full items-center justify-between border-b border-white/10 bg-[#090909] px-4 sm:px-6">
+    <header className="flex h-14 w-full items-center justify-between border-b border-white/10 bg-[#000000] px-4 sm:px-6">
       <div className="flex items-center gap-3">
         {/* Mobile menu button */}
         <button
@@ -31,62 +31,48 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
         {/* Title */}
         <div className="flex items-center gap-2">
           <h1 className="text-sm font-medium text-white truncate max-w-xs sm:max-w-md">
-            {activeSessionTitle || "New Analysis"}
+            {activeSessionTitle || "New Satellite Query"}
           </h1>
-
-          {isTemporaryChat && (
-            <span className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 font-mono text-[10px] text-amber-300">
-              Temporary Chat
-            </span>
-          )}
         </div>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-3 text-xs font-mono">
-        {/* Interactive Satellite Map Modal Trigger */}
+      <div className="flex items-center gap-2 sm:gap-3 text-xs">
+        {/* Specialist Model Badge */}
         <button
           onClick={() => setMapModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
-          title="Inspect AOI Geographic Boundary"
+          className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-neutral-300 hover:border-white/20 transition-colors"
+          title="Inspect AOI / GeoChat Core"
         >
-          <Globe className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Map</span>
+          <Globe className="h-3 w-3 text-neutral-400" />
+          <span>GeoChat • Sentinel Core</span>
         </button>
 
-        {/* Temporary Chat Toggle */}
+        {/* Temporary Toggle */}
         <button
           onClick={() => setIsTemporaryChat(!isTemporaryChat)}
-          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 transition-colors ${
-            isTemporaryChat
-              ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-              : "border-white/10 bg-white/5 text-neutral-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-2 py-1 transition-colors text-xs ${
+            isTemporaryChat ? "text-amber-400 font-medium" : "text-neutral-400 hover:text-white"
           }`}
-          title={
-            isTemporaryChat
-              ? "Temporary chat enabled (won't save to history)"
-              : "Click to enable temporary chat"
-          }
+          title={isTemporaryChat ? "Temporary chat enabled" : "Toggle temporary chat"}
         >
-          <Shield className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">
-            {isTemporaryChat ? "Temporary" : "Save History"}
+          <span className={`text-[12px] leading-none ${isTemporaryChat ? "text-amber-400" : "text-neutral-500"}`}>
+            •
           </span>
+          <span>Temporary</span>
         </button>
 
         {/* Share Button */}
         <button
           onClick={() => setShareModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-neutral-200 hover:bg-white/10 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-neutral-200 hover:bg-white/10 hover:text-white transition-colors"
         >
           <Share2 className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Share</span>
+          <span>Share</span>
         </button>
 
-        {/* Export shortcuts if a completed execution exists. The backend
-            itself refuses (409) a GeoJSON export for an execution with no
-            real georeferenced geometry -- no need to duplicate that check
-            here, just don't pretend export always succeeds silently. */}
+
+        {/* Export shortcuts if a completed execution exists */}
         {lastResult?.execution_id && (
           <>
             <a
@@ -115,3 +101,4 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
     </header>
   );
 }
+

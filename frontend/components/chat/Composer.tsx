@@ -149,7 +149,7 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
           value={text}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? "Ask a question about Earth observation imagery..."}
+          placeholder={placeholder ?? "Ask questions about Earth observation data, compare dates, or inspect features..."}
           className="flex-1 max-h-44 min-h-[28px] bg-transparent py-1 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none font-sans leading-relaxed"
         />
 
@@ -169,9 +169,10 @@ export function Composer({ onSend, onUploadFiles, isLoading, placeholder }: Comp
         </button>
       </div>
 
-      <div className="mt-2 text-center font-mono text-[10px] text-neutral-400">
-        GeoTIFF · TIFF · PNG · JPEG · Natural-language or Hindi/Hinglish query
+      <div className="mt-2 text-center font-sans text-[11px] text-neutral-500">
+        SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
       </div>
     </div>
   );
 }
+

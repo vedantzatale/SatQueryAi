@@ -40,7 +40,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
       } else {
         setMessages([]);
         setLastResult(null);
-        setActiveSessionTitle("New Analysis");
+        setActiveSessionTitle("New Satellite Query");
       }
       return;
     }
@@ -96,9 +96,9 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
   async function ensureSession(): Promise<string> {
     if (sessionId) return sessionId;
     try {
-      const created = await createSession("New Analysis");
+      const created = await createSession("New Satellite Query");
       setSessionId(created.id);
-      setActiveSessionTitle(created.title || "New Analysis");
+      setActiveSessionTitle(created.title || "New Satellite Query");
       return created.id;
     } catch {
       // Fallback session ID for offline demo
@@ -211,13 +211,13 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
         let demoResult: ExecutionResult;
 
         if (lower.includes("change") || attachmentsSnapshot.length >= 2) {
-          demoResult = MOCK_SESSIONS[0].result;
-        } else if (lower.includes("water") || lower.includes("flood")) {
           demoResult = MOCK_SESSIONS[1].result;
-        } else if (lower.includes("sar") || lower.includes("radar")) {
+        } else if (lower.includes("water") || lower.includes("flood")) {
           demoResult = MOCK_SESSIONS[2].result;
-        } else {
+        } else if (lower.includes("sar") || lower.includes("radar")) {
           demoResult = MOCK_SESSIONS[3].result;
+        } else {
+          demoResult = MOCK_SESSIONS[4].result;
         }
 
         appendAssistantMessage(demoResult);
@@ -228,7 +228,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden bg-[#0a0a0a]">
+    <div className="flex flex-1 flex-col h-full overflow-hidden bg-[#000000]">
       {messages.length === 0 ? (
         <EmptyState onSelectPrompt={(prompt) => handleSend(prompt)} />
       ) : (
@@ -240,7 +240,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
       )}
 
       {/* Persistent Bottom Composer */}
-      <div className="border-t border-white/10 bg-[#0c0c0c]/80 backdrop-blur-md">
+      <div className="w-full bg-[#000000] pb-2">
         <Composer
           onSend={handleSend}
           onUploadFiles={handleUploadFiles}
@@ -250,3 +250,4 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     </div>
   );
 }
+

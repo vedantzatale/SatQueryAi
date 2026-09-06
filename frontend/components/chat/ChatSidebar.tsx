@@ -3,17 +3,17 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import {
+  ChevronUp,
   Compass,
   Edit2,
-  Globe,
   LogOut,
   MessageSquare,
   MoreHorizontal,
+  PanelLeftClose,
   Plus,
   Search,
   Settings,
   Trash2,
-  User,
   X,
 } from "lucide-react";
 
@@ -90,32 +90,42 @@ export function ChatSidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/10 bg-[#0a0a0a] transition-transform duration-300 md:static md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/10 bg-[#000000] transition-transform duration-300 md:static md:translate-x-0 ${
         isOpenMobile ? "translate-x-0" : "-translate-x-full"
       }`}
     >
       {/* Top Header / Brand + New Chat */}
-      <div className="p-3.5 space-y-3 border-b border-white/10">
+      <div className="p-3.5 space-y-3">
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-white"
+            className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-white uppercase"
           >
-            <div className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/5 text-[10px]">
-              SQ
+            <div className="flex h-4 w-4 items-center justify-center rounded-full border border-white/30 bg-white/10">
+              <div className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_4px_white]" />
             </div>
             <span>SATQUERY AI</span>
           </Link>
 
-          {onCloseMobile && (
+          <div className="flex items-center gap-1">
             <button
               onClick={onCloseMobile}
-              className="md:hidden p-1 text-neutral-400 hover:text-white"
-              aria-label="Close Sidebar"
+              className="p-1 text-neutral-400 hover:text-white rounded transition-colors"
+              aria-label="Toggle Sidebar"
+              title="Toggle Sidebar"
             >
-              <X className="h-4 w-4" />
+              <PanelLeftClose className="h-4 w-4" />
             </button>
-          )}
+            {onCloseMobile && (
+              <button
+                onClick={onCloseMobile}
+                className="md:hidden p-1 text-neutral-400 hover:text-white"
+                aria-label="Close Sidebar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* New Chat Button */}
@@ -124,27 +134,28 @@ export function ChatSidebar({
             onNewChat();
             if (onCloseMobile) onCloseMobile();
           }}
-          className="w-full flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white hover:bg-white/10 hover:border-white/30 transition-all group"
+          className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs font-medium text-white hover:bg-white/[0.08] hover:border-white/25 transition-all group"
         >
           <div className="flex items-center gap-2">
             <Plus className="h-3.5 w-3.5 text-neutral-300 group-hover:text-white" />
             <span>New Analysis</span>
           </div>
-          <kbd className="font-mono text-[10px] text-neutral-400">⌘K</kbd>
+          <span className="font-mono text-[10px] text-neutral-500 rounded bg-white/5 px-1.5 py-0.5 border border-white/5">⌘N</span>
         </button>
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search sessions..."
-            className="w-full rounded-lg border border-white/10 bg-[#121212] pl-8 pr-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-white/30 focus:outline-none font-sans"
+            placeholder="Search conversations..."
+            className="w-full rounded-lg border border-white/10 bg-[#111111] pl-8 pr-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-white/30 focus:outline-none font-sans"
           />
         </div>
       </div>
+
 
       {/* History Stream Grouped by Date */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-5 text-xs">
@@ -243,22 +254,23 @@ export function ChatSidebar({
       </div>
 
       {/* Bottom User Profile */}
-      <div className="relative border-t border-white/10 p-3 bg-[#0d0d0d]">
+      <div className="relative border-t border-white/10 p-3 bg-[#080808]">
         <button
           onClick={() => setProfileMenuOpen(!profileMenuOpen)}
           className="flex w-full items-center justify-between rounded-lg p-1.5 hover:bg-white/5 transition-colors text-left"
         >
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 font-mono text-xs font-semibold text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-xs font-semibold text-white">
               S
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-medium text-white">Shivam</span>
-              <span className="font-mono text-[10px] text-neutral-400">Research Workspace</span>
+              <span className="text-[10px] text-neutral-500">Research Workspace</span>
             </div>
           </div>
-          <MoreHorizontal className="h-4 w-4 text-neutral-400" />
+          <ChevronUp className="h-4 w-4 text-neutral-500" />
         </button>
+
 
         {/* Profile popover menu */}
         {profileMenuOpen && (

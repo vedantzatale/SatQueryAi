@@ -71,8 +71,9 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#080808] text-neutral-100 font-sans selection:bg-white selection:text-black">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#000000] text-neutral-100 font-sans selection:bg-white selection:text-black">
       {/* Sidebar (Desktop + Mobile Drawer) */}
+
       <ChatSidebar
         conversations={conversations}
         activeId={sessionId}
