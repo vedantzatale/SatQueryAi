@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -128,9 +129,14 @@ export function Navbar() {
             href="/"
             className="group !px-3.5 !py-0 !h-[38px]"
           >
-            <div className="flex h-5 w-5 items-center justify-center rounded-[4px] border border-white/20 bg-white/5 font-mono text-[10px] text-white transition-all group-hover:border-white/50 group-hover:bg-white/10 shadow-sm mr-1">
-              SQ
-            </div>
+            <Image
+              src="/logo/satquertlogo.png"
+              alt="SatQuery AI Logo"
+              width={20}
+              height={20}
+              className="h-5 w-5 rounded-[4px] object-contain mr-1 shadow-sm shrink-0"
+              priority
+            />
             <span className="font-mono tracking-tight text-[13px] text-neutral-100 uppercase">
               SATQUERY<span className="text-neutral-500 ml-1">AI</span>
             </span>

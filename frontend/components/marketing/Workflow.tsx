@@ -60,11 +60,11 @@ export function Workflow() {
           <span>OBSERVABLE AGENTIC PIPELINE</span>
         </div>
 
-        <h2 className="text-[clamp(28px,3.8vw,44px)] font-medium leading-[1.1] tracking-tight text-white">
+        <h2 className="text-[clamp(34px,4.6vw,56px)] font-bold sm:font-semibold leading-[1.06] tracking-[-0.025em] text-white">
           How SatQuery analyzes.
         </h2>
 
-        <p className="text-[15px] leading-relaxed text-neutral-400">
+        <p className="text-[16px] sm:text-[17.5px] leading-[1.65] text-neutral-300 font-normal">
           SatQuery routes questions through a deterministic, auditable multi-stage pipeline rather
           than feeding raw satellite data directly into an ungrounded black-box chatbot.
         </p>
@@ -84,8 +84,8 @@ export function Workflow() {
                   {step.model}
                 </span>
               </div>
-              <h3 className="text-base font-medium text-white mb-2 tracking-tight">{step.title}</h3>
-              <p className="text-xs leading-relaxed text-neutral-400">{step.desc}</p>
+              <h3 className="text-base font-semibold text-white mb-2 tracking-tight">{step.title}</h3>
+              <p className="text-[13px] leading-relaxed text-neutral-300">{step.desc}</p>
             </div>
 
             <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-neutral-400">

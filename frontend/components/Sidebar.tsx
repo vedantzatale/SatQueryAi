@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { createSession, listSessions } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -32,9 +33,13 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">
-          SQ
-        </div>
+        <Image
+          src="/logo/satquertlogo.png"
+          alt="SatQuery AI"
+          width={32}
+          height={32}
+          className="h-8 w-8 rounded-md object-contain shrink-0"
+        />
         <div>
           <div className="text-sm font-semibold text-slate-900">SatQuery AI</div>
           <div className="text-xs text-slate-500">Remote-sensing orchestrator</div>

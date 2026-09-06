@@ -5,6 +5,10 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "SatQuery AI",
   description: "Ask your satellite data a question. SatQuery finds, understands, explains and proves the answer.",
+  icons: {
+    icon: "/logo/satquertlogo.png",
+    apple: "/logo/satquertlogo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

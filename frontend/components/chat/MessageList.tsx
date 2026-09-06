@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { AssistantMessage } from "./AssistantMessage";
 import type { ChatMessage, ExecutionResult } from "@/lib/types";
 
@@ -62,9 +63,13 @@ export function MessageList({ messages, isLoading, loadingStatus }: MessageListP
         {isLoading && (
           <div className="flex flex-col items-start gap-3 animate-fade-in">
             <div className="flex items-center gap-2 text-xs text-neutral-400">
-              <div className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 font-mono text-[10px] text-white">
-                SQ
-              </div>
+              <Image
+                src="/logo/satquertlogo.png"
+                alt="SatQuery AI"
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded-[4px] object-contain shrink-0"
+              />
               <span className="font-medium text-white">SatQuery AI</span>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] px-5 py-4 flex items-center gap-3 font-mono text-xs text-neutral-300">

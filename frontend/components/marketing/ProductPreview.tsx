@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -127,9 +128,13 @@ export function ProductPreview() {
               {/* Assistant Message */}
               <div className="flex flex-col items-start gap-3">
                 <div className="flex items-center gap-2.5 text-[12px] text-neutral-400">
-                  <div className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 font-mono text-[10px] text-white font-semibold">
-                    SQ
-                  </div>
+                  <Image
+                    src="/logo/satquertlogo.png"
+                    alt="SatQuery AI"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 rounded-[4px] object-contain shrink-0"
+                  />
                   <span className="font-medium text-white">SatQuery AI</span>
                   <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-neutral-300">
                     SatQuery Change

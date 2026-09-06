@@ -11,11 +11,11 @@ export function MultimodalShowcase() {
           <span>COMPLEMENTARY MODALITIES</span>
         </div>
 
-        <h2 className="text-[clamp(28px,3.8vw,44px)] font-medium leading-[1.1] tracking-tight text-white">
+        <h2 className="text-[clamp(34px,4.6vw,56px)] font-bold sm:font-semibold leading-[1.06] tracking-[-0.025em] text-white">
           Combine perspectives.
         </h2>
 
-        <p className="text-[15px] leading-relaxed text-neutral-400">
+        <p className="text-[16px] sm:text-[17.5px] leading-[1.65] text-neutral-300 font-normal">
           Optical and SAR imagery capture fundamentally different properties of the Earth.
           SatQuery brings those signals together when the question requires it, cross-validating
           spectral reflectance against radar backscatter.

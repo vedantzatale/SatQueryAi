@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -132,9 +133,13 @@ export function ChatSidebar({
               href="/"
               className="flex items-center gap-2.5 text-xs font-bold tracking-wider text-white uppercase"
             >
-              <div className="flex h-4 w-4 items-center justify-center rounded-full border border-white/30 bg-white/10">
-                <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_6px_white]" />
-              </div>
+              <Image
+                src="/logo/satquertlogo.png"
+                alt="SatQuery AI"
+                width={18}
+                height={18}
+                className="h-[18px] w-[18px] rounded-[4px] object-contain shrink-0"
+              />
               <span>SATQUERY AI</span>
             </Link>
 

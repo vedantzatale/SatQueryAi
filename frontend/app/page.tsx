@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowRight, Compass, FileCheck, Layers, Sparkles } from "lucide-react";
+import { Compass, FileCheck, Layers, Sparkles } from "lucide-react";
 import AirlockHero from "@/components/marketing/AirlockHero";
 import { ChangeShowcase } from "@/components/marketing/ChangeShowcase";
 import { FAQ } from "@/components/marketing/FAQ";
@@ -31,10 +30,10 @@ export default function HomePage() {
                   <Compass className="h-3 w-3 text-neutral-400" />
                   <span>UNIFIED INTERFACE</span>
                 </div>
-                <h2 className="text-[clamp(30px,4vw,48px)] font-medium leading-[1.08] tracking-tight text-white">
+                <h2 className="text-[clamp(34px,4.6vw,56px)] font-bold sm:font-semibold leading-[1.06] tracking-[-0.025em] text-white">
                   One interface for difficult imagery.
                 </h2>
-                <p className="text-[16px] leading-relaxed text-neutral-400">
+                <p className="text-[16px] sm:text-[17.5px] leading-[1.65] text-neutral-300 font-normal">
                   Satellite data is rich, but the path from image to answer is often fragmented
                   across specialist tools, GIS software, and multi-step manual workflows. SatQuery
                   brings those workflows into one conversational workspace.
@@ -48,8 +47,8 @@ export default function HomePage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 mb-5">
                       <Sparkles className="h-5 w-5 text-neutral-200" />
                     </div>
-                    <h3 className="text-lg font-medium text-white mb-2 tracking-tight">Ask your imagery</h3>
-                    <p className="text-sm leading-relaxed text-neutral-400">
+                    <h3 className="text-xl font-semibold text-white mb-2.5 tracking-tight">Ask your imagery</h3>
+                    <p className="text-[14.5px] leading-relaxed text-neutral-300 font-normal">
                       Move from raw satellite imagery to natural-language answers without manually
                       translating every question into a remote-sensing workflow.
                     </p>
@@ -64,8 +63,8 @@ export default function HomePage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 mb-5">
                       <FileCheck className="h-5 w-5 text-neutral-200" />
                     </div>
-                    <h3 className="text-lg font-medium text-white mb-2 tracking-tight">Evidence, not just answers</h3>
-                    <p className="text-sm leading-relaxed text-neutral-400">
+                    <h3 className="text-xl font-semibold text-white mb-2.5 tracking-tight">Evidence, not just answers</h3>
+                    <p className="text-[14.5px] leading-relaxed text-neutral-300 font-normal">
                       Every analysis exposes its source imagery, detected regions, derived maps,
                       calibrated confidence, and observable execution path.
                     </p>
@@ -80,8 +79,8 @@ export default function HomePage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 mb-5">
                       <Layers className="h-5 w-5 text-neutral-200" />
                     </div>
-                    <h3 className="text-lg font-medium text-white mb-2 tracking-tight">One question. The right model.</h3>
-                    <p className="text-sm leading-relaxed text-neutral-400">
+                    <h3 className="text-xl font-semibold text-white mb-2.5 tracking-tight">One question. The right model.</h3>
+                    <p className="text-[14.5px] leading-relaxed text-neutral-300 font-normal">
                       SatQuery routes different questions to specialist remote-sensing models rather
                       than forcing every task through a single generalist LLM.
                     </p>
@@ -103,35 +102,7 @@ export default function HomePage() {
           {/* Observable Agentic Pipeline Section */}
           <Workflow />
 
-          {/* Final Call To Action */}
-          <section className="py-24 border-t border-white/10 bg-[#0a0a0a] text-center">
-            <div className="max-w-2xl mx-auto px-6 space-y-6">
-              <h2 className="text-[clamp(32px,4.5vw,52px)] font-medium leading-[1.06] tracking-tightest text-white">
-                Start analyzing Earth observation data.
-              </h2>
-              <p className="text-[16px] text-neutral-400 max-w-lg mx-auto leading-relaxed">
-                Upload your GeoTIFF or explore synthetic demo scenes. SatQuery identifies modalities,
-                orchestrates specialists, and proves each answer with evidence.
-              </p>
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link
-                  href="/app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-medium text-black transition-all hover:bg-neutral-200 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
-                >
-                  <span>Launch SatQuery AI</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  href="/models"
-                  className="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-white/10 transition-all"
-                >
-                  Inspect Model Registry
-                </Link>
-              </div>
-            </div>
-          </section>
+
           {/* FAQ Luxury Inquiries Section */}
           <FAQ />
         </main>

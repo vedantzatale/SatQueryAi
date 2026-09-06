@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Check,
   Copy,
@@ -46,9 +47,13 @@ export function AssistantMessage({ content, result }: AssistantMessageProps) {
     <div className="flex flex-col items-start gap-3 w-full max-w-3xl animate-fade-in font-sans">
       {/* Top Metadata Header (Clean Model Tag) */}
       <div className="flex items-center gap-2 text-xs text-neutral-400">
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 font-mono text-[9px] text-white font-bold border border-white/20">
-          SQ
-        </div>
+        <Image
+          src="/logo/satquertlogo.png"
+          alt="SatQuery AI"
+          width={20}
+          height={20}
+          className="h-5 w-5 rounded-[4px] object-contain shrink-0"
+        />
         <span className="font-medium text-white text-xs">SatQuery AI</span>
         {confidence && (
           <span className="text-[11px] text-neutral-400 font-mono">

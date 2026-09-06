@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
@@ -126,9 +127,13 @@ export function Footer() {
             {/* Top Logo */}
             <div className="relative z-10">
               <Link href="/" className="inline-flex items-center gap-2.5 text-white group">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-white/25 bg-white/10 font-mono text-xs font-bold text-white shadow-sm transition-transform group-hover:scale-105">
-                  SQ
-                </div>
+                <Image
+                  src="/logo/satquertlogo.png"
+                  alt="SatQuery AI Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-md object-contain shadow-sm shrink-0 transition-transform group-hover:scale-105"
+                />
                 <span className="text-xl font-bold tracking-tight font-mono">
                   SATQUERY<span className="text-neutral-500 ml-1">AI</span>
                 </span>

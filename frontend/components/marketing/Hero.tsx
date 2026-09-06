@@ -107,7 +107,7 @@ export function Hero() {
       >
         {/* Centered Hero Headline & Subtitle */}
         <div className="flex flex-col items-center text-center mt-6 sm:mt-10">
-          <h1 className="text-[clamp(2.25rem,5.2vw,5.5rem)] font-medium leading-[1.04] tracking-[-0.021em] text-[#fafafa] max-w-4xl">
+          <h1 className="text-[clamp(2.25rem,5.2vw,5.5rem)] font-bold sm:font-semibold leading-[1.04] tracking-[-0.021em] text-[#fafafa] max-w-4xl">
             <span className="block overflow-hidden pb-[0.16em] -mb-[0.16em]">
               <span className="inline-block">Think clearly.</span>
             </span>
@@ -116,7 +116,7 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-[clamp(1.1rem,2.5vw,2.5rem)] max-w-xl text-[clamp(0.95rem,1.4vw,1.4rem)] leading-[1.35] text-[#9e9e9e] font-normal tracking-[0.004em]">
+          <p className="mt-[clamp(1.1rem,2.5vw,2.5rem)] max-w-xl text-[clamp(1.05rem,1.45vw,1.45rem)] leading-[1.4] text-neutral-300 font-normal tracking-[0.004em]">
             An AI workspace that structures your reasoning,
             <br className="hidden sm:inline" /> not just your answers.
           </p>
@@ -260,11 +260,11 @@ export function Hero() {
       >
         {/* Section 2 Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
-          <h2 className="text-[clamp(1.8rem,4.1vw,3.3rem)] font-normal leading-[1.11] tracking-[-0.02em] text-[#ffffff]">
+          <h2 className="text-[clamp(2rem,4.4vw,3.6rem)] font-bold sm:font-semibold leading-[1.08] tracking-[-0.02em] text-[#ffffff]">
             <span className="block">Built for Earth intelligence.</span>
             <span className="block text-neutral-300">Powered by structured spatial models.</span>
           </h2>
-          <p className="mt-4 text-[clamp(0.85rem,1.25vw,1.125rem)] text-[#8b8b8d] leading-relaxed">
+          <p className="mt-4 text-[clamp(0.95rem,1.3vw,1.2rem)] text-neutral-300 leading-relaxed">
             Ask complex geospatial questions. Explore multi-sensor perspectives.
             <br className="hidden sm:inline" /> Get structured, reliable answers — instantly.
           </p>
