@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   Compass,
@@ -16,7 +16,6 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useAppStore } from "@/lib/store";
 
 export interface ConversationSummaryItem {
   id: string;
@@ -68,10 +67,24 @@ export function ChatSidebar({
     setMenuOpenId(null);
   }
 
+  // Suppresses the onBlur save that a browser can still fire when Escape
+  // unmounts the focused rename <input> -- without this, cancelling with
+  // Escape could still persist the edit the user was trying to discard.
+  const skipBlurSaveRef = useRef(false);
+
   function handleSaveRename(id: string) {
+    if (skipBlurSaveRef.current) {
+      skipBlurSaveRef.current = false;
+      return;
+    }
     if (editTitle.trim()) {
       onRenameConversation(id, editTitle.trim());
     }
+    setEditingId(null);
+  }
+
+  function cancelEditing() {
+    skipBlurSaveRef.current = true;
     setEditingId(null);
   }
 
@@ -160,7 +173,7 @@ export function ChatSidebar({
                         onBlur={() => handleSaveRename(c.id)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleSaveRename(c.id);
-                          if (e.key === "Escape") setEditingId(null);
+                          if (e.key === "Escape") cancelEditing();
                         }}
                         className="w-full rounded bg-neutral-800 px-2 py-1 text-xs text-white border border-white/30 focus:outline-none"
                       />

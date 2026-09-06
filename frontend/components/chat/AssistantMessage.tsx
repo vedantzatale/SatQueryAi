@@ -21,9 +21,15 @@ export function AssistantMessage({ content, result }: AssistantMessageProps) {
   const task = result?.task;
 
   function handleCopy() {
-    navigator.clipboard.writeText(answer);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard
+      .writeText(answer)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        // Clipboard permission denied or unavailable -- don't claim success.
+      });
   }
 
   return (

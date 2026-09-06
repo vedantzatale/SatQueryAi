@@ -15,9 +15,16 @@ export function ShareModal() {
   const shareUrl = typeof window !== "undefined" ? window.location.href : "https://satquery.ai/app";
 
   function handleCopy() {
-    navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      })
+      .catch(() => {
+        // Clipboard permission denied or unavailable -- leave the button
+        // showing "Copy link" rather than falsely claiming it succeeded.
+      });
   }
 
   return (

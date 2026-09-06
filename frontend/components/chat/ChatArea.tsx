@@ -115,31 +115,35 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setIsLoading(true);
     setLoadingStatus("Inspecting GeoTIFF/image metadata...");
 
-    for (const file of files) {
-      const isSar = file.name.toLowerCase().includes("sar");
-      const isOptical = file.name.toLowerCase().includes("optical");
-      const previewUrl = URL.createObjectURL(file);
+    // Attachment previews are added synchronously up front, then all
+    // uploads run in parallel rather than blocking one-by-one on each
+    // network round-trip.
+    await Promise.all(
+      files.map(async (file) => {
+        const isSar = file.name.toLowerCase().includes("sar");
+        const isOptical = file.name.toLowerCase().includes("optical");
+        const previewUrl = URL.createObjectURL(file);
 
-      addPendingAttachment({
-        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        file,
-        previewUrl,
-        name: file.name,
-        sizeBytes: file.size,
-        type: isSar ? "sar" : isOptical ? "optical" : "optical",
-        sensor: isSar ? "Sentinel-1 C-SAR" : "Sentinel-2 MSI",
-      });
+        addPendingAttachment({
+          id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          file,
+          previewUrl,
+          name: file.name,
+          sizeBytes: file.size,
+          type: isSar ? "sar" : isOptical ? "optical" : "optical",
+          sensor: isSar ? "Sentinel-1 C-SAR" : "Sentinel-2 MSI",
+        });
 
-      // Try uploading to real backend
-      try {
-        const uploadRes = await uploadImage(currentSessionId, file);
-        if (uploadRes.image_id) {
-          addImageId(uploadRes.image_id);
+        try {
+          const uploadRes = await uploadImage(currentSessionId, file);
+          if (uploadRes.image_id) {
+            addImageId(uploadRes.image_id);
+          }
+        } catch {
+          // Backend not reachable, local attachment preview preserved
         }
-      } catch {
-        // Backend not reachable, local attachment preview preserved
-      }
-    }
+      })
+    );
 
     setIsLoading(false);
     setLoadingStatus(null);
