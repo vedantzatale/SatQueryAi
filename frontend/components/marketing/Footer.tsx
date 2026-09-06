@@ -172,15 +172,15 @@ export function Footer() {
                   <ul className="flex flex-col space-y-2.5 text-xs font-mono text-neutral-400">
                     {section.links.map((link, linkIdx) => (
                       <li key={linkIdx}>
-                        {link.href.startsWith("http") ? (
-                          <a
+                        {link.href.startsWith("http") || link.href.startsWith("/app") ? (
+                          <Link
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-white transition-colors"
                           >
                             {link.label}
-                          </a>
+                          </Link>
                         ) : (
                           <Link
                             href={link.href}

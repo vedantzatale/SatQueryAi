@@ -90,6 +90,7 @@ export interface SpecularButtonProps {
   autoAnimate?: boolean;
   disabled?: boolean;
   href?: string;
+  target?: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   type?: "button" | "submit" | "reset";
@@ -116,6 +117,7 @@ export const SpecularButton: React.FC<SpecularButtonProps> = ({
   autoAnimate = false,
   disabled = false,
   href,
+  target,
   onClick,
   className = "",
   type = "button",
@@ -287,7 +289,9 @@ export const SpecularButton: React.FC<SpecularButtonProps> = ({
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e);
     if (href) {
-      if (href === "/" && typeof window !== "undefined" && window.location.pathname === "/") {
+      if (target === "_blank" || href === "/app" || href.startsWith("/app")) {
+        window.open(href, "_blank", "noopener,noreferrer");
+      } else if (href === "/" && typeof window !== "undefined" && window.location.pathname === "/") {
         if ((window as unknown as { __lenis?: { scrollTo: (target: number, opts: { duration: number }) => void } }).__lenis) {
           (window as unknown as { __lenis: { scrollTo: (target: number, opts: { duration: number }) => void } }).__lenis.scrollTo(0, { duration: 1.2 });
         } else {

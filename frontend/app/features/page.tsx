@@ -104,6 +104,8 @@ export default function FeaturesPage() {
               <div className="pt-2">
                 <Link
                   href="/app"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-medium text-black hover:bg-neutral-200 transition-colors"
                 >
                   <span>Open SatQuery Workspace</span>

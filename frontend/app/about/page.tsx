@@ -95,6 +95,8 @@ export default function AboutPage() {
               <div className="pt-2">
                 <Link
                   href="/app"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-black hover:bg-neutral-200 transition-colors"
                 >
                   <span>Explore in SatQuery AI</span>

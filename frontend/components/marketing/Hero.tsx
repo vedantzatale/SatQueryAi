@@ -39,6 +39,8 @@ export function Hero() {
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3.5">
           <Link
             href="/app"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-[14px] font-medium text-black transition-all duration-200 hover:bg-neutral-200 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
           >
             <span>Try SatQuery AI</span>

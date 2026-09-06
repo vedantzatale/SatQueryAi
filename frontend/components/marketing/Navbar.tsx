@@ -150,6 +150,7 @@ export function Navbar() {
           <LiquidMetalButton
             label="Try SatQuery AI"
             href="/app"
+            target="_blank"
             height={38}
             width={156}
             textColor="#ffffff"
@@ -212,6 +213,7 @@ export function Navbar() {
               <LiquidMetalButton
                 label="Try SatQuery AI"
                 href="/app"
+                target="_blank"
                 height={42}
                 width={200}
                 textColor="#ffffff"

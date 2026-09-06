@@ -39,6 +39,8 @@ export function ProductPreview() {
             </span>
             <Link
               href="/app"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[12px] font-medium text-neutral-300 hover:text-white flex items-center gap-1"
             >
               <span>Open live workspace</span>

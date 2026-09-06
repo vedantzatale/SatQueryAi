@@ -11,6 +11,7 @@ export interface LiquidMetalButtonProps {
   onClick?: () => void;
   viewMode?: "text" | "icon";
   href?: string;
+  target?: string;
   width?: number;
   height?: number;
   textColor?: string;
@@ -23,6 +24,7 @@ export function LiquidMetalButton({
   onClick,
   viewMode = "text",
   href,
+  target,
   width,
   height,
   textColor = "#f5f5f5",
@@ -176,7 +178,11 @@ export function LiquidMetalButton({
 
     onClick?.();
     if (href) {
-      router.push(href);
+      if (target === "_blank" || href === "/app" || href.startsWith("/app")) {
+        window.open(href, "_blank", "noopener,noreferrer");
+      } else {
+        router.push(href);
+      }
     }
   };
 

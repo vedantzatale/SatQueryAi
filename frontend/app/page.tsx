@@ -120,6 +120,8 @@ export default function HomePage() {
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/app"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-medium text-black transition-all hover:bg-neutral-200 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
                 >
                   <span>Launch SatQuery AI</span>

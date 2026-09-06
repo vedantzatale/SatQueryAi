@@ -52,6 +52,8 @@ export function ChangeShowcase() {
           <div className="pt-2">
             <Link
               href="/app"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-neutral-200 hover:text-white transition-colors group"
             >
               <span>Test change detection in workspace</span>
