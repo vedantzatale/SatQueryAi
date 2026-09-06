@@ -175,11 +175,16 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     const attachmentsSnapshot = [...pendingAttachments];
     clearPendingAttachments();
 
+    // Attach-and-send-with-no-question is a real, common flow -- send the
+    // same fallback text to the backend that's shown in the UI, instead of
+    // an empty string the backend has no choice but to reject.
+    const effectiveText = text || "Analyze attached satellite imagery.";
+
     // Append user message immediately
     const userMsg: MessageWithMeta = {
       id: `user-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       role: "user",
-      content: text || "Analyze attached satellite imagery.",
+      content: effectiveText,
       created_at: new Date().toISOString(),
       execution_id: null,
       attachments: attachmentsSnapshot.map((a) => ({ name: a.name, type: a.type })),
@@ -191,7 +196,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
 
     // Try real backend first
     try {
-      const { execution_id } = await submitQuery(currentSessionId, text, imageIds);
+      const { execution_id } = await submitQuery(currentSessionId, effectiveText, imageIds);
       setLoadingStatus("Generating grounded evidence...");
       const analysisResult = await getAnalysis(execution_id);
 

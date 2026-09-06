@@ -67,7 +67,7 @@ class AgentAdapter(BaseModelAdapter):
         language = self._detect_language(query_text)
         q = query_text.lower()
 
-        task, intent = self._detect_task(q)
+        task, intent = self._detect_task(q, image_count)
         temporal = task in ("change_vqa", "change_detection") or "compare" in q and (
             "date" in q or "year" in q or "before" in q or "after" in q
         )
@@ -115,10 +115,15 @@ class AgentAdapter(BaseModelAdapter):
         return "en"
 
     @staticmethod
-    def _detect_task(q: str) -> tuple[str, str]:
+    def _detect_task(q: str, image_count: int = 0) -> tuple[str, str]:
         if any(kw in q for kw in ["optical and sar", "optical + sar", "radar and optical", "combine optical"]):
             return "optical_sar_analysis", "cross_modal_analysis"
-        if any(kw in q for kw in ["find satellite", "retrieve", "get satellite", "satellite imagery", "satellite data"]):
+        # Retrieval means "go find imagery for me" -- never the right read
+        # when the user already attached images to analyze, even if their
+        # wording happens to mention "satellite imagery"/"satellite data".
+        if image_count == 0 and any(
+            kw in q for kw in ["find satellite", "retrieve", "get satellite", "satellite imagery", "satellite data"]
+        ):
             return "satellite_retrieval", "data_retrieval"
         if any(
             kw in q
