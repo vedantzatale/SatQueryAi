@@ -23,6 +23,24 @@ export interface ConversationSummaryItem {
   category: "Today" | "Yesterday" | "Previous 7 Days" | "Older";
 }
 
+export function SidebarCollapseIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="3.5" />
+      <line x1="8.5" y1="3" x2="8.5" y2="21" />
+      <path d="m14 9.5-2.5 2.5 2.5 2.5" />
+    </svg>
+  );
+}
+
 interface ChatSidebarProps {
   conversations: ConversationSummaryItem[];
   activeId: string | null;
@@ -30,6 +48,8 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, newTitle: string) => void;
+  isOpenDesktop?: boolean;
+  onToggleDesktop?: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
 }
@@ -41,6 +61,8 @@ export function ChatSidebar({
   onNewChat,
   onDeleteConversation,
   onRenameConversation,
+  isOpenDesktop = true,
+  onToggleDesktop,
   isOpenMobile = false,
   onCloseMobile,
 }: ChatSidebarProps) {
@@ -90,12 +112,16 @@ export function ChatSidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/10 bg-[#000000] transition-transform duration-300 md:static md:translate-x-0 ${
-        isOpenMobile ? "translate-x-0" : "-translate-x-full"
+      className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/10 bg-[#000000] transition-all duration-300 md:static ${
+        isOpenMobile ? "translate-x-0 w-72" : "-translate-x-full md:translate-x-0"
+      } ${
+        isOpenDesktop
+          ? "md:w-72 md:opacity-100 md:pointer-events-auto"
+          : "md:w-0 md:opacity-0 md:pointer-events-none md:border-r-0 md:overflow-hidden"
       }`}
     >
       {/* Top Header / Brand + New Chat */}
-      <div className="p-3.5 space-y-3">
+      <div className="p-3.5 space-y-3 min-w-[288px]">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -109,12 +135,15 @@ export function ChatSidebar({
 
           <div className="flex items-center gap-1">
             <button
-              onClick={onCloseMobile}
-              className="p-1 text-neutral-400 hover:text-white rounded transition-colors"
-              aria-label="Toggle Sidebar"
-              title="Toggle Sidebar"
+              onClick={() => {
+                if (onToggleDesktop) onToggleDesktop();
+                if (onCloseMobile) onCloseMobile();
+              }}
+              className="p-1 text-neutral-400 hover:text-white rounded hover:bg-white/5 transition-colors"
+              aria-label="Toggle Sidebar (⌘B)"
+              title="Toggle Sidebar (⌘B)"
             >
-              <PanelLeftClose className="h-4 w-4" />
+              <SidebarCollapseIcon className="h-4 w-4" />
             </button>
             {onCloseMobile && (
               <button
@@ -127,6 +156,7 @@ export function ChatSidebar({
             )}
           </div>
         </div>
+
 
         {/* New Chat Button */}
         <button

@@ -6,9 +6,15 @@ import { useAppStore } from "@/lib/store";
 
 interface ChatHeaderProps {
   onToggleMobileSidebar: () => void;
+  isOpenDesktop?: boolean;
+  onToggleDesktop?: () => void;
 }
 
-export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
+export function ChatHeader({
+  onToggleMobileSidebar,
+  isOpenDesktop = true,
+  onToggleDesktop,
+}: ChatHeaderProps) {
   const activeSessionTitle = useAppStore((s) => s.activeSessionTitle);
   const isTemporaryChat = useAppStore((s) => s.isTemporaryChat);
   const setIsTemporaryChat = useAppStore((s) => s.setIsTemporaryChat);
@@ -22,11 +28,35 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
         {/* Mobile menu button */}
         <button
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-1.5 text-neutral-400 hover:text-white"
+          className="md:hidden p-1.5 text-neutral-400 hover:text-white rounded hover:bg-white/5"
           aria-label="Open Sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
+
+        {/* Desktop Expand Button when sidebar is collapsed */}
+        {!isOpenDesktop && (
+          <button
+            onClick={onToggleDesktop}
+            className="hidden md:flex p-1.5 text-neutral-400 hover:text-white rounded hover:bg-white/5 transition-colors"
+            aria-label="Open Sidebar (⌘B)"
+            title="Open Sidebar (⌘B)"
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect width="18" height="18" x="3" y="3" rx="3.5" />
+              <line x1="8.5" y1="3" x2="8.5" y2="21" />
+              <path d="m11.5 9.5 2.5 2.5-2.5 2.5" />
+            </svg>
+          </button>
+        )}
 
         {/* Title */}
         <div className="flex items-center gap-2">
@@ -35,6 +65,7 @@ export function ChatHeader({ onToggleMobileSidebar }: ChatHeaderProps) {
           </h1>
         </div>
       </div>
+
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3 text-xs">

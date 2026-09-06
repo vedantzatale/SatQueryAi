@@ -16,6 +16,7 @@ export default function WorkspacePage() {
   const resetConversationState = useAppStore((s) => s.resetConversationState);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [conversations, setConversations] = useState<ConversationSummaryItem[]>(
     MOCK_SESSIONS.map((s) => ({
       id: s.id,
@@ -23,6 +24,22 @@ export default function WorkspacePage() {
       category: s.category,
     }))
   );
+
+  // Global keyboard shortcuts (Cmd+B to toggle sidebar, Cmd+N for new chat)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setDesktopSidebarOpen((prev) => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        resetConversationState();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [resetConversationState]);
 
   // Sync with real backend sessions on load if available
   useEffect(() => {
@@ -73,7 +90,6 @@ export default function WorkspacePage() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#000000] text-neutral-100 font-sans selection:bg-white selection:text-black">
       {/* Sidebar (Desktop + Mobile Drawer) */}
-
       <ChatSidebar
         conversations={conversations}
         activeId={sessionId}
@@ -81,6 +97,8 @@ export default function WorkspacePage() {
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={handleRenameConversation}
+        isOpenDesktop={desktopSidebarOpen}
+        onToggleDesktop={() => setDesktopSidebarOpen((prev) => !prev)}
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
       />
@@ -95,7 +113,11 @@ export default function WorkspacePage() {
 
       {/* Main Chat Workspace */}
       <div className="flex flex-1 flex-col h-full min-w-0 overflow-hidden">
-        <ChatHeader onToggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <ChatHeader
+          onToggleMobileSidebar={() => setMobileSidebarOpen(true)}
+          isOpenDesktop={desktopSidebarOpen}
+          onToggleDesktop={() => setDesktopSidebarOpen((prev) => !prev)}
+        />
         <ChatArea />
       </div>
 
@@ -105,3 +127,4 @@ export default function WorkspacePage() {
     </div>
   );
 }
+
