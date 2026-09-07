@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 
 export interface FAQItem {
   q: string;
@@ -60,14 +61,20 @@ export function FAQLuxury({
   subtitle = "Earth observation intelligence & foundation model architecture.",
 }: FAQLuxuryProps) {
   const [active, setActive] = useState<number | null>(0);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   return (
     <section
       id="faq"
-      className="w-full min-h-[70vh] flex items-center justify-center relative overflow-hidden py-24 select-none border-t border-white/10 bg-[#070707] text-white transition-colors"
+      className={`w-full min-h-[70vh] flex items-center justify-center relative overflow-hidden py-24 select-none border-t ${
+        isLight
+          ? "border-black/10 bg-[#f5f2eb] text-[#18181b]"
+          : "border-white/10 bg-[#070707] text-white"
+      } transition-colors duration-200`}
     >
       {/* Subtle Background Animated Blobs */}
-      <div className="absolute inset-0 opacity-40 pointer-events-none transition-opacity">
+      <div className={`absolute inset-0 ${isLight ? "opacity-0" : "opacity-40"} pointer-events-none transition-opacity`}>
         <motion.div
           animate={{ scale: [1, 1.15, 1], rotate: [0, 90, 0] }}
           transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
@@ -81,11 +88,11 @@ export function FAQLuxury({
       </div>
 
       <div className="w-full max-w-4xl z-10 px-4 sm:px-6">
-        <div className="mb-14 pl-6 border-l-2 border-white/20">
-          <h2 className="text-4xl sm:text-5xl font-light tracking-tight mb-2 text-white font-serif">
+        <div className={`mb-14 pl-6 border-l-2 ${isLight ? "border-black/25" : "border-white/20"}`}>
+          <h2 className={`text-4xl sm:text-5xl font-light tracking-tight mb-2 font-serif ${isLight ? "text-[#18181b]" : "text-white"}`}>
             {title}
           </h2>
-          <p className="tracking-wider uppercase text-xs font-mono text-[#888888]">
+          <p className={`tracking-wider uppercase text-xs font-mono faq-subtitle ${isLight ? "text-[#57534e] font-medium" : "text-[#888888]"}`}>
             {subtitle}
           </p>
         </div>
@@ -96,8 +103,8 @@ export function FAQLuxury({
             return (
               <div
                 key={i}
-                className={`border-t border-white/10 ${
-                  i === faqs.length - 1 ? "border-b border-white/10" : ""
+                className={`${isLight ? "border-t border-black/10" : "border-t border-white/10"} ${
+                  i === faqs.length - 1 ? (isLight ? "border-b border-black/10" : "border-b border-white/10") : ""
                 }`}
               >
                 <button
@@ -106,10 +113,14 @@ export function FAQLuxury({
                   className="w-full py-6 sm:py-8 text-left flex justify-between items-center group transition-colors"
                 >
                   <span
-                    className={`text-lg sm:text-2xl font-light transition-colors duration-300 pr-4 ${
+                    className={`text-lg sm:text-2xl transition-colors duration-300 pr-4 faq-question ${
                       isOpen
-                        ? "text-white font-normal"
-                        : "text-[#a3a3a3] group-hover:text-white"
+                        ? isLight
+                          ? "text-[#0a0a0a] font-medium"
+                          : "text-white font-normal"
+                        : isLight
+                          ? "text-[#1c1917] group-hover:text-black font-normal"
+                          : "text-[#a3a3a3] group-hover:text-white font-light"
                     }`}
                   >
                     {faq.q}
@@ -117,10 +128,14 @@ export function FAQLuxury({
                   <motion.span
                     animate={{ rotate: isOpen ? 90 : 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className={`shrink-0 transition-colors ${
+                    className={`shrink-0 transition-colors faq-arrow ${
                       isOpen
-                        ? "text-white"
-                        : "text-[#737373] group-hover:text-white"
+                        ? isLight
+                          ? "text-[#0a0a0a]"
+                          : "text-white"
+                        : isLight
+                          ? "text-[#57534e] group-hover:text-black"
+                          : "text-[#737373] group-hover:text-white"
                     }`}
                   >
                     <ArrowRight size={22} />
@@ -136,7 +151,9 @@ export function FAQLuxury({
                       transition={{ duration: 0.35, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="pb-8 pr-6 sm:pr-12 text-sm sm:text-base font-light leading-relaxed max-w-3xl text-[#d4d4d4]">
+                      <div className={`pb-8 pr-6 sm:pr-12 text-sm sm:text-base leading-relaxed max-w-3xl faq-answer ${
+                        isLight ? "text-[#27272a] font-normal" : "text-[#d4d4d4] font-light"
+                      }`}>
                         {faq.a}
                       </div>
                     </motion.div>

@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUp, Brain, Lightbulb, Mic, Plus } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 
 export function Hero() {
   const [activeTab, setActiveTab] = useState<"decision" | "spatial">("spatial");
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   return (
-    <div className="w-full bg-[#0c0c0c] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden antialiased">
+    <div className={`w-full ${isLight ? "bg-[#f5f2eb] text-[#18181b]" : "bg-[#0c0c0c] text-white"} font-sans selection:bg-white selection:text-black overflow-x-hidden antialiased transition-colors duration-200`}>
       <style jsx global>{`
         :root {
           --hero-bg: #0c0c0c;
@@ -50,6 +53,18 @@ export function Hero() {
             #78d0cd 88%,
             rgba(120, 208, 205, 0.55) 100%
           );
+        }
+
+        html.light {
+          --hero-bg: #f5f2eb;
+          --hero-box: #fcfbf8;
+          --hero-hairline: rgba(0, 0, 0, 0.08);
+          --hero-heading: #18181b;
+          --hero-subtitle: #52525b;
+          --hero-nav: #444444;
+          --hero-placeholder: #78716c;
+          --hero-chip-fill: rgba(0, 0, 0, 0.04);
+          --hero-chip-border: rgba(0, 0, 0, 0.12);
         }
 
         @keyframes send-ring-sweep {
@@ -107,7 +122,7 @@ export function Hero() {
       >
         {/* Centered Hero Headline & Subtitle */}
         <div className="flex flex-col items-center text-center mt-6 sm:mt-10">
-          <h1 className="text-[clamp(2.25rem,5.2vw,5.5rem)] font-bold sm:font-semibold leading-[1.04] tracking-[-0.021em] text-[#fafafa] max-w-4xl">
+          <h1 className={`text-[clamp(2.25rem,5.2vw,5.5rem)] font-bold sm:font-semibold leading-[1.04] tracking-[-0.021em] ${isLight ? "text-[#18181b]" : "text-[#fafafa]"} max-w-4xl`}>
             <span className="block overflow-hidden pb-[0.16em] -mb-[0.16em]">
               <span className="inline-block">Think clearly.</span>
             </span>
@@ -116,7 +131,7 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-[clamp(1.1rem,2.5vw,2.5rem)] max-w-xl text-[clamp(1.05rem,1.45vw,1.45rem)] leading-[1.4] text-neutral-300 font-normal tracking-[0.004em]">
+          <p className={`mt-[clamp(1.1rem,2.5vw,2.5rem)] max-w-xl text-[clamp(1.05rem,1.45vw,1.45rem)] leading-[1.4] ${isLight ? "text-[#52525b]" : "text-neutral-300"} font-normal tracking-[0.004em]`}>
             An AI workspace that structures your reasoning,
             <br className="hidden sm:inline" /> not just your answers.
           </p>
@@ -127,14 +142,14 @@ export function Hero() {
               href="/app"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-xs sm:text-sm font-medium text-[#0c0c0c] hover:bg-[#ededed] active:scale-[0.98] transition-all shadow-[0_0_24px_rgba(255,255,255,0.15)]"
+              className={`group flex items-center gap-2 rounded-full ${isLight ? "bg-[#18181b] text-white hover:bg-[#27272a] shadow-[0_4px_20px_rgba(0,0,0,0.12)]" : "bg-white text-[#0c0c0c] hover:bg-[#ededed] shadow-[0_0_24px_rgba(255,255,255,0.15)]"} px-6 py-2.5 text-xs sm:text-sm font-medium active:scale-[0.98] transition-all`}
             >
               <span>Start Free</span>
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#features"
-              className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-5 py-2.5 text-xs sm:text-sm font-normal text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all"
+              className={`flex items-center gap-2 rounded-full border ${isLight ? "border-black/10 bg-black/[0.03] text-neutral-800 hover:bg-black/[0.08]" : "border-white/15 bg-white/[0.03] text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/30"} px-5 py-2.5 text-xs sm:text-sm font-normal transition-all`}
             >
               Explore features
             </a>
@@ -143,7 +158,7 @@ export function Hero() {
 
         {/* COMPOSER CARD (Hero Interactive Element) */}
         <div className="composer-shell w-full flex justify-center mt-[clamp(1.8rem,3.2vw,3.2rem)] relative z-10">
-          <div className="composer relative w-full max-w-[860px] min-h-[190px] sm:min-h-[220px] rounded-[clamp(16px,1.5vw,22px)] border border-white/[0.065] bg-[#111111] bg-gradient-to-b from-white/[0.028] via-transparent to-transparent p-[clamp(16px,2vw,30px)] flex flex-col justify-between shadow-[0_2px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className={`composer relative w-full max-w-[860px] min-h-[190px] sm:min-h-[220px] rounded-[clamp(16px,1.5vw,22px)] border ${isLight ? "border-black/10 bg-[#fcfbf8] shadow-[0_12px_40px_-8px_rgba(40,30,20,0.08),inset_0_1px_0_rgba(255,255,255,0.9)]" : "border-white/[0.065] bg-[#111111] bg-gradient-to-b from-white/[0.028] via-transparent to-transparent shadow-[0_2px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)]"} p-[clamp(16px,2vw,30px)] flex flex-col justify-between`}>
             {/* Yellow-to-Teal Underglow hugging bottom edge */}
             <div
               className="composer-glow absolute inset-x-0 -bottom-[3px] sm:-bottom-[5px] h-3 rounded-b-[inherit] -z-10 opacity-95 blur-[1px] pointer-events-none"
@@ -151,7 +166,7 @@ export function Hero() {
             />
 
             {/* Placeholder Text */}
-            <div className="text-[#aeaeae] text-[clamp(1rem,1.35vw,1.35rem)] font-normal select-none">
+            <div className={`${isLight ? "text-[#78716c]" : "text-[#aeaeae]"} text-[clamp(1rem,1.35vw,1.35rem)] font-normal select-none`}>
               Break down a satellite scene, AOI change, or raster query…
             </div>
 
@@ -160,7 +175,7 @@ export function Hero() {
               {/* Plus Button */}
               <Link
                 href="/app"
-                className="chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] shrink-0 items-center justify-center rounded-full bg-white/[0.028] text-white hover:bg-white/[0.08] transition-colors"
+                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] shrink-0 items-center justify-center rounded-full ${isLight ? "bg-black/[0.04] text-neutral-900 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} transition-colors`}
                 aria-label="Add attachment"
                 title="Add attachment"
               >
@@ -170,9 +185,9 @@ export function Hero() {
               {/* DeepThink Pill Chip */}
               <button
                 type="button"
-                className="chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] items-center gap-2 rounded-full bg-white/[0.028] px-[clamp(12px,1.4vw,22px)] text-xs sm:text-[13px] font-normal text-white hover:bg-white/[0.08] transition-colors"
+                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] items-center gap-2 rounded-full ${isLight ? "bg-black/[0.04] text-neutral-900 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} px-[clamp(12px,1.4vw,22px)] text-xs sm:text-[13px] font-normal transition-colors`}
               >
-                <Lightbulb className="h-3.5 w-3.5 text-amber-300" />
+                <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
                 <span>DeepThink</span>
               </button>
 
@@ -182,7 +197,7 @@ export function Hero() {
               {/* Mic Icon */}
               <button
                 type="button"
-                className="flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] items-center justify-center rounded-full text-[#e1e1e1] hover:text-white hover:bg-white/10 transition-colors"
+                className={`flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] items-center justify-center rounded-full ${isLight ? "text-neutral-600 hover:text-neutral-900 hover:bg-black/5" : "text-[#e1e1e1] hover:text-white hover:bg-white/10"} transition-colors`}
                 aria-label="Voice query"
                 title="Voice query"
               >
@@ -202,7 +217,7 @@ export function Hero() {
                   style={{ background: "var(--hero-grad-solid)" }}
                 />
                 {/* Inner Disc with Up-Arrow */}
-                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#141414] text-[#fafafa] z-10">
+                <div className={`relative flex h-full w-full items-center justify-center rounded-full ${isLight ? "bg-[#18181b] text-[#fafafa]" : "bg-[#141414] text-[#fafafa]"} z-10`}>
                   <ArrowUp className="h-4 w-4 stroke-[2.4]" />
                 </div>
               </Link>
@@ -211,7 +226,7 @@ export function Hero() {
         </div>
 
         {/* TRUST LOGOS FOOTER */}
-        <div className="mt-14 sm:mt-20 pt-6 border-t border-white/[0.05] flex flex-wrap items-center justify-center gap-[clamp(1.8rem,5vw,5.5rem)] text-[#5c5c5c]">
+        <div className={`mt-14 sm:mt-20 pt-6 border-t ${isLight ? "border-black/10 text-neutral-500" : "border-white/[0.05] text-[#5c5c5c]"} flex flex-wrap items-center justify-center gap-[clamp(1.8rem,5vw,5.5rem)]`}>
           {/* Brand 1 */}
           <div className="flex items-center gap-2">
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -256,15 +271,15 @@ export function Hero() {
       ════════════════════════════════════ */}
       <section
         id="features"
-        className="section-two relative min-h-[100dvh] bg-[#0c0c0c] pt-[clamp(70px,10vw,160px)] pb-[clamp(30px,4vh,60px)] px-4 sm:px-6 md:px-8 max-w-[1300px] mx-auto flex flex-col justify-between"
+        className={`section-two relative min-h-[100dvh] ${isLight ? "bg-[#ede8df]" : "bg-[#0c0c0c]"} pt-[clamp(70px,10vw,160px)] pb-[clamp(30px,4vh,60px)] px-4 sm:px-6 md:px-8 max-w-[1300px] mx-auto flex flex-col justify-between`}
       >
         {/* Section 2 Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
-          <h2 className="text-[clamp(2rem,4.4vw,3.6rem)] font-bold sm:font-semibold leading-[1.08] tracking-[-0.02em] text-[#ffffff]">
+          <h2 className={`text-[clamp(2rem,4.4vw,3.6rem)] font-bold sm:font-semibold leading-[1.08] tracking-[-0.02em] ${isLight ? "text-[#18181b]" : "text-[#ffffff]"}`}>
             <span className="block">Built for Earth intelligence.</span>
-            <span className="block text-neutral-300">Powered by structured spatial models.</span>
+            <span className={`block ${isLight ? "text-neutral-600" : "text-neutral-300"}`}>Powered by structured spatial models.</span>
           </h2>
-          <p className="mt-4 text-[clamp(0.95rem,1.3vw,1.2rem)] text-neutral-300 leading-relaxed">
+          <p className={`mt-4 text-[clamp(0.95rem,1.3vw,1.2rem)] ${isLight ? "text-neutral-600" : "text-neutral-300"} leading-relaxed`}>
             Ask complex geospatial questions. Explore multi-sensor perspectives.
             <br className="hidden sm:inline" /> Get structured, reliable answers — instantly.
           </p>
@@ -289,10 +304,10 @@ export function Hero() {
           </div>
 
           {/* Inner Dark Chat Card */}
-          <div className="chat-card max-w-[840px] mx-auto rounded-[clamp(14px,1.4vw,20px)] bg-[#0d0d0d] border border-white/10 p-[clamp(16px,2vw,28px)] shadow-2xl space-y-4 font-sans">
+          <div className={`chat-card max-w-[840px] mx-auto rounded-[clamp(14px,1.4vw,20px)] ${isLight ? "bg-[#fcfbf8] border border-black/10 shadow-xl" : "bg-[#0d0d0d] border border-white/10 shadow-2xl"} p-[clamp(16px,2vw,28px)] space-y-4 font-sans`}>
             {/* Message 1: User */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
+              <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 What changed between these two Sentinel-2 images of northern Pune?
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
@@ -313,21 +328,21 @@ export function Hero() {
               >
                 <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_4px_white]" />
               </div>
-              <div className="max-w-[82%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm space-y-2">
+              <div className={`max-w-[82%] rounded-[15px] ${isLight ? "bg-[#f2ede4] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm space-y-2`}>
                 <p>Let&#39;s evaluate the spectral change across four spatial dimensions:</p>
-                <ul className="space-y-1 pl-1 text-neutral-300">
+                <ul className={`space-y-1 pl-1 ${isLight ? "text-neutral-700" : "text-neutral-300"}`}>
                   <li>• Built-up urban expansion (+12.4 ha)</li>
                   <li>• Agricultural plot conversion</li>
                   <li>• Vegetation canopy index (NDVI)</li>
                   <li>• Surface moisture &amp; runoff (NDWI)</li>
                 </ul>
-                <p className="pt-1 text-white font-medium">Would you like to prioritize SAR radar or optical multispectral evidence?</p>
+                <p className={`pt-1 ${isLight ? "text-neutral-900" : "text-white"} font-medium`}>Would you like to prioritize SAR radar or optical multispectral evidence?</p>
               </div>
             </div>
 
             {/* Message 3: User */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
+              <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 Analyze the Mumbai coastal SAR data. Did flood inundation rise in August?
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
@@ -348,14 +363,14 @@ export function Hero() {
               >
                 <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_4px_white]" />
               </div>
-              <div className="max-w-[82%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
+              <div className={`max-w-[82%] rounded-[15px] ${isLight ? "bg-[#f2ede4] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-3 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 I&#39;ve coregistered the Sentinel-1 C-SAR pass. The flood extent in August increased by 14.2 hectares across low-lying estuaries. I&#39;ve drafted a calibrated change report below.
               </div>
             </div>
 
             {/* Message 5: User (Final) */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[80%] rounded-[15px] bg-[#1c1c1c] text-[#efefef] px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm">
+              <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 Quantify deforestation across Sector 4B and export a GeoJSON polygon mask for GIS
               </div>
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
@@ -370,12 +385,12 @@ export function Hero() {
             <div className="pt-2">
               <Link
                 href="/app"
-                className="flex items-center justify-between rounded-full bg-[#fdfdfd] px-4 py-2 sm:py-2.5 shadow-md hover:bg-white transition-colors cursor-text text-left"
+                className={`flex items-center justify-between rounded-full ${isLight ? "bg-[#ede8df] border border-black/10 hover:bg-[#e5dfd5]" : "bg-[#fdfdfd] hover:bg-white"} px-4 py-2 sm:py-2.5 shadow-md transition-colors cursor-text text-left`}
               >
-                <span className="text-[#6b6b6d] text-xs sm:text-sm font-normal">Ask a question about the satellite imagery…</span>
+                <span className={`${isLight ? "text-[#52525b]" : "text-[#6b6b6d]"} text-xs sm:text-sm font-normal`}>Ask a question about the satellite imagery…</span>
                 <div className="flex items-center gap-2">
-                  <Mic className="h-4 w-4 text-[#111111]" />
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0c0c0c] text-white">
+                  <Mic className={`h-4 w-4 ${isLight ? "text-neutral-700" : "text-[#111111]"}`} />
+                  <div className={`flex h-6 w-6 items-center justify-center rounded-full ${isLight ? "bg-[#18181b]" : "bg-[#0c0c0c]"} text-white`}>
                     <ArrowUp className="h-3 w-3 stroke-[2.5]" />
                   </div>
                 </div>

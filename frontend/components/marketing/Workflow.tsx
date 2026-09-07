@@ -11,8 +11,12 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 
 export function Workflow() {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+
   const steps = [
     {
       num: "01",
@@ -53,18 +57,18 @@ export function Workflow() {
   ];
 
   return (
-    <section className="relative w-full max-w-[1140px] mx-auto px-6 sm:px-8 py-20 border-t border-white/10">
+    <section className={`relative w-full max-w-[1140px] mx-auto px-6 sm:px-8 py-20 border-t ${isLight ? "border-black/10" : "border-white/10"} transition-colors duration-200`}>
       <div className="max-w-2xl mx-auto text-center mb-16 space-y-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 font-mono text-[11px] tracking-wider uppercase text-neutral-300">
-          <Network className="h-3 w-3 text-neutral-400" />
+        <div className={`inline-flex items-center gap-2 rounded-full border ${isLight ? "border-black/10 bg-black/5 text-neutral-700" : "border-white/10 bg-white/[0.03] text-neutral-300"} px-3.5 py-1 font-mono text-[11px] tracking-wider uppercase`}>
+          <Network className={`h-3 w-3 ${isLight ? "text-neutral-600" : "text-neutral-400"}`} />
           <span>OBSERVABLE AGENTIC PIPELINE</span>
         </div>
 
-        <h2 className="text-[clamp(34px,4.6vw,56px)] font-bold sm:font-semibold leading-[1.06] tracking-[-0.025em] text-white">
+        <h2 className={`text-[clamp(34px,4.6vw,56px)] font-bold sm:font-semibold leading-[1.06] tracking-[-0.025em] ${isLight ? "text-neutral-900" : "text-white"}`}>
           How SatQuery analyzes.
         </h2>
 
-        <p className="text-[16px] sm:text-[17.5px] leading-[1.65] text-neutral-300 font-normal">
+        <p className={`text-[16px] sm:text-[17.5px] leading-[1.65] ${isLight ? "text-neutral-600" : "text-neutral-300"} font-normal`}>
           SatQuery routes questions through a deterministic, auditable multi-stage pipeline rather
           than feeding raw satellite data directly into an ungrounded black-box chatbot.
         </p>
@@ -75,22 +79,22 @@ export function Workflow() {
         {steps.map((step, idx) => (
           <div
             key={idx}
-            className="tech-card rounded-2xl p-6 flex flex-col justify-between relative group"
+            className={`tech-card rounded-2xl p-6 flex flex-col justify-between relative group ${isLight ? "!bg-[#fcfbf8] !border-black/10 !shadow-sm" : ""}`}
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="font-mono text-xs text-neutral-400 font-semibold">{step.num}</span>
-                <span className="font-mono text-[10px] text-neutral-400 border border-white/10 bg-white/5 px-2 py-0.5 rounded">
+                <span className={`font-mono text-xs ${isLight ? "text-neutral-700 font-bold" : "text-neutral-400 font-semibold"}`}>{step.num}</span>
+                <span className={`font-mono text-[10px] ${isLight ? "text-neutral-700 border-black/10 bg-black/5" : "text-neutral-400 border-white/10 bg-white/5"} border px-2 py-0.5 rounded`}>
                   {step.model}
                 </span>
               </div>
-              <h3 className="text-base font-semibold text-white mb-2 tracking-tight">{step.title}</h3>
-              <p className="text-[13px] leading-relaxed text-neutral-300">{step.desc}</p>
+              <h3 className={`text-base font-semibold ${isLight ? "text-neutral-900" : "text-white"} mb-2 tracking-tight`}>{step.title}</h3>
+              <p className={`text-[13px] leading-relaxed ${isLight ? "text-neutral-600" : "text-neutral-300"}`}>{step.desc}</p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-neutral-400">
+            <div className={`mt-5 pt-3 border-t ${isLight ? "border-black/10 text-neutral-500" : "border-white/5 text-neutral-400"} flex items-center justify-between text-[10px] font-mono`}>
               <span>AUDIT VERIFIED</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-white/30 group-hover:bg-white transition-colors" />
+              <span className={`h-1.5 w-1.5 rounded-full ${isLight ? "bg-neutral-400 group-hover:bg-neutral-900" : "bg-white/30 group-hover:bg-white"} transition-colors`} />
             </div>
           </div>
         ))}

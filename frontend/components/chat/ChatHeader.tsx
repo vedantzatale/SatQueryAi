@@ -16,6 +16,7 @@ import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface ChatHeaderProps {
   onToggleMobileSidebar: () => void;
@@ -111,6 +112,9 @@ export function ChatHeader({
           <Cpu className="w-3.5 h-3.5 text-[#888888]" />
           <span>GeoChat • Sentinel Core</span>
         </div>
+
+        {/* Theme Toggle (Default / Light / Dark) */}
+        <ThemeToggle />
 
         {/* Temporary Toggle Button */}
         <button

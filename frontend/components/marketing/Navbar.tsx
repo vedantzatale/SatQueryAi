@@ -8,11 +8,15 @@ import { ArrowUpRight, Menu, X } from "lucide-react";
 import { PillNav } from "./PillNav";
 import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
 import { SpecularButton } from "@/components/ui/SpecularButton";
+import { ThemeToggle, ThemeToggleLabeled } from "@/components/ui/ThemeToggle";
+import { useTheme } from "@/lib/theme";
 
 export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(pathname !== "/");
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0;
@@ -147,10 +151,10 @@ export function Navbar() {
           <SpecularButton
             size="md"
             radius={9999}
-            backgroundColor="#090909"
-            textColor="#f0f0f0"
-            lineColor="#ffffff"
-            baseColor="#3a3a3a"
+            backgroundColor={isLight ? "#ece7de" : "#090909"}
+            textColor={isLight ? "#18181b" : "#f0f0f0"}
+            lineColor={isLight ? "#18181b" : "#ffffff"}
+            baseColor={isLight ? "#d4cebe" : "#3a3a3a"}
             intensity={1.2}
             shineSize={12}
             shineFade={35}
@@ -169,8 +173,8 @@ export function Navbar() {
               className="h-6 w-6 rounded-[5px] object-contain mr-2 shadow-sm shrink-0"
               priority
             />
-            <span className="font-mono tracking-tight text-[14px] sm:text-[14.5px] text-neutral-100 uppercase">
-              SATQUERY<span className="text-neutral-500 ml-1">AI</span>
+            <span className={`font-mono tracking-tight text-[14px] sm:text-[14.5px] uppercase ${isLight ? "text-neutral-900" : "text-neutral-100"}`}>
+              SATQUERY<span className={isLight ? "text-neutral-500 ml-1" : "text-neutral-500 ml-1"}>AI</span>
             </span>
           </SpecularButton>
         </div>
@@ -187,24 +191,26 @@ export function Navbar() {
             ease="power2.out"
             hoverDuration={0.65}
             leaveDuration={0.45}
-            baseColor="#ffffff"
+            baseColor={isLight ? "#18181b" : "#ffffff"}
             pillColor="transparent"
-            pillTextColor="#ffffff"
-            hoveredPillTextColor="#000000"
-            containerBg="#080808"
+            pillTextColor={isLight ? "#18181b" : "#ffffff"}
+            hoveredPillTextColor={isLight ? "#ffffff" : "#000000"}
+            containerBg={isLight ? "#ece7de" : "#080808"}
             initialLoadAnimation={false}
           />
         </div>
 
-        {/* Right: Contact & Action CTA */}
+        {/* Right: Theme toggle, Contact & Action CTA */}
         <div className="flex-1 hidden md:flex items-center justify-end gap-3 pointer-events-auto">
+          {/* 3-option theme toggle */}
+          <ThemeToggle />
           <SpecularButton
             size="md"
             radius={9999}
-            backgroundColor="#090909"
-            textColor="#f0f0f0"
-            lineColor="#ffffff"
-            baseColor="#3a3a3a"
+            backgroundColor={isLight ? "#ece7de" : "#090909"}
+            textColor={isLight ? "#18181b" : "#f0f0f0"}
+            lineColor={isLight ? "#18181b" : "#ffffff"}
+            baseColor={isLight ? "#d4cebe" : "#3a3a3a"}
             intensity={1.2}
             shineSize={12}
             shineFade={35}
@@ -232,7 +238,11 @@ export function Navbar() {
         <div className="flex md:hidden items-center pointer-events-auto">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center justify-center h-11 w-11 rounded-full border border-white/15 bg-[#0e0e0e]/90 text-neutral-300 hover:text-white shadow-md transition-colors"
+            className={`flex items-center justify-center h-11 w-11 rounded-full border ${
+              isLight
+                ? "border-black/10 bg-[#ece7de] text-neutral-800"
+                : "border-white/15 bg-[#0e0e0e]/90 text-neutral-300 hover:text-white"
+            } shadow-md transition-colors`}
             aria-label="Toggle Navigation"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -242,7 +252,11 @@ export function Navbar() {
 
       {/* Mobile menu drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden mt-2 border border-white/15 bg-[#0c0c0c]/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl animate-fade-in pointer-events-auto">
+        <div className={`md:hidden mt-2 border ${
+          isLight
+            ? "border-black/10 bg-[#f5f2eb]/95 text-neutral-900"
+            : "border-white/15 bg-[#0c0c0c]/95 text-neutral-300"
+        } backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl animate-fade-in pointer-events-auto`}>
           <nav className="flex flex-col gap-3">
             <Link
               href="/#features"
@@ -283,6 +297,11 @@ export function Navbar() {
                 icon={<ArrowUpRight className="h-4 w-4 text-neutral-200" />}
                 onClick={() => setMobileMenuOpen(false)}
               />
+            </div>
+            {/* Theme toggle — labeled row for mobile */}
+            <div className="border-t border-white/10 pt-3">
+              <p className="text-xs text-neutral-600 mb-1.5 px-0.5">Theme</p>
+              <ThemeToggleLabeled />
             </div>
           </nav>
         </div>
