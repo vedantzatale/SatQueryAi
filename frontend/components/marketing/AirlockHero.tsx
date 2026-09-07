@@ -115,9 +115,9 @@ function clamp(v: number, min: number, max: number) {
 export default function AirlockHero({
     videoSrc = DEFAULT_VIDEO,
     posterSrc = DEFAULT_POSTER,
-    title = "THE AIRLOCK OPENS",
+    title = "SATQUERY AI",
     scrollHint = "SCROLL",
-    tagline = "Everything you know fits in one half of the frame.",
+    tagline = "Imagery should be queried, not merely viewed.",
     signature = false,
     scrubDistance = 2600,
     holdDistance = 180,
