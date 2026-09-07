@@ -95,17 +95,13 @@
     color: #18181b !important;
   }
 
-  /* Any element or button with a dark surface MUST preserve white text in light mode */
-  html.light [class*="bg-[#18181b]"],
-  html.light [class*="bg-[#18181b]"] *,
-  html.light [class*="bg-black"],
-  html.light [class*="bg-black"] *,
-  html.light [class*="bg-[#0c0c0c]"],
-  html.light [class*="bg-[#0c0c0c]"] *,
-  html.light [class*="bg-[#141414]"],
-  html.light [class*="bg-[#141414]"] *,
-  html.light [class*="bg-neutral-900"],
-  html.light [class*="bg-neutral-900"] * {
+  /* Any solid dark button or pill in light mode preserves white text */
+  html.light .bg-\[\#18181b\],
+  html.light .bg-\[\#18181b\] *,
+  html.light .bg-black,
+  html.light .bg-black *,
+  html.light .bg-neutral-900,
+  html.light .bg-neutral-900 * {
     color: #ffffff !important;
   }
 

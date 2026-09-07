@@ -65,6 +65,12 @@ export function Hero() {
           --hero-placeholder: #78716c;
           --hero-chip-fill: rgba(0, 0, 0, 0.04);
           --hero-chip-border: rgba(0, 0, 0, 0.12);
+          --hero-chip-edge: linear-gradient(
+            135deg,
+            rgba(0, 0, 0, 0.16) 0%,
+            rgba(0, 0, 0, 0.08) 38%,
+            rgba(0, 0, 0, 0.03) 100%
+          );
         }
 
         @keyframes send-ring-sweep {
@@ -179,20 +185,20 @@ export function Hero() {
               {/* Plus Button */}
               <Link
                 href="/app"
-                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] shrink-0 items-center justify-center rounded-full ${isLight ? "bg-black/[0.04] text-neutral-900 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} transition-colors`}
+                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] shrink-0 items-center justify-center rounded-full ${isLight ? "bg-black/[0.04] text-neutral-800 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} transition-colors`}
                 aria-label="Add attachment"
                 title="Add attachment"
               >
-                <Plus className="h-4 w-4 stroke-[2]" />
+                <Plus className={`h-4 w-4 stroke-[2] ${isLight ? "!text-neutral-800" : ""}`} />
               </Link>
 
               {/* DeepThink Pill Chip */}
               <button
                 type="button"
-                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] items-center gap-2 rounded-full ${isLight ? "bg-black/[0.04] text-neutral-900 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} px-[clamp(12px,1.4vw,22px)] text-xs sm:text-[13px] font-normal transition-colors`}
+                className={`chip-edge-ring flex h-[clamp(38px,3.2vw,48px)] items-center gap-2 rounded-full ${isLight ? "bg-black/[0.04] text-neutral-800 hover:bg-black/[0.08] border border-black/10" : "bg-white/[0.028] text-white hover:bg-white/[0.08]"} px-[clamp(12px,1.4vw,22px)] text-xs sm:text-[13px] font-normal transition-colors`}
               >
-                <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-                <span>DeepThink</span>
+                <Lightbulb className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <span className={isLight ? "!text-neutral-800 font-medium" : ""}>DeepThink</span>
               </button>
 
               {/* Spacer */}
@@ -201,11 +207,11 @@ export function Hero() {
               {/* Mic Icon */}
               <button
                 type="button"
-                className={`flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] items-center justify-center rounded-full ${isLight ? "text-neutral-600 hover:text-neutral-900 hover:bg-black/5" : "text-[#e1e1e1] hover:text-white hover:bg-white/10"} transition-colors`}
+                className={`flex h-[clamp(38px,3.2vw,48px)] w-[clamp(38px,3.2vw,48px)] items-center justify-center rounded-full ${isLight ? "text-neutral-700 hover:text-neutral-900 hover:bg-black/5" : "text-[#e1e1e1] hover:text-white hover:bg-white/10"} transition-colors`}
                 aria-label="Voice query"
                 title="Voice query"
               >
-                <Mic className="h-4 w-4" />
+                <Mic className={`h-4 w-4 ${isLight ? "!text-neutral-700" : ""}`} />
               </button>
 
               {/* Send Button with Rotating Rainbow/Gradient Ring */}
