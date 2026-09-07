@@ -57,7 +57,7 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
           <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#141414] border border-[#2e2e2e] text-xs text-[#a3a3a3] select-none">
             <ShieldAlert className="w-4 h-4 text-white shrink-0" />
             <span>
-              <strong className="text-white font-medium">Temporary Chat:</strong> This conversation won&apos;t appear in your history, won&apos;t be saved, and will be discarded when closed.
+              <strong className="text-white font-medium">Temporary chat:</strong> This chat can reference memory, plugins, and custom instructions, but it won&apos;t appear in your history.
             </span>
           </div>
         )}

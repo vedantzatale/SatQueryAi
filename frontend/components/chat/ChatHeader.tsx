@@ -47,7 +47,7 @@ export function ChatHeader({
       resetConversationState();
       setIsTemporaryChat(true);
       setSessionId(`temp-${Date.now()}`);
-      setActiveSessionTitle("Temporary Analysis");
+      setActiveSessionTitle("Temporary chat");
     } else {
       resetConversationState();
       setIsTemporaryChat(false);
