@@ -8,6 +8,7 @@ import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
 import { Attachment, SensorType } from "@/lib/types";
 import { AttachmentChip } from "./AttachmentChip";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
 
 interface ComposerProps {
   onSend: (text: string, attachments?: Attachment[]) => void;
@@ -41,6 +42,8 @@ export function Composer({
   const addPendingAttachment = useAppStore((s) => s.addPendingAttachment);
   const removePendingAttachment = useAppStore((s) => s.removePendingAttachment);
   const { t } = useT();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     if (initialText) setText(initialText);
@@ -264,10 +267,14 @@ export function Composer({
       {/* Main Pill Input Bar */}
       <div
         className={cn(
-          "relative flex items-center gap-3 rounded-[32px] border bg-[#141414] dark:bg-[#141414] px-4 py-3 sm:py-3.5 shadow-2xl transition-all duration-200",
-          dragActive
-            ? "border-white bg-[#1a1a1a]"
-            : "border-[#2e2e2e] focus-within:border-[#4d4d4d]"
+          "relative flex items-center gap-3 rounded-[32px] border px-4 py-3 sm:py-3.5 shadow-2xl transition-all duration-200",
+          isLight
+            ? dragActive
+              ? "border-black/30 bg-[#fcfbf8] shadow-[0_10px_36px_-4px_rgba(40,30,20,0.12)]"
+              : "border-black/10 bg-[#fcfbf8] focus-within:border-black/25 shadow-[0_10px_36px_-4px_rgba(40,30,20,0.08)]"
+            : dragActive
+              ? "border-white bg-[#1a1a1a]"
+              : "border-[#2e2e2e] bg-[#141414] focus-within:border-[#4d4d4d]"
         )}
       >
         {/* Attachment Dropdown Button */}
@@ -278,8 +285,12 @@ export function Composer({
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-full transition-colors border",
               menuOpen || pendingAttachments.length > 0
-                ? "bg-[#212121] border-[#383838] text-white"
-                : "bg-[#171717] border-[#262626] text-[#737373] hover:text-white hover:bg-[#1f1f1f]"
+                ? isLight
+                  ? "bg-black/10 border-black/20 text-neutral-900"
+                  : "bg-[#212121] border-[#383838] text-white"
+                : isLight
+                  ? "bg-black/[0.04] border-black/10 text-neutral-600 hover:text-black hover:bg-black/10"
+                  : "bg-[#171717] border-[#262626] text-[#737373] hover:text-white hover:bg-[#1f1f1f]"
             )}
             title="Attach satellite imagery or select sensor"
           >
@@ -288,26 +299,36 @@ export function Composer({
 
           {/* Quick Attachment Dropdown Menu */}
           {menuOpen && (
-            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#171717] border border-[#303030] rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100">
-              <div className="px-2.5 py-1.5 text-[10px] uppercase font-mono text-[#737373] tracking-wider">
+            <div className={`absolute bottom-full left-0 mb-2 w-64 rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100 border ${
+              isLight
+                ? "bg-[#fcfbf8] border-black/10 text-neutral-800 shadow-xl"
+                : "bg-[#171717] border-[#303030]"
+            }`}>
+              <div className={`px-2.5 py-1.5 text-[10px] uppercase font-mono tracking-wider ${
+                isLight ? "text-neutral-500" : "text-[#737373]"
+              }`}>
                 Select Imagery Source
               </div>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#e5e5e5] hover:text-white hover:bg-[#262626] rounded-xl transition-colors text-left"
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-xl transition-colors text-left ${
+                  isLight
+                    ? "text-neutral-800 hover:bg-black/5"
+                    : "text-[#e5e5e5] hover:text-white hover:bg-[#262626]"
+                }`}
               >
-                <ImageIcon className="w-3.5 h-3.5 text-[#888888]" />
+                <ImageIcon className={`w-3.5 h-3.5 ${isLight ? "text-neutral-600" : "text-[#888888]"}`} />
                 <div>
                   <p className="font-medium">Upload File (GeoTIFF, PNG)</p>
-                  <p className="text-[10px] text-[#737373]">Single or multi-temporal raster</p>
+                  <p className={`text-[10px] ${isLight ? "text-neutral-500" : "text-[#737373]"}`}>Single or multi-temporal raster</p>
                 </div>
               </button>
 
-              <div className="h-[1px] bg-[#262626] my-1" />
+              <div className={`h-[1px] my-1 ${isLight ? "bg-black/10" : "bg-[#262626]"}`} />
 
-              <div className="px-2.5 py-1 text-[10px] font-mono text-[#525252]">
+              <div className={`px-2.5 py-1 text-[10px] font-mono ${isLight ? "text-neutral-400" : "text-[#525252]"}`}>
                 Preset Satellite Layers
               </div>
 
@@ -320,9 +341,13 @@ export function Composer({
                     SATELLITE_IMAGES.puneAfter
                   )
                 }
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#d4d4d4] hover:text-white hover:bg-[#262626] rounded-lg transition-colors text-left"
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors text-left ${
+                  isLight
+                    ? "text-neutral-700 hover:text-black hover:bg-black/5"
+                    : "text-[#d4d4d4] hover:text-white hover:bg-[#262626]"
+                }`}
               >
-                <Layers className="w-3 h-3 text-[#888888]" />
+                <Layers className={`w-3 h-3 ${isLight ? "text-neutral-500" : "text-[#888888]"}`} />
                 <span>Sentinel-2 MSI (10m Optical)</span>
               </button>
 
@@ -335,9 +360,13 @@ export function Composer({
                     SATELLITE_IMAGES.sarRadar
                   )
                 }
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#d4d4d4] hover:text-white hover:bg-[#262626] rounded-lg transition-colors text-left"
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors text-left ${
+                  isLight
+                    ? "text-neutral-700 hover:text-black hover:bg-black/5"
+                    : "text-[#d4d4d4] hover:text-white hover:bg-[#262626]"
+                }`}
               >
-                <Radio className="w-3 h-3 text-[#888888]" />
+                <Radio className={`w-3 h-3 ${isLight ? "text-neutral-500" : "text-[#888888]"}`} />
                 <span>Sentinel-1 C-Band SAR (Radar)</span>
               </button>
             </div>
@@ -355,7 +384,11 @@ export function Composer({
             placeholder ??
             (isCentered ? t("composer.placeholder") : t("composer.placeholderExpanded"))
           }
-          className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[15px] sm:text-[16px] text-white placeholder:text-[#525252] focus:outline-none resize-none font-sans leading-relaxed font-normal"
+          className={`flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[15px] sm:text-[16px] focus:outline-none resize-none font-sans leading-relaxed font-normal ${
+            isLight
+              ? "text-[#18181b] placeholder:text-[#78716c]"
+              : "text-white placeholder:text-[#525252]"
+          }`}
         />
 
         {/* Right Action Icons: Mic, Send */}
@@ -366,8 +399,10 @@ export function Composer({
             onClick={toggleVoiceInput}
             className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
               isListening
-                ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
-                : "text-neutral-400 hover:text-white hover:bg-white/10"
+                ? "bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                : isLight
+                  ? "text-neutral-500 hover:text-neutral-900 hover:bg-black/5"
+                  : "text-neutral-400 hover:text-white hover:bg-white/10"
             }`}
             title={isListening ? "Listening... (click to stop)" : "Voice query"}
           >
@@ -382,8 +417,12 @@ export function Composer({
             className={cn(
               "w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0",
               (text.trim() || pendingAttachments.length > 0) && !isLoading
-                ? "bg-white text-black hover:bg-[#e5e5e5] shadow-md cursor-pointer"
-                : "bg-[#212121] text-[#525252] cursor-not-allowed"
+                ? isLight
+                  ? "bg-[#18181b] text-white hover:bg-[#27272a] shadow-md cursor-pointer"
+                  : "bg-white text-black hover:bg-[#e5e5e5] shadow-md cursor-pointer"
+                : isLight
+                  ? "bg-black/10 text-neutral-400 cursor-not-allowed"
+                  : "bg-[#212121] text-[#525252] cursor-not-allowed"
             )}
             aria-label="Send message"
           >
@@ -393,7 +432,9 @@ export function Composer({
       </div>
 
       {/* Understated Disclaimer Text */}
-      <p className="text-[10.5px] sm:text-[11px] text-center text-[#525252] font-mono mt-2.5 select-none">
+      <p className={`text-[10.5px] sm:text-[11px] text-center font-mono mt-2.5 select-none ${
+        isLight ? "text-[#78716c]" : "text-[#525252]"
+      }`}>
         {t("composer.disclaimer")}
       </p>
     </div>

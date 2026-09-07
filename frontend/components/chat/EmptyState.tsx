@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useT } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 import { Attachment } from "@/lib/types";
 
 interface EmptyStateProps {
@@ -10,11 +11,15 @@ interface EmptyStateProps {
 
 export function EmptyState({}: EmptyStateProps) {
   const { t } = useT();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   return (
     <div className="flex flex-col items-center justify-center max-w-2xl mx-auto py-16 sm:py-20 px-4 text-center space-y-4 select-none animate-in fade-in duration-200">
       <div className="space-y-3">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#141414] border border-[#2e2e2e] shadow-subtle mb-1">
+        <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl border mb-1 ${
+          isLight ? "bg-[#fcfbf8] border-black/10 shadow-sm" : "bg-[#141414] border-[#2e2e2e] shadow-subtle"
+        }`}>
           <Image
             src="/logo/satquertlogo.png"
             alt="SatQuery AI"
@@ -23,10 +28,10 @@ export function EmptyState({}: EmptyStateProps) {
             className="h-7 w-7 rounded-[4px] object-contain shrink-0"
           />
         </div>
-        <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-white">
+        <h2 className={`text-xl sm:text-2xl font-medium tracking-tight ${isLight ? "text-[#18181b]" : "text-white"}`}>
           SATQUERY AI
         </h2>
-        <p className="text-sm text-[#888888] font-normal max-w-md mx-auto leading-relaxed">
+        <p className={`text-sm font-normal max-w-md mx-auto leading-relaxed ${isLight ? "text-neutral-600" : "text-[#888888]"}`}>
           {t("empty.tagline")}
         </p>
       </div>

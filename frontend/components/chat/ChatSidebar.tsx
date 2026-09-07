@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { UI_LANGUAGES, useT } from "@/lib/i18n";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 
 export interface ConversationSummaryItem {
   id: string;
@@ -126,9 +127,14 @@ export function ChatSidebar({
     setEditingId(null);
   }
 
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/10 bg-[#000000] overflow-hidden transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:static ${
+      className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r ${
+        isLight ? "border-black/10 bg-[#ede8df] text-[#18181b]" : "border-white/10 bg-[#000000] text-white"
+      } overflow-hidden transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:static ${
         isOpenMobile ? "translate-x-0 w-72" : "-translate-x-full md:translate-x-0"
       } ${
         isOpenDesktop
@@ -142,7 +148,7 @@ export function ChatSidebar({
           <div className="flex items-center justify-between px-1">
             <Link
               href="/"
-              className="flex items-center gap-2.5 text-xs font-bold tracking-wider text-white uppercase"
+              className={`flex items-center gap-2.5 text-xs font-bold tracking-wider uppercase ${isLight ? "text-neutral-900" : "text-white"}`}
             >
               <Image
                 src="/logo/satquertlogo.png"
@@ -160,7 +166,7 @@ export function ChatSidebar({
                   if (onToggleDesktop) onToggleDesktop();
                   if (onCloseMobile) onCloseMobile();
                 }}
-                className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors duration-75"
+                className={`p-1.5 rounded-lg transition-colors duration-75 ${isLight ? "text-neutral-600 hover:text-black hover:bg-black/5" : "text-neutral-400 hover:text-white hover:bg-white/10"}`}
                 aria-label="Toggle Sidebar (⌘B)"
                 title="Toggle Sidebar (⌘B)"
               >
@@ -169,7 +175,7 @@ export function ChatSidebar({
               {onCloseMobile && (
                 <button
                   onClick={onCloseMobile}
-                  className="md:hidden p-1.5 text-neutral-400 hover:text-white"
+                  className={`md:hidden p-1.5 ${isLight ? "text-neutral-600 hover:text-black" : "text-neutral-400 hover:text-white"}`}
                   aria-label="Close Sidebar"
                 >
                   <X className="h-4 w-4" />
@@ -184,13 +190,19 @@ export function ChatSidebar({
               onNewChat();
               if (onCloseMobile) onCloseMobile();
             }}
-            className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#141414] px-3.5 py-2.5 text-xs font-medium text-white hover:bg-[#202020] hover:border-white/20 transition-colors duration-75 group"
+            className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs font-medium transition-colors duration-75 group ${
+              isLight
+                ? "border-black/10 bg-[#fcfbf8] text-neutral-900 hover:bg-white hover:border-black/20 shadow-sm"
+                : "border-white/10 bg-[#141414] text-white hover:bg-[#202020] hover:border-white/20"
+            }`}
           >
             <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-neutral-300 group-hover:text-white" />
+              <Plus className={`h-4 w-4 ${isLight ? "text-neutral-700 group-hover:text-black" : "text-neutral-300 group-hover:text-white"}`} />
               <span>{t("sidebar.newAnalysis")}</span>
             </div>
-            <kbd className="font-mono text-[10px] text-neutral-400 rounded bg-white/5 border border-white/10 px-1.5 py-0.5">⌘N</kbd>
+            <kbd className={`font-mono text-[10px] rounded px-1.5 py-0.5 border ${
+              isLight ? "bg-black/5 border-black/10 text-neutral-600" : "bg-white/5 border-white/10 text-neutral-400"
+            }`}>⌘N</kbd>
           </button>
 
           {/* Search Input */}
@@ -201,7 +213,11 @@ export function ChatSidebar({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("sidebar.searchPlaceholder")}
-              className="w-full rounded-xl border border-white/10 bg-[#141414] pl-9 pr-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:border-white/30 focus:outline-none font-sans"
+              className={`w-full rounded-xl border pl-9 pr-3.5 py-2 text-xs font-sans focus:outline-none ${
+                isLight
+                  ? "border-black/10 bg-[#fcfbf8] text-neutral-900 placeholder:text-neutral-500 focus:border-black/30 shadow-sm"
+                  : "border-white/10 bg-[#141414] text-white placeholder-neutral-500 focus:border-white/30"
+              }`}
             />
           </div>
 
@@ -209,7 +225,11 @@ export function ChatSidebar({
           <div className="relative">
             <button
               onClick={() => setLangMenuOpen(!langMenuOpen)}
-              className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#141414] px-3.5 py-2 text-xs text-neutral-300 hover:border-white/30 hover:text-white transition-colors"
+              className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2 text-xs transition-colors ${
+                isLight
+                  ? "border-black/10 bg-[#fcfbf8] text-neutral-800 hover:border-black/20 shadow-sm"
+                  : "border-white/10 bg-[#141414] text-neutral-300 hover:border-white/30 hover:text-white"
+              }`}
             >
               <span className="flex items-center gap-1.5">
                 <Globe className="h-3.5 w-3.5" />
@@ -217,7 +237,11 @@ export function ChatSidebar({
               </span>
             </button>
             {langMenuOpen && (
-              <div className="absolute left-0 right-0 top-10 z-30 rounded-xl border border-white/15 bg-[#181818] p-1 shadow-2xl animate-fade-in text-xs">
+              <div className={`absolute left-0 right-0 top-10 z-30 rounded-xl border p-1 animate-fade-in text-xs ${
+                isLight
+                  ? "border-black/10 bg-[#fcfbf8] text-neutral-800 shadow-xl"
+                  : "border-white/15 bg-[#181818] shadow-2xl"
+              }`}>
                 {UI_LANGUAGES.map((l) => (
                   <button
                     key={l.code}
@@ -225,7 +249,11 @@ export function ChatSidebar({
                       setUiLanguage(l.code);
                       setLangMenuOpen(false);
                     }}
-                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 ${
+                      isLight
+                        ? "text-neutral-700 hover:bg-black/5 hover:text-black"
+                        : "text-neutral-300 hover:bg-white/10 hover:text-white"
+                    }`}
                   >
                     <span>{l.label}</span>
                     {l.code === language && <Check className="h-3 w-3" />}
@@ -265,7 +293,11 @@ export function ChatSidebar({
                             if (e.key === "Enter") handleSaveRename(c.id);
                             if (e.key === "Escape") cancelEditing();
                           }}
-                          className="w-full rounded-lg bg-[#212121] px-3 py-2 text-xs text-white border border-white/30 focus:outline-none"
+                          className={`w-full rounded-lg px-3 py-2 text-xs border focus:outline-none ${
+                            isLight
+                              ? "bg-[#fcfbf8] text-neutral-900 border-black/20 focus:border-black/40"
+                              : "bg-[#212121] text-white border-white/30 focus:border-white/50"
+                          }`}
                         />
                       </div>
                     );
@@ -276,8 +308,12 @@ export function ChatSidebar({
                       key={c.id}
                       className={`group relative flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors duration-75 cursor-pointer select-none ${
                         isActive
-                          ? "bg-[#212121] text-white font-medium"
-                          : "text-neutral-300 hover:bg-[#181818] hover:text-white"
+                          ? isLight
+                            ? "bg-[#fcfbf8] text-neutral-950 font-medium border border-black/10 shadow-sm"
+                            : "bg-[#212121] text-white font-medium"
+                          : isLight
+                            ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950"
+                            : "text-neutral-300 hover:bg-[#181818] hover:text-white"
                       }`}
                       onClick={() => {
                         onSelectConversation(c.id);
@@ -287,7 +323,9 @@ export function ChatSidebar({
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <svg
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-white" : "text-neutral-400 group-hover:text-neutral-200"
+                            isActive
+                              ? isLight ? "text-neutral-950" : "text-white"
+                              : isLight ? "text-neutral-500 group-hover:text-neutral-900" : "text-neutral-400 group-hover:text-neutral-200"
                           }`}
                           viewBox="0 0 24 24"
                           fill="none"
@@ -305,24 +343,28 @@ export function ChatSidebar({
                       <div
                         className={`ml-1 shrink-0 ${
                           isActive
-                            ? "opacity-100 text-neutral-300"
+                            ? isLight ? "opacity-100 text-neutral-600" : "opacity-100 text-neutral-300"
                             : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-neutral-400"
                         }`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
                           onClick={() => setMenuOpenId(menuOpenId === c.id ? null : c.id)}
-                          className="p-1 text-neutral-400 hover:text-white rounded hover:bg-white/10"
+                          className={`p-1 rounded ${isLight ? "text-neutral-500 hover:text-black hover:bg-black/5" : "text-neutral-400 hover:text-white hover:bg-white/10"}`}
                           aria-label="Conversation Options"
                         >
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </button>
 
                         {menuOpenId === c.id && (
-                          <div className="absolute right-2 top-9 z-30 w-32 rounded-xl border border-white/15 bg-[#181818] p-1 shadow-2xl font-sans text-xs">
+                          <div className={`absolute right-2 top-9 z-30 w-32 rounded-xl border p-1 shadow-2xl font-sans text-xs ${
+                            isLight ? "border-black/10 bg-[#fcfbf8] text-neutral-800 shadow-xl" : "border-white/15 bg-[#181818]"
+                          }`}>
                             <button
                               onClick={() => startEditing(c)}
-                              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
+                              className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 ${
+                                isLight ? "text-neutral-700 hover:bg-black/5 hover:text-black" : "text-neutral-300 hover:bg-white/10 hover:text-white"
+                              }`}
                             >
                               <Edit2 className="h-3 w-3" />
                               <span>{t("sidebar.rename")}</span>
@@ -349,73 +391,90 @@ export function ChatSidebar({
         </div>
 
         {/* Bottom User Profile */}
-        <div className="relative border-t border-white/10 p-3 bg-[#080808]">
+        <div className={`relative border-t p-3 ${isLight ? "border-black/10 bg-transparent" : "border-white/10 bg-[#080808]"}`}>
           <button
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
             className={`flex w-full items-center justify-between rounded-xl p-2 transition-colors text-left ${
-              profileMenuOpen ? "bg-[#181818]" : "hover:bg-white/5"
+              profileMenuOpen
+                ? isLight ? "bg-black/10" : "bg-[#181818]"
+                : isLight ? "hover:bg-black/5" : "hover:bg-white/5"
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-xs font-semibold text-white">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold user-avatar-badge select-none ${
+                  isLight ? "bg-[#18181b] text-white shadow-xs" : "bg-neutral-800 text-white"
+                }`}
+                style={isLight ? { color: "#ffffff", backgroundColor: "#18181b" } : undefined}
+              >
                 S
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-white">Shivam</span>
-                <span className="text-[10px] text-neutral-400 font-normal">{t("sidebar.researchWorkspace")}</span>
+              <div className="flex flex-col min-w-0">
+                <span className={`text-xs font-semibold leading-tight truncate ${isLight ? "text-neutral-900" : "text-white"}`}>Shivam</span>
+                <span className={`text-[10px] font-normal leading-tight truncate ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>{t("sidebar.researchWorkspace")}</span>
               </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-neutral-400" />
+            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-150 ${profileMenuOpen ? "rotate-180" : ""} ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
           </button>
 
           {/* Profile popover menu */}
           {profileMenuOpen && (
-            <div className="absolute bottom-16 left-3 right-3 rounded-2xl border border-white/10 bg-[#141414] p-3 shadow-2xl animate-fade-in font-sans text-xs text-neutral-300">
+            <div className={`absolute bottom-16 left-3 right-3 rounded-2xl border p-3 shadow-2xl animate-fade-in font-sans text-xs ${
+              isLight ? "border-black/10 bg-[#fcfbf8] text-neutral-800 shadow-xl" : "border-white/10 bg-[#141414] text-neutral-300"
+            }`}>
               {/* User Details */}
               <div className="px-1.5 py-1">
-                <div className="text-xs font-semibold text-white">Shivam (Analyst)</div>
-                <div className="text-[11px] text-neutral-400 mt-0.5">shivam@earthobs.internal</div>
+                <div className={`text-xs font-semibold ${isLight ? "text-neutral-900" : "text-white"}`}>Shivam (Analyst)</div>
+                <div className={`text-[11px] mt-0.5 ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>shivam@earthobs.internal</div>
               </div>
 
-              <div className="border-t border-white/10 my-2" />
+              <div className={`my-2 border-t ${isLight ? "border-black/10" : "border-white/10"}`} />
 
               {/* Menu Items */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setProfileMenuOpen(false)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs transition-colors text-left ${
+                    isLight ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950" : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
-                  <Settings className="h-4 w-4 text-neutral-400" />
+                  <Settings className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                   <span>{t("sidebar.preferences")}</span>
                 </button>
 
                 <Link
                   href="/models"
                   onClick={() => setProfileMenuOpen(false)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs transition-colors text-left ${
+                    isLight ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950" : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
-                  <Globe className="h-4 w-4 text-neutral-400" />
+                  <Globe className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                   <span>{t("sidebar.stacCatalog")}</span>
                 </Link>
 
                 <button
                   onClick={() => setProfileMenuOpen(false)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs transition-colors text-left ${
+                    isLight ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950" : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
-                  <Shield className="h-4 w-4 text-neutral-400" />
+                  <Shield className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                   <span>{t("sidebar.privacy")}</span>
                 </button>
               </div>
 
-              <div className="border-t border-white/10 my-2" />
+              <div className={`my-2 border-t ${isLight ? "border-black/10" : "border-white/10"}`} />
 
               {/* Logout */}
               <Link
                 href="/"
                 onClick={() => setProfileMenuOpen(false)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors text-left"
+                className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-rose-500 hover:bg-rose-500/10 transition-colors text-left ${
+                  isLight ? "text-rose-600 hover:bg-rose-500/10" : "text-rose-400 hover:bg-rose-500/10"
+                }`}
               >
-                <LogOut className="h-4 w-4 text-rose-400" />
+                <LogOut className="h-4 w-4 text-rose-500" />
                 <span>{t("sidebar.logout")}</span>
               </Link>
             </div>

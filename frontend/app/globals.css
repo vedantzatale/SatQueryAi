@@ -224,15 +224,29 @@
     color: #18181b !important;
   }
 
+  html.light .chat-workspace .bg-\[\#000000\],
+  html.light .chat-workspace .bg-\[\#080808\] {
+    background-color: #f5f2eb !important;
+  }
+
   /* Sidebar in light theme */
   html.light .chat-workspace aside {
     background-color: #ece7de !important;
     border-right-color: rgba(0, 0, 0, 0.08) !important;
   }
 
-  html.light .chat-workspace aside a,
-  html.light .chat-workspace aside .text-white {
+  html.light .chat-workspace aside a {
     color: #18181b !important;
+  }
+
+  html.light .chat-workspace aside .text-white:not(.user-avatar-badge):not(.keep-white) {
+    color: #18181b !important;
+  }
+
+  html.light .chat-workspace aside .user-avatar-badge,
+  html.light .chat-workspace aside .keep-white {
+    color: #ffffff !important;
+    background-color: #18181b !important;
   }
 
   html.light .chat-workspace aside button.bg-\[\#141414\] {

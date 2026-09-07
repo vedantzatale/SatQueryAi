@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, ChevronDown, ChevronRight, X } from "lucide-react";
 import { getTransparency } from "@/lib/api";
+import { useTheme } from "@/lib/theme";
 import type { ExecutionResult, TransparencyResponse, TransparencyStep } from "@/lib/types";
 
 interface AnalysisTraceProps {
@@ -54,34 +55,41 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
   const processingApplied = provenance?.processing_applied ?? [];
   const modelProvenance = result?.model_provenance ?? transparency?.model_provenance ?? null;
 
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+
   return (
-    <div className="border-t border-white/10 pt-3 text-xs font-mono">
+    <div className={`border-t pt-3 text-xs font-mono ${isLight ? "border-black/10" : "border-white/10"}`}>
       <button
         onClick={handleToggle}
-        className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+        className={`flex items-center gap-2 transition-colors ${isLight ? "text-neutral-600 hover:text-black" : "text-neutral-400 hover:text-white"}`}
       >
         {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         <span className="text-[11px] uppercase tracking-wider">How was this analyzed? (Audit Trace)</span>
       </button>
 
       {isOpen && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-[#090909] p-4 space-y-3 animate-fade-in text-neutral-300">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-b border-white/5 pb-3">
+        <div className={`mt-3 rounded-xl border p-4 space-y-3 animate-fade-in ${
+          isLight ? "border-black/10 bg-[#ede8df] text-neutral-800 shadow-sm" : "border-white/10 bg-[#090909] text-neutral-300"
+        }`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 border-b pb-3 ${
+            isLight ? "border-black/10" : "border-white/5"
+          }`}>
             <div>
-              <span className="text-neutral-400 block text-[10px] uppercase">Task</span>
-              <span className="text-white text-xs font-medium">{task ?? "not available"}</span>
+              <span className={`block text-[10px] uppercase ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>Task</span>
+              <span className={`text-xs font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>{task ?? "not available"}</span>
             </div>
             <div>
-              <span className="text-neutral-400 block text-[10px] uppercase">Input Imagery</span>
-              <span className="text-white text-xs font-medium">{provider ?? "not available"}</span>
+              <span className={`block text-[10px] uppercase ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>Input Imagery</span>
+              <span className={`text-xs font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>{provider ?? "not available"}</span>
             </div>
             <div>
-              <span className="text-neutral-400 block text-[10px] uppercase">Date / Sensor</span>
-              <span className="text-white text-xs font-medium">{acquisitionDate ?? "not available"}</span>
+              <span className={`block text-[10px] uppercase ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>Date / Sensor</span>
+              <span className={`text-xs font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>{acquisitionDate ?? "not available"}</span>
             </div>
             <div>
-              <span className="text-neutral-400 block text-[10px] uppercase">Spatial Reference</span>
-              <span className="text-white text-xs font-medium">
+              <span className={`block text-[10px] uppercase ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>Spatial Reference</span>
+              <span className={`text-xs font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>
                 {crs ?? "no CRS (ungeoreferenced)"}
                 {resolution != null ? ` · ${resolution}m GSD` : ""}
               </span>
@@ -89,40 +97,40 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
           </div>
 
           <div>
-            <span className="text-neutral-400 block text-[10px] uppercase mb-1.5">
+            <span className={`block text-[10px] uppercase mb-1.5 ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>
               Execution Steps (audit trail)
             </span>
             <div className="space-y-1.5">
               {stepsLoading ? (
-                <span className="text-[11px] text-neutral-500">Loading real execution trace…</span>
+                <span className={`text-[11px] ${isLight ? "text-neutral-600" : "text-neutral-500"}`}>Loading real execution trace…</span>
               ) : steps && steps.length > 0 ? (
                 steps.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-[11px] text-neutral-300">
+                  <div key={idx} className={`flex items-start gap-2 text-[11px] ${isLight ? "text-neutral-800" : "text-neutral-300"}`}>
                     {step.status === "ok" ? (
-                      <Check className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" />
+                      <Check className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
                     ) : step.status === "error" || step.status === "failed" ? (
-                      <X className="h-3 w-3 text-red-400 shrink-0 mt-0.5" />
+                      <X className="h-3 w-3 text-red-500 shrink-0 mt-0.5" />
                     ) : (
-                      <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0 mt-0.5" />
+                      <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
                     )}
                     <span>
-                      <span className="text-white">{step.step}</span>
+                      <span className={`font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>{step.step}</span>
                       {step.detail && Object.keys(step.detail).length > 0 && (
-                        <span className="text-neutral-500"> — {formatDetail(step.detail)}</span>
+                        <span className={isLight ? "text-neutral-600" : "text-neutral-500"}> — {formatDetail(step.detail)}</span>
                       )}
                     </span>
                   </div>
                 ))
               ) : stepsError || processingApplied.length === 0 ? (
-                <span className="text-[11px] text-neutral-500">No execution trace recorded</span>
+                <span className={`text-[11px] ${isLight ? "text-neutral-600" : "text-neutral-500"}`}>No execution trace recorded</span>
               ) : (
                 // Fallback: the coarser preprocessing-only list embedded in
                 // the result itself, when the full step trace isn't
                 // reachable (e.g. a mock/demo session with no real
                 // execution_id to fetch).
                 processingApplied.map((step, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-[11px] text-neutral-300">
-                    <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                  <div key={idx} className={`flex items-center gap-2 text-[11px] ${isLight ? "text-neutral-800" : "text-neutral-300"}`}>
+                    <Check className="h-3 w-3 text-emerald-500 shrink-0" />
                     <span>{step}</span>
                   </div>
                 ))
@@ -130,23 +138,25 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
             </div>
           </div>
 
-          <div className="border-t border-white/5 pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-neutral-400">
+          <div className={`border-t pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] ${
+            isLight ? "border-black/10 text-neutral-600" : "border-white/5 text-neutral-400"
+          }`}>
             <div>
-              <span className="text-neutral-400">MODELS: </span>
-              <span className="text-neutral-300">
+              <span className={isLight ? "text-neutral-600" : "text-neutral-400"}>MODELS: </span>
+              <span className={isLight ? "text-neutral-900 font-medium" : "text-neutral-300"}>
                 {model ?? "not available"}
                 {modelProvenance?.version ? ` (v${modelProvenance.version})` : ""}
               </span>
             </div>
             <div>
-              <span className="text-neutral-400">STATUS: </span>
+              <span className={isLight ? "text-neutral-600" : "text-neutral-400"}>STATUS: </span>
               <span
                 className={`uppercase font-medium ${
                   status === "completed"
-                    ? "text-emerald-400"
+                    ? "text-emerald-500"
                     : status === "failed"
-                    ? "text-red-400"
-                    : "text-amber-400"
+                    ? "text-red-500"
+                    : "text-amber-500"
                 }`}
               >
                 {status ?? "unknown"}
@@ -155,7 +165,9 @@ export function AnalysisTrace({ result, transparency }: AnalysisTraceProps) {
           </div>
 
           {modelProvenance?.fallback_used && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[11px] text-amber-300">
+            <div className={`flex items-start gap-2 rounded-lg border p-2.5 text-[11px] ${
+              isLight ? "border-amber-600/30 bg-amber-500/15 text-amber-900" : "border-amber-500/30 bg-amber-500/5 text-amber-300"
+            }`}>
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
                 The primary model for this capability was unavailable; a registered fallback

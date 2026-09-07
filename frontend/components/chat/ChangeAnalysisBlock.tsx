@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ChangeAnalysisData } from "@/lib/types";
 import { Layers, Calendar, ArrowRight, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
 
 interface ChangeAnalysisBlockProps {
   data: ChangeAnalysisData;
@@ -30,39 +31,58 @@ export function ChangeAnalysisBlock({ data, onOpenViewer }: ChangeAnalysisBlockP
     setSliderPosition(percent);
   };
 
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+
   return (
-    <div className="w-full rounded-2xl border border-[#262626] bg-[#0f0f0f] overflow-hidden space-y-4 p-4 shadow-card">
+    <div className={`w-full rounded-2xl border overflow-hidden space-y-4 p-4 ${
+      isLight ? "border-black/10 bg-[#fcfbf8] shadow-sm" : "border-[#262626] bg-[#0f0f0f] shadow-card"
+    }`}>
       {/* Header with Title & Date Comparison */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#1f1f1f]">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b ${
+        isLight ? "border-black/10" : "border-[#1f1f1f]"
+      }`}>
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-[#888888]" />
-            <h4 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+            <Layers className={`w-4 h-4 ${isLight ? "text-neutral-600" : "text-[#888888]"}`} />
+            <h4 className={`text-xs font-semibold uppercase tracking-wider font-mono ${
+              isLight ? "text-neutral-900" : "text-white"
+            }`}>
               Temporal Change Analysis
             </h4>
           </div>
-          <p className="text-[11px] text-[#737373]">{data.summary}</p>
+          <p className={`text-[11px] ${isLight ? "text-neutral-600" : "text-[#737373]"}`}>{data.summary}</p>
         </div>
 
         {/* Date comparison pill */}
-        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#171717] border border-[#262626] text-xs font-mono text-[#a3a3a3] shrink-0 self-start sm:self-auto">
-          <Calendar className="w-3 h-3 text-[#737373]" />
+        <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono shrink-0 self-start sm:self-auto ${
+          isLight ? "bg-[#ede8df] border-black/10 text-neutral-800" : "bg-[#171717] border-[#262626] text-[#a3a3a3]"
+        }`}>
+          <Calendar className={`w-3 h-3 ${isLight ? "text-neutral-600" : "text-[#737373]"}`} />
           <span>{data.beforeDate}</span>
-          <ArrowRight className="w-3 h-3 text-[#525252]" />
-          <span className="text-white font-medium">{data.afterDate}</span>
+          <ArrowRight className={`w-3 h-3 ${isLight ? "text-neutral-500" : "text-[#525252]"}`} />
+          <span className={`font-medium ${isLight ? "text-neutral-950" : "text-white"}`}>{data.afterDate}</span>
         </div>
       </div>
 
       {/* View Mode Switcher */}
       <div className="flex items-center justify-between gap-2">
-        <div className="inline-flex p-0.5 rounded-lg bg-[#141414] border border-[#212121] text-xs">
+        <div className={`inline-flex p-0.5 rounded-lg border text-xs ${
+          isLight ? "bg-[#ede8df] border-black/10" : "bg-[#141414] border-[#212121]"
+        }`}>
           <button
             type="button"
             suppressHydrationWarning
             onClick={() => setActiveTab("slider")}
             className={cn(
               "px-3 py-1 rounded-md transition-colors text-[11px] font-medium",
-              activeTab === "slider" ? "bg-[#262626] text-white" : "text-[#737373] hover:text-white"
+              activeTab === "slider"
+                ? isLight
+                  ? "bg-white text-neutral-950 shadow-xs"
+                  : "bg-[#262626] text-white"
+                : isLight
+                  ? "text-neutral-600 hover:text-neutral-950"
+                  : "text-[#737373] hover:text-white"
             )}
           >
             Split Slider
@@ -73,7 +93,13 @@ export function ChangeAnalysisBlock({ data, onOpenViewer }: ChangeAnalysisBlockP
             onClick={() => setActiveTab("before")}
             className={cn(
               "px-3 py-1 rounded-md transition-colors text-[11px] font-medium",
-              activeTab === "before" ? "bg-[#262626] text-white" : "text-[#737373] hover:text-white"
+              activeTab === "before"
+                ? isLight
+                  ? "bg-white text-neutral-950 shadow-xs"
+                  : "bg-[#262626] text-white"
+                : isLight
+                  ? "text-neutral-600 hover:text-neutral-950"
+                  : "text-[#737373] hover:text-white"
             )}
           >
             Before ({data.beforeDate?.slice(-4) || "T1"})
@@ -84,7 +110,13 @@ export function ChangeAnalysisBlock({ data, onOpenViewer }: ChangeAnalysisBlockP
             onClick={() => setActiveTab("after")}
             className={cn(
               "px-3 py-1 rounded-md transition-colors text-[11px] font-medium",
-              activeTab === "after" ? "bg-[#262626] text-white" : "text-[#737373] hover:text-white"
+              activeTab === "after"
+                ? isLight
+                  ? "bg-white text-neutral-950 shadow-xs"
+                  : "bg-[#262626] text-white"
+                : isLight
+                  ? "text-neutral-600 hover:text-neutral-950"
+                  : "text-[#737373] hover:text-white"
             )}
           >
             After ({data.afterDate?.slice(-4) || "T2"})
@@ -95,7 +127,13 @@ export function ChangeAnalysisBlock({ data, onOpenViewer }: ChangeAnalysisBlockP
             onClick={() => setActiveTab("mask")}
             className={cn(
               "px-3 py-1 rounded-md transition-colors text-[11px] font-medium",
-              activeTab === "mask" ? "bg-[#262626] text-white" : "text-[#737373] hover:text-white"
+              activeTab === "mask"
+                ? isLight
+                  ? "bg-white text-neutral-950 shadow-xs"
+                  : "bg-[#262626] text-white"
+                : isLight
+                  ? "text-neutral-600 hover:text-neutral-950"
+                  : "text-[#737373] hover:text-white"
             )}
           >
             Change Mask
@@ -202,24 +240,28 @@ export function ChangeAnalysisBlock({ data, onOpenViewer }: ChangeAnalysisBlockP
 
       {/* Quantitative Change Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-        <div className="p-3 bg-[#141414] border border-[#212121] rounded-xl space-y-0.5">
-          <span className="text-[10px] uppercase font-mono text-[#737373]">Estimated Changed Area</span>
-          <p className="text-base font-semibold text-white font-mono">{data.areaHa} ha</p>
-          <span className="text-[11px] text-[#888888]">±0.3 ha statistical bound</span>
+        <div className={`p-3 rounded-xl space-y-0.5 border ${
+          isLight ? "bg-[#ede8df] border-black/10" : "bg-[#141414] border-[#212121]"
+        }`}>
+          <span className={`text-[10px] uppercase font-mono ${isLight ? "text-neutral-600" : "text-[#737373]"}`}>Estimated Changed Area</span>
+          <p className={`text-base font-semibold font-mono ${isLight ? "text-neutral-950" : "text-white"}`}>{data.areaHa} ha</p>
+          <span className={`text-[11px] ${isLight ? "text-neutral-600" : "text-[#888888]"}`}>±0.3 ha statistical bound</span>
         </div>
 
-        <div className="p-3 bg-[#141414] border border-[#212121] rounded-xl space-y-0.5 sm:col-span-2">
-          <span className="text-[10px] uppercase font-mono text-[#737373]">Detected Sub-Class Partition</span>
+        <div className={`p-3 rounded-xl space-y-0.5 sm:col-span-2 border ${
+          isLight ? "bg-[#ede8df] border-black/10" : "bg-[#141414] border-[#212121]"
+        }`}>
+          <span className={`text-[10px] uppercase font-mono ${isLight ? "text-neutral-600" : "text-[#737373]"}`}>Detected Sub-Class Partition</span>
           <div className="space-y-1.5 pt-1">
             {data.detectedClasses && data.detectedClasses.map((cls) => (
               <div key={cls.name} className="space-y-0.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#d4d4d4]">{cls.name}</span>
-                  <span className="font-mono text-white">{cls.areaHa} ha ({cls.percentage}%)</span>
+                  <span className={isLight ? "text-neutral-700" : "text-[#d4d4d4]"}>{cls.name}</span>
+                  <span className={`font-mono ${isLight ? "text-neutral-950" : "text-white"}`}>{cls.areaHa} ha ({cls.percentage}%)</span>
                 </div>
-                <div className="w-full h-1 bg-[#212121] rounded-full overflow-hidden">
+                <div className={`w-full h-1 rounded-full overflow-hidden ${isLight ? "bg-black/10" : "bg-[#212121]"}`}>
                   <div
-                    className="h-full bg-[#888888] rounded-full"
+                    className={`h-full rounded-full ${isLight ? "bg-neutral-800" : "bg-[#888888]"}`}
                     style={{ width: `${cls.percentage}%` }}
                   />
                 </div>

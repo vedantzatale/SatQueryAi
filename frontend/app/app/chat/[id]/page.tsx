@@ -11,6 +11,7 @@ import { EvidenceModal } from "@/components/chat/EvidenceModal";
 import { deleteSession, listSessions, renameSession } from "@/lib/api";
 import { MOCK_SESSIONS } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 
 function categorize(createdAt: string): ConversationSummaryItem["category"] {
   const created = new Date(createdAt);
@@ -30,6 +31,8 @@ export default function ChatDetailPage() {
   const sessionId = useAppStore((s) => s.sessionId);
   const setSessionId = useAppStore((s) => s.setSessionId);
   const resetConversationState = useAppStore((s) => s.resetConversationState);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<ConversationSummaryItem[]>(
@@ -98,7 +101,7 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="chat-workspace flex h-screen w-screen overflow-hidden bg-[#080808] text-neutral-100 font-sans selection:bg-white selection:text-black">
+    <div className={`chat-workspace flex h-screen w-screen overflow-hidden ${isLight ? "bg-[#f5f2eb] text-[#18181b]" : "bg-[#080808] text-neutral-100"} font-sans selection:bg-white selection:text-black transition-colors duration-200`}>
       <style>{`
         .chat-workspace ::-webkit-scrollbar,
         .chat-workspace::-webkit-scrollbar,

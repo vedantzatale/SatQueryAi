@@ -17,6 +17,7 @@ import { ExecutionDrawer } from "./ExecutionDrawer";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import type { ExecutionResult, Message } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 
 interface AssistantMessageProps {
   content?: string;
@@ -32,6 +33,8 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const setEvidenceModalData = useAppStore((s) => s.setEvidenceModalData);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const answer = message?.content ?? result?.answer ?? content ?? "Analysis completed.";
   const trace = message?.analysisTrace;
@@ -125,9 +128,11 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
   return (
     <div className="flex flex-col items-start gap-3 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-200 font-sans">
       {/* Top Metadata Header with Logo & Model & Confidence */}
-      <div className="flex items-center justify-between w-full text-xs text-neutral-400">
+      <div className={`flex items-center justify-between w-full text-xs ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#141414] border border-[#2e2e2e] flex items-center justify-center shrink-0">
+          <div className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 ${
+            isLight ? "bg-[#fcfbf8] border-black/10 shadow-xs" : "bg-[#141414] border-[#2e2e2e]"
+          }`}>
             <Image
               src="/logo/satquertlogo.png"
               alt="SatQuery AI"
@@ -136,14 +141,18 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
               className="h-4 w-4 rounded-[3px] object-contain shrink-0"
             />
           </div>
-          <span className="font-semibold text-white text-xs tracking-wide">SatQuery</span>
+          <span className={`font-semibold text-xs tracking-wide ${isLight ? "text-[#18181b]" : "text-white"}`}>SatQuery</span>
           {trace && (
-            <span className="text-[10px] text-[#737373] font-mono border border-[#262626] px-1.5 py-0.5 rounded">
+            <span className={`text-[10px] font-mono border px-1.5 py-0.5 rounded ${
+              isLight ? "text-neutral-600 border-black/10 bg-black/5" : "text-[#737373] border-[#262626]"
+            }`}>
               {trace.models.join(" + ")}
             </span>
           )}
           {!trace && result?.model && (
-            <span className="text-[10px] text-[#737373] font-mono border border-[#262626] px-1.5 py-0.5 rounded">
+            <span className={`text-[10px] font-mono border px-1.5 py-0.5 rounded ${
+              isLight ? "text-neutral-600 border-black/10 bg-black/5" : "text-[#737373] border-[#262626]"
+            }`}>
               {result.model}
             </span>
           )}
@@ -152,7 +161,9 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
               so this can only ever fire for a genuine result. */}
           {!trace && isDemo && (
             <span
-              className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-300"
+              className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
+                isLight ? "border-amber-600/30 bg-amber-500/15 text-amber-800" : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+              }`}
               title="No trained model ran. This result came from a pixel-color heuristic stand-in, so it is not a reliable analysis."
             >
               DEMO — no trained model
@@ -172,7 +183,7 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
             gets a plain-text label instead, exactly qualified per the
             backend's own caveat, rather than routed through that component. */}
         {!trace && confidence && (
-          <span className="text-[11px] text-neutral-400 font-mono">
+          <span className={`text-[11px] font-mono ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>
             {confidence.overall_level} confidence
             {isDemo
               ? " (uncalibrated)"
@@ -184,7 +195,9 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
       </div>
 
       {/* Main Response Text */}
-      <div className="w-full text-[15px] sm:text-[15.5px] leading-[1.65] text-[#ececec] whitespace-pre-wrap font-normal space-y-2">
+      <div className={`w-full text-[15px] sm:text-[15.5px] leading-[1.65] whitespace-pre-wrap font-normal space-y-2 ${
+        isLight ? "text-[#18181b]" : "text-[#ececec]"
+      }`}>
         {answer.split("\n\n").map((para, idx) => (
           <p key={idx}>{para}</p>
         ))}
@@ -231,17 +244,23 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
       )}
 
       {/* ChatGPT-style Action Toolbar */}
-      <div className="flex items-center gap-2 pt-2 text-neutral-400">
+      <div className={`flex items-center gap-2 pt-2 ${isLight ? "text-neutral-600" : "text-neutral-400"}`}>
         <button
           type="button"
           onClick={handleCopy}
           className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-            copied ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "hover:bg-white/10 hover:text-white"
+            copied
+              ? isLight
+                ? "bg-emerald-500/20 text-emerald-700 border border-emerald-500/40"
+                : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+              : isLight
+                ? "hover:bg-black/5 hover:text-black"
+                : "hover:bg-white/10 hover:text-white"
           }`}
           title="Copy response"
           aria-label="Copy response"
         >
-          {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+          {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
         </button>
 
         <button
@@ -249,13 +268,17 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
           onClick={handleThumbsUp}
           className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
             liked === true
-              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-              : "hover:bg-white/10 hover:text-white"
+              ? isLight
+                ? "bg-emerald-500/20 text-emerald-700 border border-emerald-500/40"
+                : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+              : isLight
+                ? "hover:bg-black/5 hover:text-black"
+                : "hover:bg-white/10 hover:text-white"
           }`}
           title="Good response / Accurate analysis"
           aria-label="Like response"
         >
-          <ThumbsUp className={`h-4 w-4 ${liked === true ? "fill-emerald-400" : ""}`} />
+          <ThumbsUp className={`h-4 w-4 ${liked === true ? (isLight ? "fill-emerald-600 text-emerald-600" : "fill-emerald-400") : ""}`} />
         </button>
 
         <button
@@ -263,31 +286,41 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
           onClick={handleThumbsDown}
           className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
             liked === false
-              ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-              : "hover:bg-white/10 hover:text-white"
+              ? isLight
+                ? "bg-rose-500/20 text-rose-700 border border-rose-500/40"
+                : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+              : isLight
+                ? "hover:bg-black/5 hover:text-black"
+                : "hover:bg-white/10 hover:text-white"
           }`}
           title="Bad response / Flag discrepancy"
           aria-label="Dislike response"
         >
-          <ThumbsDown className={`h-4 w-4 ${liked === false ? "fill-rose-400" : ""}`} />
+          <ThumbsDown className={`h-4 w-4 ${liked === false ? (isLight ? "fill-rose-600 text-rose-600" : "fill-rose-400") : ""}`} />
         </button>
 
         <button
           type="button"
           onClick={handleRegenerateClick}
           disabled={isRegenerating}
-          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors ${
-            isRegenerating ? "text-white bg-white/10 pointer-events-none" : ""
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+            isLight ? "hover:bg-black/5 hover:text-black" : "hover:bg-white/10 hover:text-white"
+          } ${
+            isRegenerating ? (isLight ? "text-black bg-black/10 pointer-events-none" : "text-white bg-white/10 pointer-events-none") : ""
           }`}
           title="Regenerate response"
           aria-label="Regenerate response"
         >
-          <RefreshCw className={`h-4 w-4 ${isRegenerating ? "animate-spin text-white" : ""}`} />
+          <RefreshCw className={`h-4 w-4 ${isRegenerating ? (isLight ? "animate-spin text-black" : "animate-spin text-white") : ""}`} />
         </button>
 
         {/* Dynamic Feedback Toast */}
         {feedbackToast && (
-          <span className="ml-1 text-[11px] font-mono text-neutral-300 bg-[#1e1e1e] border border-white/10 px-2.5 py-1 rounded-md animate-in fade-in zoom-in-95 duration-150 select-none">
+          <span className={`ml-1 text-[11px] font-mono px-2.5 py-1 rounded-md animate-in fade-in zoom-in-95 duration-150 select-none border ${
+            isLight
+              ? "text-neutral-800 bg-[#fcfbf8] border-black/10 shadow-sm"
+              : "text-neutral-300 bg-[#1e1e1e] border-white/10"
+          }`}>
             {feedbackToast}
           </span>
         )}

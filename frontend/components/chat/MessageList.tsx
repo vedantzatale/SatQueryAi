@@ -6,6 +6,7 @@ import { ShieldAlert, Maximize2 } from "lucide-react";
 import { AssistantMessage } from "./AssistantMessage";
 import { TypingIndicatorChat } from "./TypingIndicatorChat";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 import type { Attachment, ChatMessage, ExecutionResult, Message } from "@/lib/types";
 
 export interface MessageWithMeta extends Partial<Message> {
@@ -31,6 +32,8 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
   const bottomRef = useRef<HTMLDivElement>(null);
   const isTemporaryChat = useAppStore((s) => s.isTemporaryChat);
   const setEvidenceModalData = useAppStore((s) => s.setEvidenceModalData);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,10 +57,12 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
       <div className="px-4 sm:px-8 py-6 space-y-8 max-w-3xl mx-auto w-full">
         {/* Temporary Chat Notice Banner */}
         {isTemporaryChat && (
-          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#141414] border border-[#2e2e2e] text-xs text-[#a3a3a3] select-none">
-            <ShieldAlert className="w-4 h-4 text-white shrink-0" />
+          <div className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs select-none ${
+            isLight ? "bg-[#fcfbf8] border-black/10 text-neutral-700 shadow-sm" : "bg-[#141414] border-[#2e2e2e] text-[#a3a3a3]"
+          }`}>
+            <ShieldAlert className={`w-4 h-4 shrink-0 ${isLight ? "text-neutral-900" : "text-white"}`} />
             <span>
-              <strong className="text-white font-medium">Temporary chat:</strong> This chat can reference memory, plugins, and custom instructions, but it won&apos;t appear in your history.
+              <strong className={`font-medium ${isLight ? "text-neutral-900" : "text-white"}`}>Temporary chat:</strong> This chat can reference memory, plugins, and custom instructions, but it won&apos;t appear in your history.
             </span>
           </div>
         )}
@@ -103,14 +108,18 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
                         role={imgUrl ? "button" : undefined}
                         tabIndex={imgUrl ? 0 : undefined}
                         title={imgUrl ? "Click to view full-resolution image" : undefined}
-                        className={`group flex items-center gap-2.5 p-2 rounded-xl bg-[#171717] border border-[#2e2e2e] shadow-subtle max-w-[280px] transition-all duration-150 select-none ${
-                          imgUrl
-                            ? "cursor-pointer hover:border-white/40 hover:bg-[#222222] focus:outline-none focus:border-white/50"
-                            : ""
+                        className={`group flex items-center gap-2.5 p-2 rounded-xl border shadow-subtle max-w-[280px] transition-all duration-150 select-none ${
+                          isLight
+                            ? "bg-[#fcfbf8] border-black/10 hover:bg-white hover:border-black/20"
+                            : "bg-[#171717] border-[#2e2e2e] hover:border-white/40 hover:bg-[#222222]"
+                        } ${
+                          imgUrl ? "cursor-pointer focus:outline-none" : ""
                         }`}
                       >
                         {imgUrl ? (
-                          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#0d0d0d] border border-[#333333] shrink-0 group-hover:border-white/40 transition-colors">
+                          <div className={`relative w-10 h-10 rounded-lg overflow-hidden border shrink-0 transition-colors ${
+                            isLight ? "bg-[#ece7de] border-black/10" : "bg-[#0d0d0d] border-[#333333] group-hover:border-white/40"
+                          }`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imgUrl}
@@ -122,15 +131,21 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
                             </div>
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-[#262626] flex items-center justify-center text-[10px] font-mono text-neutral-400 shrink-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-mono shrink-0 ${
+                            isLight ? "bg-black/5 text-neutral-600" : "bg-[#262626] text-neutral-400"
+                          }`}>
                             TIFF
                           </div>
                         )}
                         <div className="flex-1 min-w-0 pr-1">
-                          <p className="text-xs font-medium text-white truncate group-hover:text-white transition-colors">
+                          <p className={`text-xs font-medium truncate transition-colors ${
+                            isLight ? "text-neutral-900 group-hover:text-black" : "text-white group-hover:text-white"
+                          }`}>
                             {att.name}
                           </p>
-                          <div className="flex items-center gap-1.5 text-[10px] text-[#888888] font-mono group-hover:text-neutral-300 transition-colors">
+                          <div className={`flex items-center gap-1.5 text-[10px] font-mono transition-colors ${
+                            isLight ? "text-neutral-500 group-hover:text-neutral-700" : "text-[#888888] group-hover:text-neutral-300"
+                          }`}>
                             {att.sensor && <span>{att.sensor}</span>}
                             {att.resolution && <span>• {att.resolution}</span>}
                           </div>
@@ -142,7 +157,11 @@ export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }
               )}
 
               {/* Message Bubble */}
-              <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tr-sm bg-[#212121] border border-[#2e2e2e] px-4 py-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#ececec] shadow-subtle whitespace-pre-wrap">
+              <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tr-sm px-4 py-3 text-[14.5px] sm:text-[15px] leading-relaxed shadow-subtle whitespace-pre-wrap ${
+                isLight
+                  ? "bg-[#ece6dc] text-[#18181b] border border-black/10 shadow-sm"
+                  : "bg-[#212121] border border-[#2e2e2e] text-[#ececec]"
+              }`}>
                 {msg.content}
               </div>
             </div>

@@ -17,6 +17,7 @@ import { useT } from "@/lib/i18n";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useTheme } from "@/lib/theme";
 
 interface ChatHeaderProps {
   onToggleMobileSidebar: () => void;
@@ -42,6 +43,8 @@ export function ChatHeader({
   const setSessionId = useAppStore((s) => s.setSessionId);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const { t } = useT();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   function handleToggleTemporary() {
     if (!isTemporaryChat) {
@@ -58,14 +61,14 @@ export function ChatHeader({
   }
 
   return (
-    <header className="flex h-14 w-full items-center justify-between border-b border-[#1f1f1f] bg-[#000000]/80 backdrop-blur-md px-4 sm:px-6 sticky top-0 z-30 select-none">
+    <header className={`flex h-14 w-full items-center justify-between border-b ${isLight ? "border-black/10 bg-[#f5f2eb]/90 text-[#18181b]" : "border-[#1f1f1f] bg-[#000000]/80 text-white"} backdrop-blur-md px-4 sm:px-6 sticky top-0 z-30 select-none transition-colors duration-200`}>
       {/* Left section */}
       <div className="flex items-center gap-3 min-w-0">
         {/* Mobile menu button */}
         <button
           type="button"
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-1.5 text-[#737373] hover:text-white rounded-lg hover:bg-[#1a1a1a]"
+          className={`md:hidden p-1.5 rounded-lg transition-colors ${isLight ? "text-neutral-600 hover:text-black hover:bg-black/5" : "text-[#737373] hover:text-white hover:bg-[#1a1a1a]"}`}
           aria-label="Open Sidebar"
         >
           <Menu className="h-5 w-5" />
@@ -76,7 +79,7 @@ export function ChatHeader({
           <button
             type="button"
             onClick={onToggleDesktop}
-            className="hidden md:flex p-1.5 rounded-lg text-[#737373] hover:text-white hover:bg-[#1a1a1a] transition-colors shrink-0"
+            className={`hidden md:flex p-1.5 rounded-lg transition-colors shrink-0 ${isLight ? "text-neutral-600 hover:text-black hover:bg-black/5" : "text-[#737373] hover:text-white hover:bg-[#1a1a1a]"}`}
             aria-label="Open Sidebar (⌘B)"
             title="Open Sidebar (⌘B)"
           >
@@ -86,18 +89,18 @@ export function ChatHeader({
 
         {/* Title & Task Tag */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <h1 className="text-xs sm:text-sm font-medium text-white truncate font-sans">
+          <h1 className={`text-xs sm:text-sm font-medium truncate font-sans ${isLight ? "text-[#18181b]" : "text-white"}`}>
             {activeSessionTitle || "New Satellite Query"}
           </h1>
 
           {activeTask && (
-            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#171717] border border-[#2a2a2a] text-[#a3a3a3]">
+            <span className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono ${isLight ? "bg-black/5 border border-black/10 text-neutral-600" : "bg-[#171717] border border-[#2a2a2a] text-[#a3a3a3]"}`}>
               {activeTask}
             </span>
           )}
 
           {isTemporaryChat && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-[#221f14] border border-[#443818] text-[#d4b152] font-medium">
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isLight ? "bg-amber-500/10 border border-amber-500/20 text-amber-800" : "bg-[#221f14] border border-[#443818] text-[#d4b152]"}`}>
               <ShieldAlert className="w-3 h-3" />
               {t("header.temporary")}
             </span>
@@ -108,8 +111,8 @@ export function ChatHeader({
       {/* Right Controls */}
       <div className="relative flex items-center gap-2 text-xs font-sans">
         {/* Model Tag */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121212] border border-[#262626] text-[11px] text-[#888888] font-mono shadow-subtle">
-          <Cpu className="w-3.5 h-3.5 text-[#888888]" />
+        <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono shadow-subtle ${isLight ? "bg-[#ede8df] border-black/10 text-neutral-600" : "bg-[#121212] border-[#262626] text-[#888888]"}`}>
+          <Cpu className={`w-3.5 h-3.5 ${isLight ? "text-neutral-600" : "text-[#888888]"}`} />
           <span>GeoChat • Sentinel Core</span>
         </div>
 
@@ -123,15 +126,19 @@ export function ChatHeader({
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs transition-all font-medium border",
             isTemporaryChat
-              ? "bg-[#262626] text-white border-[#444444] shadow-subtle"
-              : "bg-transparent text-[#737373] hover:text-white border-transparent hover:bg-[#171717]"
+              ? isLight
+                ? "bg-black/10 text-neutral-900 border-black/20 shadow-subtle"
+                : "bg-[#262626] text-white border-[#444444] shadow-subtle"
+              : isLight
+                ? "bg-transparent text-neutral-600 hover:text-neutral-900 border-transparent hover:bg-black/5"
+                : "bg-transparent text-[#737373] hover:text-white border-transparent hover:bg-[#171717]"
           )}
           title={isTemporaryChat ? "Temporary chat enabled (will discard when switching)" : "Enable temporary chat"}
         >
           <span
             className={cn(
               "w-1.5 h-1.5 rounded-full transition-colors",
-              isTemporaryChat ? "bg-white" : "bg-[#525252]"
+              isTemporaryChat ? (isLight ? "bg-black" : "bg-white") : (isLight ? "bg-neutral-400" : "bg-[#525252]")
             )}
           />
           <span className="hidden sm:inline">{t("header.temporary")}</span>
@@ -141,7 +148,11 @@ export function ChatHeader({
         <button
           type="button"
           onClick={() => setShareModalOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171717] hover:bg-[#212121] text-[#e5e5e5] hover:text-white border border-[#2e2e2e] rounded-xl text-xs font-medium transition-colors shadow-subtle"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors shadow-subtle border ${
+            isLight
+              ? "bg-[#fcfbf8] hover:bg-white text-neutral-800 border-black/10 shadow-sm"
+              : "bg-[#171717] hover:bg-[#212121] text-[#e5e5e5] hover:text-white border border-[#2e2e2e]"
+          }`}
         >
           <Share2 className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t("header.share")}</span>
@@ -152,23 +163,33 @@ export function ChatHeader({
           <button
             type="button"
             onClick={() => setOptionsOpen(!optionsOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+              isLight ? "text-neutral-600 hover:bg-black/5 hover:text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            }`}
             aria-label="More options"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
 
           {optionsOpen && (
-            <div className="absolute right-0 top-10 z-40 w-56 rounded-2xl border border-[#303030] bg-[#171717] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-100 font-sans text-xs text-neutral-300">
+            <div className={`absolute right-0 top-10 z-40 w-56 rounded-2xl border p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-100 font-sans text-xs ${
+              isLight
+                ? "border-black/10 bg-[#fcfbf8] text-neutral-800 shadow-xl"
+                : "border-[#303030] bg-[#171717] text-neutral-300"
+            }`}>
               <button
                 type="button"
                 onClick={() => {
                   setMapModalOpen(true);
                   setOptionsOpen(false);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-colors text-left ${
+                  isLight
+                    ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950"
+                    : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <Globe className="h-4 w-4 text-neutral-400" />
+                <Globe className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                 <span>{t("header.inspectMap")}</span>
               </button>
 
@@ -178,15 +199,19 @@ export function ChatHeader({
                   here, just don't pretend export always succeeds silently. */}
               {lastResult?.execution_id && (
                 <>
-                  <div className="border-t border-white/10 my-1" />
+                  <div className={`my-1 border-t ${isLight ? "border-black/10" : "border-white/10"}`} />
                   <a
                     href={reportGeoJsonUrl(lastResult.execution_id)}
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => setOptionsOpen(false)}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-colors text-left ${
+                      isLight
+                        ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950"
+                        : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                    }`}
                   >
-                    <FileJson className="h-4 w-4 text-neutral-400" />
+                    <FileJson className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                     <span>{t("header.downloadGeojson")}</span>
                   </a>
                   <a
@@ -194,9 +219,13 @@ export function ChatHeader({
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => setOptionsOpen(false)}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-colors text-left ${
+                      isLight
+                        ? "text-neutral-700 hover:bg-black/5 hover:text-neutral-950"
+                        : "text-neutral-200 hover:bg-white/10 hover:text-white"
+                    }`}
                   >
-                    <Download className="h-4 w-4 text-neutral-400" />
+                    <Download className={`h-4 w-4 ${isLight ? "text-neutral-500" : "text-neutral-400"}`} />
                     <span>{t("header.downloadPdf")}</span>
                   </a>
                 </>

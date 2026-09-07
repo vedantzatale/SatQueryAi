@@ -8,6 +8,7 @@ import { createSession, getAnalysis, getSession, submitQuery, uploadImage } from
 import { INITIAL_CONVERSATIONS, MOCK_SESSIONS } from "@/lib/mock-data";
 import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 import type { Attachment, ExecutionResult, Message } from "@/lib/types";
 
 interface ChatAreaProps {
@@ -421,21 +422,24 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setLoadingStatus(null);
   }
 
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden bg-[#000000]">
+    <div className={`flex flex-1 flex-col h-full overflow-hidden ${isLight ? "bg-[#f5f2eb] text-[#18181b]" : "bg-[#000000] text-white"} transition-colors duration-200`}>
       {messages.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center -mt-16 px-4 w-full max-w-[840px] mx-auto animate-in fade-in duration-200">
           {isTemporaryChat ? (
             <div className="flex flex-col items-center text-center mb-8 select-none">
-              <h1 className="text-3xl sm:text-4xl md:text-[34px] font-semibold tracking-tight text-white mb-2.5 font-sans">
+              <h1 className={`text-3xl sm:text-4xl md:text-[34px] font-semibold tracking-tight mb-2.5 font-sans ${isLight ? "text-[#18181b]" : "text-white"}`}>
                 Temporary chat
               </h1>
-              <p className="text-[14px] sm:text-[15px] text-[#888888] font-normal max-w-xl font-sans leading-relaxed">
+              <p className={`text-[14px] sm:text-[15px] font-normal max-w-xl font-sans leading-relaxed ${isLight ? "text-[#52525b]" : "text-[#888888]"}`}>
                 This chat can reference memory, plugins, and custom instructions, but it won&apos;t appear in your history.
               </p>
             </div>
           ) : (
-            <h1 className="text-3xl sm:text-4xl md:text-[34px] font-semibold tracking-tight text-white mb-8 text-center font-sans select-none">
+            <h1 className={`text-3xl sm:text-4xl md:text-[34px] font-semibold tracking-tight mb-8 text-center font-sans select-none ${isLight ? "text-[#18181b]" : "text-white"}`}>
               What&#39;s on your mind today?
             </h1>
           )}
@@ -459,7 +463,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
           />
 
           {/* Persistent Bottom Composer */}
-          <div className="w-full bg-[#000000] pb-4 pt-2">
+          <div className={`w-full ${isLight ? "bg-[#f5f2eb]" : "bg-[#000000]"} pb-4 pt-2 transition-colors duration-200`}>
             <Composer
               onSend={handleSend}
               onUploadFiles={handleUploadFiles}
