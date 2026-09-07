@@ -24,9 +24,10 @@ interface MessageListProps {
   isLoading: boolean;
   loadingStatus?: string | null;
   onSelectPrompt?: (prompt: string, attachments?: Attachment[]) => void;
+  onRegenerate?: (messageId?: string) => void;
 }
 
-export function MessageList({ messages, isLoading, loadingStatus }: MessageListProps) {
+export function MessageList({ messages, isLoading, loadingStatus, onRegenerate }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isTemporaryChat = useAppStore((s) => s.isTemporaryChat);
   const setEvidenceModalData = useAppStore((s) => s.setEvidenceModalData);
@@ -154,6 +155,7 @@ export function MessageList({ messages, isLoading, loadingStatus }: MessageListP
             message={msg as Message}
             content={msg.content}
             result={msg.result}
+            onRegenerate={() => onRegenerate?.(msg.id)}
           />
         );
       })}

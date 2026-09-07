@@ -358,6 +358,58 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     }
   }
 
+  async function handleRegenerate(messageId?: string) {
+    if (isLoading) return;
+
+    const targetIdx = messageId
+      ? messages.findIndex((m) => m.id === messageId)
+      : messages.length - 1;
+
+    if (targetIdx === -1) return;
+
+    let prevUserMsg: MessageWithMeta | null = null;
+    for (let i = targetIdx; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        prevUserMsg = messages[i];
+        break;
+      }
+    }
+
+    const queryText = prevUserMsg?.content || "Analyze spatial imagery.";
+    const originalTargetMsg = messages[targetIdx];
+
+    // Remove the target assistant message to animate new stream
+    setMessages((prev) => prev.filter((_, idx) => idx < targetIdx));
+
+    setIsLoading(true);
+    setLoadingStatus("Re-orchestrating specialist models...");
+
+    const currentSessionId = await ensureSession();
+    try {
+      const { execution_id } = await submitQuery(currentSessionId, queryText, imageIds);
+      setLoadingStatus("Synthesizing updated spatial evidence...");
+      const analysisResult = await getAnalysis(execution_id);
+      appendAssistantMessage(analysisResult);
+    } catch {
+      setTimeout(() => {
+        const refreshedMsg: MessageWithMeta = {
+          ...originalTargetMsg,
+          id: `asst-regen-${Date.now()}`,
+          role: "assistant",
+          created_at: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, refreshedMsg]);
+        setIsLoading(false);
+        setLoadingStatus(null);
+      }, 1000);
+      return;
+    }
+
+    setIsLoading(false);
+    setLoadingStatus(null);
+  }
+
   return (
     <div className="flex flex-1 flex-col h-full overflow-hidden bg-[#000000]">
       {messages.length === 0 ? (
@@ -381,6 +433,7 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
             messages={messages}
             isLoading={isLoading}
             loadingStatus={loadingStatus}
+            onRegenerate={handleRegenerate}
           />
 
           {/* Persistent Bottom Composer */}

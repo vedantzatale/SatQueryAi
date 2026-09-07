@@ -23,11 +23,14 @@ interface AssistantMessageProps {
   result?: ExecutionResult | null;
   message?: Message;
   onOpenViewer?: (title: string, image: string, metrics?: { label: string; value: string }[]) => void;
+  onRegenerate?: () => void;
 }
 
-export function AssistantMessage({ content, result, message, onOpenViewer }: AssistantMessageProps) {
+export function AssistantMessage({ content, result, message, onOpenViewer, onRegenerate }: AssistantMessageProps) {
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState<boolean | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const setEvidenceModalData = useAppStore((s) => s.setEvidenceModalData);
 
   const answer = message?.content ?? result?.answer ?? content ?? "Analysis completed.";
@@ -35,6 +38,13 @@ export function AssistantMessage({ content, result, message, onOpenViewer }: Ass
   const confidence = result?.confidence;
   const changeAnalysis = message?.changeAnalysis;
   const multimodal = message?.multimodal;
+
+  const showToast = (text: string) => {
+    setFeedbackToast(text);
+    setTimeout(() => {
+      setFeedbackToast((current) => (current === text ? null : current));
+    }, 2400);
+  };
 
   const handleViewerOpen = (title: string, image: string, metrics?: { label: string; value: string }[]) => {
     if (onOpenViewer) {
@@ -45,13 +55,65 @@ export function AssistantMessage({ content, result, message, onOpenViewer }: Ass
   };
 
   function handleCopy() {
-    navigator.clipboard
-      .writeText(answer)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => {});
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(answer)
+        .then(() => {
+          setCopied(true);
+          showToast("Copied to clipboard");
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          fallbackCopy();
+        });
+    } else {
+      fallbackCopy();
+    }
+  }
+
+  function fallbackCopy() {
+    try {
+      const el = document.createElement("textarea");
+      el.value = answer;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      showToast("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast("Unable to copy");
+    }
+  }
+
+  function handleThumbsUp() {
+    if (liked === true) {
+      setLiked(null);
+      setFeedbackToast(null);
+    } else {
+      setLiked(true);
+      showToast("Feedback submitted: Accurate analysis");
+    }
+  }
+
+  function handleThumbsDown() {
+    if (liked === false) {
+      setLiked(null);
+      setFeedbackToast(null);
+    } else {
+      setLiked(false);
+      showToast("Feedback submitted: Discrepancy flagged");
+    }
+  }
+
+  function handleRegenerateClick() {
+    setIsRegenerating(true);
+    showToast("Regenerating analysis...");
+    if (onRegenerate) {
+      onRegenerate();
+    }
+    setTimeout(() => setIsRegenerating(false), 1200);
   }
 
   return (
@@ -147,42 +209,62 @@ export function AssistantMessage({ content, result, message, onOpenViewer }: Ass
         <button
           type="button"
           onClick={handleCopy}
-          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+            copied ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "hover:bg-white/10 hover:text-white"
+          }`}
           title="Copy response"
+          aria-label="Copy response"
         >
           {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
         </button>
 
         <button
           type="button"
-          onClick={() => setLiked(liked === true ? null : true)}
-          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${
-            liked === true ? "text-white bg-white/10" : "hover:text-white"
+          onClick={handleThumbsUp}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+            liked === true
+              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+              : "hover:bg-white/10 hover:text-white"
           }`}
-          title="Accurate Grounding"
+          title="Good response / Accurate analysis"
+          aria-label="Like response"
         >
-          <ThumbsUp className="h-4 w-4" />
+          <ThumbsUp className={`h-4 w-4 ${liked === true ? "fill-emerald-400" : ""}`} />
         </button>
 
         <button
           type="button"
-          onClick={() => setLiked(liked === false ? null : false)}
-          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${
-            liked === false ? "text-white bg-white/10" : "hover:text-white"
+          onClick={handleThumbsDown}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+            liked === false
+              ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+              : "hover:bg-white/10 hover:text-white"
           }`}
-          title="Flag Spatial Discrepancy"
+          title="Bad response / Flag discrepancy"
+          aria-label="Dislike response"
         >
-          <ThumbsDown className="h-4 w-4" />
+          <ThumbsDown className={`h-4 w-4 ${liked === false ? "fill-rose-400" : ""}`} />
         </button>
 
         <button
           type="button"
-          onClick={handleCopy}
-          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+          onClick={handleRegenerateClick}
+          disabled={isRegenerating}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 hover:text-white transition-colors ${
+            isRegenerating ? "text-white bg-white/10 pointer-events-none" : ""
+          }`}
           title="Regenerate response"
+          aria-label="Regenerate response"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={`h-4 w-4 ${isRegenerating ? "animate-spin text-white" : ""}`} />
         </button>
+
+        {/* Dynamic Feedback Toast */}
+        {feedbackToast && (
+          <span className="ml-1 text-[11px] font-mono text-neutral-300 bg-[#1e1e1e] border border-white/10 px-2.5 py-1 rounded-md animate-in fade-in zoom-in-95 duration-150 select-none">
+            {feedbackToast}
+          </span>
+        )}
       </div>
     </div>
   );

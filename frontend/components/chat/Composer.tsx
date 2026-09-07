@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Brain, Image as ImageIcon, Layers, Mic, Paperclip, Plus, Radio, X } from "lucide-react";
+import { ArrowUp, Image as ImageIcon, Layers, Mic, Paperclip, Plus, Radio, X } from "lucide-react";
 import { useAppStore, type PendingAttachment } from "@/lib/store";
 import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
 import { Attachment, SensorType } from "@/lib/types";
@@ -28,7 +28,6 @@ export function Composer({
   initialAttachments = [],
 }: ComposerProps) {
   const [text, setText] = useState(initialText);
-  const [thinkingMode, setThinkingMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -359,23 +358,8 @@ export function Composer({
           className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[15px] sm:text-[16px] text-white placeholder:text-[#525252] focus:outline-none resize-none font-sans leading-relaxed font-normal"
         />
 
-        {/* Right Action Icons: Think, Mic, Send */}
+        {/* Right Action Icons: Mic, Send */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Think Toggle */}
-          <button
-            type="button"
-            onClick={() => setThinkingMode(!thinkingMode)}
-            className={`hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-[13px] font-medium transition-colors ${
-              thinkingMode
-                ? "bg-white/20 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-white/[0.08]"
-            }`}
-            title="Toggle Deep Co-registration & Reasoning"
-          >
-            <Brain className="h-4 w-4" />
-            <span>Think</span>
-          </button>
-
           {/* Microphone Voice Icon */}
           <button
             type="button"
