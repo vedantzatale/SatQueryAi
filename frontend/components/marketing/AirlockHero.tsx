@@ -89,8 +89,8 @@ export interface AirlockHeroProps {
 // to treat as video. jsDelivr sends video/mp4 and honours range requests, which
 // is what makes seeking work at all.
 const CDN = "https://cdn.jsdelivr.net/gh/yuraoak/airlock-hero-assets@main"
-const DEFAULT_VIDEO = `${CDN}/iss-hero-1080p.mp4`
-const DEFAULT_POSTER = `${CDN}/iss-hero-poster.jpg`
+const DEFAULT_VIDEO = "/hero/iss-hero-1080p.mp4"
+const DEFAULT_POSTER = "/hero/iss-hero-poster.jpg"
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 /** Keyboard fallback, so a reader without a wheel is never stuck. */
@@ -374,7 +374,14 @@ export default function AirlockHero({
         }
 
         video.addEventListener("loadeddata", onLoadedData)
+        video.addEventListener("loadedmetadata", onLoadedData)
+        video.addEventListener("canplay", onLoadedData)
+        video.addEventListener("canplaythrough", onLoadedData)
         video.addEventListener("seeked", onSeeked)
+
+        if (video.readyState >= 1) {
+            onLoadedData()
+        }
 
         if (!reduceMotion) {
             if (window.scrollY <= section.offsetTop + 1) engageLock()
@@ -402,6 +409,9 @@ export default function AirlockHero({
 
         return () => {
             video.removeEventListener("loadeddata", onLoadedData)
+            video.removeEventListener("loadedmetadata", onLoadedData)
+            video.removeEventListener("canplay", onLoadedData)
+            video.removeEventListener("canplaythrough", onLoadedData)
             video.removeEventListener("seeked", onSeeked)
             window.removeEventListener("wheel", onWheel)
             window.removeEventListener("touchstart", onTouchStart)
@@ -419,6 +429,21 @@ export default function AirlockHero({
             className={cn("relative h-[100dvh] w-full overflow-hidden", className)}
             style={{ background: palette.backdrop, ...style }}
         >
+            {/* Immediate poster fallback so background is visible with zero delay */}
+            {posterSrc && (
+                <img
+                    src={posterSrc}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    style={{
+                        opacity: ready ? 0 : 1,
+                        transformOrigin: "center center",
+                        willChange: "transform, opacity",
+                        transition: "opacity 0.6s ease",
+                    }}
+                />
+            )}
             <video
                 ref={videoRef}
                 src={videoSrc}
