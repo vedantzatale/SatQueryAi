@@ -229,17 +229,17 @@ export function Footer() {
                 <button
                   type="submit"
                   disabled={subscribed}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${isLight ? "bg-[#18181b] text-white hover:bg-neutral-800" : "bg-white text-black hover:bg-neutral-200"} px-6 py-2.5 text-xs font-medium transition-all shadow-sm shrink-0 disabled:bg-neutral-300`}
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${isLight ? "bg-[#18181b] !text-white hover:bg-neutral-800" : "bg-white text-black hover:bg-neutral-200"} px-6 py-2.5 text-xs font-medium transition-all shadow-sm shrink-0 disabled:bg-neutral-300`}
                 >
                   {subscribed ? (
                     <>
                       <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Subscribed</span>
+                      <span className={isLight ? "!text-white" : ""}>Subscribed</span>
                     </>
                   ) : (
                     <>
-                      <span>Subscribe</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <span className={isLight ? "!text-white" : ""}>Subscribe</span>
+                      <ArrowRight className={`h-3.5 w-3.5 ${isLight ? "!text-white" : ""}`} />
                     </>
                   )}
                 </button>

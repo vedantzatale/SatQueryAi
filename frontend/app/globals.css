@@ -88,10 +88,25 @@
   }
 
   /* Typography on landing page in light mode */
+  html.light h1.text-white,
   html.light h2.text-white,
   html.light h3.text-white,
-  html.light .text-white:not(.airlock-section *):not(.bg-\[\#18181b\] *):not(.bg-black *):not(button.bg-\[\#18181b\] *) {
+  html.light h4.text-white {
     color: #18181b !important;
+  }
+
+  /* Any element or button with a dark surface MUST preserve white text in light mode */
+  html.light [class*="bg-[#18181b]"],
+  html.light [class*="bg-[#18181b]"] *,
+  html.light [class*="bg-black"],
+  html.light [class*="bg-black"] *,
+  html.light [class*="bg-[#0c0c0c]"],
+  html.light [class*="bg-[#0c0c0c]"] *,
+  html.light [class*="bg-[#141414]"],
+  html.light [class*="bg-[#141414]"] *,
+  html.light [class*="bg-neutral-900"],
+  html.light [class*="bg-neutral-900"] * {
+    color: #ffffff !important;
   }
 
   html.light p.text-neutral-300,

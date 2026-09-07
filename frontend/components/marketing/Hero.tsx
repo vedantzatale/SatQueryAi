@@ -142,16 +142,20 @@ export function Hero() {
               href="/app"
               target="_blank"
               rel="noopener noreferrer"
-              className={`group flex items-center gap-2 rounded-full ${isLight ? "bg-[#18181b] text-white hover:bg-[#27272a] shadow-[0_4px_20px_rgba(0,0,0,0.12)]" : "bg-white text-[#0c0c0c] hover:bg-[#ededed] shadow-[0_0_24px_rgba(255,255,255,0.15)]"} px-6 py-2.5 text-xs sm:text-sm font-medium active:scale-[0.98] transition-all`}
+              className={`group flex items-center gap-2 rounded-full ${isLight ? "bg-[#18181b] !text-white hover:bg-[#27272a] shadow-[0_4px_20px_rgba(0,0,0,0.12)]" : "bg-white text-[#0c0c0c] hover:bg-[#ededed] shadow-[0_0_24px_rgba(255,255,255,0.15)]"} px-6 py-2.5 text-xs sm:text-sm font-medium active:scale-[0.98] transition-all`}
             >
-              <span>Start Free</span>
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              <span className={isLight ? "!text-white" : ""}>Start Free</span>
+              <ArrowRight className={`h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 ${isLight ? "!text-white" : ""}`} />
             </Link>
             <a
               href="#features"
-              className={`flex items-center gap-2 rounded-full border ${isLight ? "border-black/10 bg-black/[0.03] text-neutral-800 hover:bg-black/[0.08]" : "border-white/15 bg-white/[0.03] text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/30"} px-5 py-2.5 text-xs sm:text-sm font-normal transition-all`}
+              className={`flex items-center gap-2 rounded-full border ${
+                isLight
+                  ? "bg-[#18181b] !text-white hover:bg-[#27272a] border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.12)] font-medium"
+                  : "border-white/15 bg-white/[0.03] text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/30 font-normal"
+              } px-6 py-2.5 text-xs sm:text-sm transition-all`}
             >
-              Explore features
+              <span className={isLight ? "!text-white" : ""}>Explore features</span>
             </a>
           </div>
         </div>
