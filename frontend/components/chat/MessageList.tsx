@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, Maximize2 } from "lucide-react";
 import { AssistantMessage } from "./AssistantMessage";
 import { TypingIndicatorChat } from "./TypingIndicatorChat";
 import { useAppStore } from "@/lib/store";
@@ -29,6 +29,7 @@ interface MessageListProps {
 export function MessageList({ messages, isLoading, loadingStatus }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isTemporaryChat = useAppStore((s) => s.isTemporaryChat);
+  const setEvidenceModalData = useAppStore((s) => s.setEvidenceModalData);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -67,34 +68,75 @@ export function MessageList({ messages, isLoading, loadingStatus }: MessageListP
               {/* Attached Images Chips */}
               {msg.attachments && msg.attachments.length > 0 && (
                 <div className="flex flex-wrap justify-end gap-2 mb-1">
-                  {msg.attachments.map((att: any, aIdx: number) => (
-                    <div
-                      key={att.id || aIdx}
-                      className="flex items-center gap-2.5 p-2 rounded-xl bg-[#171717] border border-[#2e2e2e] shadow-subtle max-w-[280px]"
-                    >
-                      {att.url ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#0d0d0d] border border-[#333333] shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={att.url}
-                            alt={att.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-lg bg-[#262626] flex items-center justify-center text-[10px] font-mono text-neutral-400 shrink-0">
-                          TIFF
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0 pr-1">
-                        <p className="text-xs font-medium text-white truncate">{att.name}</p>
-                        <div className="flex items-center gap-1.5 text-[10px] text-[#888888] font-mono">
-                          {att.sensor && <span>{att.sensor}</span>}
-                          {att.resolution && <span>• {att.resolution}</span>}
+                  {msg.attachments.map((att: any, aIdx: number) => {
+                    const imgUrl =
+                      att.url ||
+                      att.previewUrl ||
+                      (att.file instanceof File ? URL.createObjectURL(att.file) : null);
+
+                    const handleOpenImage = () => {
+                      if (imgUrl) {
+                        setEvidenceModalData({
+                          title: att.name || "Uploaded Satellite Acquisition",
+                          image: imgUrl,
+                          metrics: [
+                            { label: "Sensor", value: att.sensor ?? "Sentinel-2 MSI" },
+                            { label: "Spatial Resolution", value: att.resolution ?? "10m Ground Sampling" },
+                            ...(att.date ? [{ label: "Acquired Date", value: att.date }] : []),
+                            ...(att.size ? [{ label: "File Size", value: att.size }] : []),
+                          ],
+                        });
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={att.id || aIdx}
+                        onClick={handleOpenImage}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleOpenImage();
+                          }
+                        }}
+                        role={imgUrl ? "button" : undefined}
+                        tabIndex={imgUrl ? 0 : undefined}
+                        title={imgUrl ? "Click to view full-resolution image" : undefined}
+                        className={`group flex items-center gap-2.5 p-2 rounded-xl bg-[#171717] border border-[#2e2e2e] shadow-subtle max-w-[280px] transition-all duration-150 select-none ${
+                          imgUrl
+                            ? "cursor-pointer hover:border-white/40 hover:bg-[#222222] focus:outline-none focus:border-white/50"
+                            : ""
+                        }`}
+                      >
+                        {imgUrl ? (
+                          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#0d0d0d] border border-[#333333] shrink-0 group-hover:border-white/40 transition-colors">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={imgUrl}
+                              alt={att.name}
+                              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 className="w-3.5 h-3.5 text-white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-[#262626] flex items-center justify-center text-[10px] font-mono text-neutral-400 shrink-0">
+                            TIFF
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 pr-1">
+                          <p className="text-xs font-medium text-white truncate group-hover:text-white transition-colors">
+                            {att.name}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-[10px] text-[#888888] font-mono group-hover:text-neutral-300 transition-colors">
+                            {att.sensor && <span>{att.sensor}</span>}
+                            {att.resolution && <span>• {att.resolution}</span>}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
