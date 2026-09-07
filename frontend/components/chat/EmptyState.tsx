@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
 import { Attachment } from "@/lib/types";
 
 interface EmptyStateProps {
@@ -8,6 +9,8 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({}: EmptyStateProps) {
+  const { t } = useT();
+
   return (
     <div className="flex flex-col items-center justify-center max-w-2xl mx-auto py-16 sm:py-20 px-4 text-center space-y-4 select-none animate-in fade-in duration-200">
       <div className="space-y-3">
@@ -24,7 +27,7 @@ export function EmptyState({}: EmptyStateProps) {
           SATQUERY AI
         </h2>
         <p className="text-sm text-[#888888] font-normal max-w-md mx-auto leading-relaxed">
-          Ask your Earth observation imagery anything. Upload scenes to quantify changes, fuse radar and optical bands, and generate evidence-grounded reports.
+          {t("empty.tagline")}
         </p>
       </div>
     </div>

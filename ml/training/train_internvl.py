@@ -27,6 +27,7 @@ _DATASET_ADAPTERS = {
     "vrsbench": "ml.datasets.vrsbench.VRSBenchAdapter",
     "rsvqa": "ml.datasets.rsvqa.RSVQAAdapter",
     "cdvqa": "ml.datasets.cdvqa.CDVQAAdapter",
+    "isro_sac": "ml.datasets.isro_sac.ISROSACAdapter",
 }
 
 

@@ -7,9 +7,20 @@ import { ChatSidebar, type ConversationSummaryItem } from "@/components/chat/Cha
 import { SatelliteMapModal } from "@/components/chat/SatelliteMapModal";
 import { ShareModal } from "@/components/chat/ShareModal";
 import { EvidenceModal } from "@/components/chat/EvidenceModal";
-import { listSessions } from "@/lib/api";
+import { deleteSession, listSessions, renameSession } from "@/lib/api";
 import { MOCK_SESSIONS } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
+
+function categorize(createdAt: string): ConversationSummaryItem["category"] {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const daysAgo = Math.round((startOfDay(now) - startOfDay(created)) / 86_400_000);
+  if (daysAgo <= 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  if (daysAgo <= 7) return "Previous 7 Days";
+  return "Older";
+}
 
 export default function WorkspacePage() {
   const sessionId = useAppStore((s) => s.sessionId);
@@ -44,28 +55,28 @@ export default function WorkspacePage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [resetConversationState]);
 
-  // Sync with real backend sessions on load if available
-  useEffect(() => {
+  function refreshSessions() {
     listSessions()
       .then((sessions) => {
-        if (sessions && sessions.length > 0) {
-          const mapped: ConversationSummaryItem[] = sessions.map((s) => ({
+        setConversations(
+          sessions.map((s) => ({
             id: s.id,
             title: s.title || "Untitled Analysis",
-            category: "Today",
-          }));
-          // Merge with mock sessions avoiding duplicate ids
-          const combined = [
-            ...mapped,
-            ...MOCK_SESSIONS.filter((m) => !mapped.some((s) => s.id === m.id)),
-          ];
-          setConversations(combined);
-        }
+            category: categorize(s.created_at),
+          }))
+        );
       })
       .catch(() => {
-        // Use default mock sessions when offline
+        // Backend unreachable -- sidebar just shows no history until it's back.
       });
-  }, []);
+  }
+
+  // Re-syncs whenever the active session changes -- covers both picking an
+  // existing conversation (harmless no-op refresh) and a brand-new session
+  // getting created on the first message of a chat (picks it up for the list).
+  useEffect(() => {
+    refreshSessions();
+  }, [sessionId]);
 
   function handleSelectConversation(id: string) {
     if (useAppStore.getState().isTemporaryChat) {
@@ -106,19 +117,27 @@ export default function WorkspacePage() {
   }
 
   function handleDeleteConversation(id: string) {
+    const previous = conversations;
     setConversations((prev) => prev.filter((c) => c.id !== id));
     if (sessionId === id) {
       handleNewChat();
     }
+    deleteSession(id).catch(() => {
+      setConversations(previous); // backend rejected/unreachable -- restore
+    });
   }
 
   function handleRenameConversation(id: string, newTitle: string) {
+    const previous = conversations;
     setConversations((prev) =>
       prev.map((c) => (c.id === id ? { ...c, title: newTitle } : c))
     );
     if (sessionId === id) {
       setActiveSessionTitle(newTitle);
     }
+    renameSession(id, newTitle).catch(() => {
+      setConversations(previous); // backend rejected/unreachable -- restore
+    });
   }
 
 

@@ -11,6 +11,7 @@ Final ISRO/SAC evaluation data must never be committed here or used in training/
 | VRSBench | VQA/captioning/grounding evaluation | `ml/datasets/vrsbench.py` | `root_dir/images/<image_id>.png` + `root_dir/<split>_annotations.json` (list of `{image_id, task, question, answer, bbox}`) |
 | RSVQA (LR/HR) | VQA evaluation | `ml/datasets/rsvqa.py` | `root_dir/images/<img_id>.tif` + `root_dir/all_questions.json` + `root_dir/all_answers.json`, cross-referenced by id as in the standard RSVQA release |
 | CDVQA | Change VQA evaluation | `ml/datasets/cdvqa.py` | `root_dir/images/<pair_id>_before.png` / `_after.png` + `root_dir/annotations.json` |
+| ISRO/SAC | Final evaluation | `ml/datasets/isro_sac.py` | `root_dir/manifest.json` -- SatQuery AI's own schema (no public ISRO/SAC layout exists to target); convert the real held-out set into it before evaluating, see the adapter's docstring |
 
 ## Field-name caveat
 

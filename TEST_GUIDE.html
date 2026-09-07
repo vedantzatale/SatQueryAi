@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SatQuery AI Test Flight</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --surface-3: #e4e8ee;
+    --border: #dbe1e8;
+    --text: #131a24;
+    --text-dim: #556271;
+    --text-faint: #8994a3;
+    --accent: #0c7abf;
+    --accent-strong: #0868a3;
+    --accent-bg: rgba(12,122,191,0.08);
+    --good: #0f9d6e;
+    --good-bg: rgba(15,157,110,0.10);
+    --warn: #b8790a;
+    --warn-bg: rgba(184,121,10,0.10);
+    --muted: #5c6773;
+    --muted-bg: rgba(92,103,115,0.10);
+    --critical: #c8433d;
+    --critical-bg: rgba(200,67,61,0.10);
+    --shadow: 0 1px 2px rgba(20,30,45,0.06), 0 8px 24px rgba(20,30,45,0.05);
+    --display: "Archivo Expanded", "Arial Narrow", sans-serif;
+    --body-font: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0e15;
+      --surface: #121822;
+      --surface-2: #19212c;
+      --surface-3: #1f2833;
+      --border: #262f3d;
+      --text: #e9edf3;
+      --text-dim: #93a0b2;
+      --text-faint: #5f6c7d;
+      --accent: #5cc8ff;
+      --accent-strong: #8adcff;
+      --accent-bg: rgba(92,200,255,0.10);
+      --good: #34d399;
+      --good-bg: rgba(52,211,153,0.12);
+      --warn: #f5b544;
+      --warn-bg: rgba(245,181,68,0.12);
+      --muted: #93a0b2;
+      --muted-bg: rgba(147,160,178,0.12);
+      --critical: #f0665f;
+      --critical-bg: rgba(240,102,95,0.12);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0e15;
+    --surface: #121822;
+    --surface-2: #19212c;
+    --surface-3: #1f2833;
+    --border: #262f3d;
+    --text: #e9edf3;
+    --text-dim: #93a0b2;
+    --text-faint: #5f6c7d;
+    --accent: #5cc8ff;
+    --accent-strong: #8adcff;
+    --accent-bg: rgba(92,200,255,0.10);
+    --good: #34d399;
+    --good-bg: rgba(52,211,153,0.12);
+    --warn: #f5b544;
+    --warn-bg: rgba(245,181,68,0.12);
+    --muted: #93a0b2;
+    --muted-bg: rgba(147,160,178,0.12);
+    --critical: #f0665f;
+    --critical-bg: rgba(240,102,95,0.12);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; letter-spacing: 0.01em; }
+  code, .mono { font-family: var(--mono); }
+  a { color: var(--accent); }
+  ::selection { background: var(--accent-bg); }
+
+  .shell { display: grid; grid-template-columns: 248px minmax(0,1fr); max-width: 1240px; margin: 0 auto; }
+  @media (max-width: 880px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    position: sticky; top: 0; align-self: start; height: 100vh;
+    overflow-y: auto; padding: 28px 18px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  @media (max-width: 880px) { .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); } }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 7px; background: var(--accent-bg);
+    border: 1px solid var(--accent); color: var(--accent-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+  }
+  .brand-text { font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; }
+  .brand-sub { font-size: 10.5px; color: var(--text-faint); font-family: var(--mono); letter-spacing: 0.03em; }
+
+  .progress-block { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .progress-num { font-family: var(--display); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .progress-label { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .progress-track { height: 5px; border-radius: 3px; background: var(--surface-3); margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--good); width: 0%; transition: width .4s ease; }
+
+  nav.toc { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+  nav.toc .toc-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 12px 0 4px; font-family: var(--mono); }
+  nav.toc a { color: var(--text-dim); text-decoration: none; padding: 5px 8px; border-radius: 6px; display: flex; align-items: center; gap: 7px; }
+  nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+  nav.toc .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  nav.toc .dot.done { background: var(--good); }
+
+  /* ---------- Main ---------- */
+  main { padding: 40px 40px 100px; min-width: 0; }
+  @media (max-width: 620px) { main { padding: 28px 18px 80px; } }
+
+  .hero { margin-bottom: 44px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; color: var(--accent-strong); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .hero h1 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 12px; line-height: 1.12; }
+  .hero p { color: var(--text-dim); max-width: 62ch; font-size: 15.5px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .chip.real { background: var(--good-bg); color: var(--good); border-color: color-mix(in srgb, var(--good) 35%, transparent); }
+  .chip.real .dot { background: var(--good); }
+  .chip.mock { background: var(--warn-bg); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+  .chip.mock .dot { background: var(--warn); }
+  .chip.excluded { background: var(--muted-bg); color: var(--muted); border-color: color-mix(in srgb, var(--muted) 35%, transparent); }
+  .chip.excluded .dot { background: var(--muted); }
+  .chip.scaffold { background: var(--accent-bg); color: var(--accent-strong); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .chip.scaffold .dot { background: var(--accent); }
+
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  .section-head h2 { font-size: 22px; margin: 0; }
+  .section-num { font-family: var(--mono); color: var(--text-faint); font-size: 13px; }
+  .section-intro { color: var(--text-dim); max-width: 68ch; margin: 12px 0 24px; font-size: 14.5px; }
+
+  .callout { border: 1px solid var(--border); background: var(--surface); border-left: 3px solid var(--accent); border-radius: 8px; padding: 14px 16px; font-size: 13.5px; color: var(--text-dim); margin: 16px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout strong { color: var(--text); }
+
+  /* ---------- Setup steps ---------- */
+  .steps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .step-card h3 { font-size: 14.5px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .step-card .step-badge { font-family: var(--mono); font-size: 10.5px; background: var(--surface-3); color: var(--text-dim); padding: 2px 7px; border-radius: 5px; }
+  .step-card ol { margin: 12px 0 0; padding-left: 20px; font-size: 13.5px; color: var(--text-dim); }
+  .step-card li { margin-bottom: 9px; }
+  .step-card li:last-child { margin-bottom: 0; }
+  pre.code, .code-line { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 9px 11px; overflow-x: auto; white-space: pre; color: var(--text); margin: 6px 0 0; }
+
+  /* ---------- Model cards ---------- */
+  .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .model-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
+  .model-card h3 { font-size: 14.5px; margin: 0; }
+  .model-card .powers { font-size: 12px; color: var(--text-dim); }
+  .model-card .powers b { color: var(--text); font-weight: 600; }
+  .model-card .caveat { font-size: 11.5px; color: var(--text-faint); border-top: 1px solid var(--border); padding-top: 9px; margin-top: auto; }
+
+  /* ---------- Scenario cards ---------- */
+  .scenario { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .scenario-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  .scenario-title { font-size: 16px; margin: 0 0 6px; }
+  .scenario-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: var(--mono); font-size: 10.5px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim); padding: 2px 7px; border-radius: 5px; }
+  .check-btn { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11.5px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim); padding: 6px 11px; border-radius: 7px; cursor: pointer; flex-shrink: 0; }
+  .check-btn:hover { border-color: var(--accent); }
+  .check-btn.checked { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+  .check-btn .box { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+
+  .scenario-goal { color: var(--text-dim); font-size: 13.5px; margin: 12px 0 14px; }
+  .scenario ol { padding-left: 20px; font-size: 13.5px; margin: 0 0 14px; }
+  .scenario li { margin-bottom: 7px; }
+  .expect { background: var(--good-bg); border: 1px solid color-mix(in srgb, var(--good) 30%, transparent); border-radius: 9px; padding: 11px 14px; font-size: 13px; }
+  .expect b { color: var(--good); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 4px; }
+  .tell-real { font-size: 12px; color: var(--text-faint); margin-top: 10px; }
+
+  /* ---------- Feature map table ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table.fmap { border-collapse: collapse; width: 100%; font-size: 12.5px; min-width: 640px; }
+  table.fmap th { text-align: left; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); background: var(--surface-2); padding: 10px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+  table.fmap td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+  table.fmap tr:last-child td { border-bottom: none; }
+  table.fmap tr:hover td { background: var(--surface-2); }
+  table.fmap td.num { font-family: var(--mono); color: var(--text-faint); }
+  table.fmap td.feat { color: var(--text); font-weight: 500; }
+
+  /* ---------- FAQ ---------- */
+  .faq { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 10px; overflow: hidden; }
+  .faq summary { cursor: pointer; padding: 13px 16px; font-size: 13.5px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-family: var(--mono); color: var(--text-faint); font-weight: 400; font-size: 16px; }
+  .faq[open] summary::after { content: "\2212"; }
+  .faq-body { padding: 0 16px 15px; font-size: 13px; color: var(--text-dim); }
+  .faq-body code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+
+  footer { border-top: 1px solid var(--border); padding-top: 20px; font-size: 12px; color: var(--text-faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 0 40px 40px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">SQ</div>
+      <div>
+        <div class="brand-text">SATQUERY AI</div>
+        <div class="brand-sub">TEST FLIGHT</div>
+      </div>
+    </div>
+
+    <div class="progress-block">
+      <div class="progress-num"><span id="doneCount">0</span>/9</div>
+      <div class="progress-label">Scenarios flown</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <nav class="toc">
+      <div class="toc-heading">Ground</div>
+      <a href="#setup"><span class="dot"></span>Launch the app</a>
+      <a href="#models"><span class="dot"></span>Meet the 5 models</a>
+      <div class="toc-heading">Test Flights</div>
+      <a href="#s1"><span class="dot" data-s="1"></span>1. Ask a question</a>
+      <a href="#s2"><span class="dot" data-s="2"></span>2. Speak Hindi/Hinglish</a>
+      <a href="#s3"><span class="dot" data-s="3"></span>3. Look at one image</a>
+      <a href="#s4"><span class="dot" data-s="4"></span>4. Compare two dates</a>
+      <a href="#s5"><span class="dot" data-s="5"></span>5. Fuse optical + radar</a>
+      <a href="#s6"><span class="dot" data-s="6"></span>6. Fetch imagery yourself</a>
+      <a href="#s7"><span class="dot" data-s="7"></span>7. Trust the answer</a>
+      <a href="#s8"><span class="dot" data-s="8"></span>8. Export &amp; revisit</a>
+      <a href="#s9"><span class="dot" data-s="9"></span>9. Model registry &amp; fallback</a>
+      <div class="toc-heading">Reference</div>
+      <a href="#feature-map">All 27 features</a>
+      <a href="#faq">Troubleshooting</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">Non-technical walkthrough &middot; written for someone who has never opened this project before</div>
+      <h1>Take SatQuery AI for a test flight.</h1>
+      <p>This is a self-guided tour of everything the app can do right now, in plain language. You don't need to
+      read any code. Each "flight" below is a real thing to click through in your browser, what you should see
+      when it works, and which of the five AI models is actually doing the work behind it.</p>
+      <div class="legend">
+        <span class="chip real"><span class="dot"></span>Real model, verified today</span>
+        <span class="chip mock"><span class="dot"></span>Mock / heuristic stand-in</span>
+        <span class="chip excluded"><span class="dot"></span>Excluded on purpose</span>
+        <span class="chip scaffold"><span class="dot"></span>Ready, waiting on data</span>
+      </div>
+    </div>
+
+    <section id="setup">
+      <div class="section-head"><span class="section-num">00</span><h2>Launch the app</h2></div>
+      <p class="section-intro">Two programs need to be running at once: the <b>backend</b> (the brain — Python,
+      port 8000) and the <b>frontend</b> (what you see — Next.js, port 3000). Open two separate terminal windows.</p>
+
+      <div class="steps">
+        <div class="step-card">
+          <h3>Backend <span class="step-badge">terminal 1</span></h3>
+          <ol>
+            <li>Open a terminal and go to the <code>backend</code> folder:
+              <pre class="code">cd "C:\Users\Shivam\Downloads\temp web\SatQueryAi\backend"</pre>
+            </li>
+            <li>Start the server. Plain <code>python</code> isn't set up on this machine, so use the full path:
+              <pre class="code">"C:\Users\Shivam\AppData\Local\Python\bin\python.exe" -m uvicorn app.main:app --reload --port 8000</pre>
+            </li>
+            <li>Wait for <code>Uvicorn running on http://127.0.0.1:8000</code>. Leave this window open — closing it
+            stops the app.</li>
+          </ol>
+        </div>
+        <div class="step-card">
+          <h3>Frontend <span class="step-badge">terminal 2</span></h3>
+          <ol>
+            <li>Open a <b>second</b> terminal and go to the <code>frontend</code> folder:
+              <pre class="code">cd "C:\Users\Shivam\Downloads\temp web\SatQueryAi\frontend"</pre>
+            </li>
+            <li>Start it:
+              <pre class="code">npm run dev</pre>
+            </li>
+            <li>Wait for <code>Local: http://localhost:3000</code>, then open that address in your browser and
+            click through to <code>/app</code>.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <strong>The first question you ask will feel slow — that's expected.</strong> The query-understanding
+        model (Qwen3-4B) runs on this machine's CPU, no GPU, so reading your question and deciding what to do
+        about it takes roughly <b>60&ndash;100 seconds</b> every time, not just the first time. Don't refresh —
+        the spinner in the chat is genuinely thinking, not stuck. Everything else (change detection, image
+        analysis) replies in a few seconds.
+      </div>
+    </section>
+
+    <section id="models">
+      <div class="section-head"><span class="section-num">01</span><h2>Meet the 5 models</h2></div>
+      <p class="section-intro">Every answer SatQuery AI gives you is actually produced by one of these five
+      components. Knowing which one is behind a given feature tells you what to expect from it.</p>
+
+      <div class="model-grid">
+        <div class="model-card">
+          <span class="chip real"><span class="dot"></span>Real</span>
+          <h3>Qwen3-4B</h3>
+          <p class="powers">The receptionist. Reads your question (English, Hindi, or Hinglish) and decides
+          <b>what</b> kind of analysis you're asking for and <b>which</b> images/dates it needs.</p>
+          <p class="caveat">Powers flights 1, 2, 6, 9 &middot; ~60&ndash;100s per question on this CPU-only machine.</p>
+        </div>
+        <div class="model-card">
+          <span class="chip real"><span class="dot"></span>Real</span>
+          <h3>ChangeFormer</h3>
+          <p class="powers">The spot-the-difference expert. Given a "before" and "after" satellite image of the
+          same place, it draws a pixel mask of exactly what changed.</p>
+          <p class="caveat">Powers flight 4 &middot; trained on the LEVIR-CD building-change dataset &middot; a few seconds per pair.</p>
+        </div>
+        <div class="model-card">
+          <span class="chip real"><span class="dot"></span>Real</span>
+          <h3>Prithvi-EO-2.0</h3>
+          <p class="powers">The spectral analyst. Turns a 6-band multispectral image into a numeric fingerprint
+          other tools can reason over, instead of treating it like an ordinary photo.</p>
+          <p class="caveat">Powers flight 3 (multispectral half) &middot; needs 6 real Sentinel-2 bands, not a 3-band photo.</p>
+        </div>
+        <div class="model-card">
+          <span class="chip real"><span class="dot"></span>Real</span>
+          <h3>CROMA-base</h3>
+          <p class="powers">The translator between optical and radar. Builds one shared representation from a
+          normal (optical) image and a radar (SAR) image and checks whether they agree.</p>
+          <p class="caveat">Powers flight 5 &middot; needs 12 optical + 2 SAR bands &middot; heaviest of the five.</p>
+        </div>
+        <div class="model-card">
+          <span class="chip excluded"><span class="dot"></span>Excluded — your choice</span>
+          <h3>InternVL3-1B <span style="color:var(--text-faint); font-weight:400;">(remote-sensing finetuned)</span></h3>
+          <p class="powers">Would be the one that <i>describes</i> a single image, answers open questions about
+          it, and points at a region you ask about. You held this one back, so it still runs on a
+          color-pattern heuristic, clearly labeled.</p>
+          <p class="caveat">Would power flight 3 (VQA/captioning/grounding half) &middot; drop its checkpoint in and ask to wire it in the same way as the other four.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="scenarios">
+      <div class="section-head"><span class="section-num">02</span><h2>Nine test flights</h2></div>
+      <p class="section-intro">Work through these in order — later ones build on things you'll already have
+      uploaded. Click "Mark flown" on each once you've seen the expected result; your progress is saved in this
+      browser.</p>
+
+      <div class="scenario" id="s1" data-scenario="1">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">1&nbsp;&middot;&nbsp;Ask a plain question</h3>
+            <div class="scenario-tags"><span class="tag">feature 1</span><span class="tag">feature 7</span><span class="tag">feature 10</span></div>
+          </div>
+          <button class="check-btn" data-target="1"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: watch the real Qwen3 model turn your sentence into a structured plan and route it to the right tool.</p>
+        <ol>
+          <li>Go to <code>/app</code>, click <b>New Analysis</b>.</li>
+          <li>Type: <i>"What changed near Mumbai between 2020 and 2023?"</i> and send it — with no image attached.</li>
+          <li>Wait (~60&ndash;100s). It's reading and planning, not fetching anything yet.</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>Since no image was attached and no date range was resolvable to real satellite catalogue coverage, the assistant should ask for more input or explain it needs imagery — it should <i>not</i> confidently invent a change percentage from nothing.</div>
+        <p class="tell-real">How to tell it's real: open the model registry page (link in the sidebar profile menu &rarr; Model Registry) and check <code>qwen_agent</code> — status should read <b>healthy</b> and <code>is_mock: false</code>.</p>
+      </div>
+
+      <div class="scenario" id="s2" data-scenario="2">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">2&nbsp;&middot;&nbsp;Speak Hindi or Hinglish</h3>
+            <div class="scenario-tags"><span class="tag">feature 17</span><span class="tag">feature 1</span></div>
+          </div>
+          <button class="check-btn" data-target="2"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: confirm the interface itself switches language, and the model understands a non-English query.</p>
+        <ol>
+          <li>In the sidebar, click the language switcher (globe icon, under the search box) and choose <b>हिन्दी</b> or <b>Hinglish</b>.</li>
+          <li>Watch the sidebar labels, empty-state suggestions, and composer hint text change immediately.</li>
+          <li>Type a query in Hinglish, e.g. <i>"Pichhle saal Pune mein built-up area badha hai kya?"</i></li>
+        </ol>
+        <div class="expect"><b>What you should see</b>The UI chrome (buttons, categories, placeholders) is now in your chosen language and stays that way after a page refresh. Qwen3's plan (visible later in the Analysis Trace) should show <code>"language": "hinglish"</code>.</div>
+        <p class="tell-real">This is the one flight with no mock fallback to compare against — the interface translation is new today, in three languages, for the sidebar/header/composer/empty-state.</p>
+      </div>
+
+      <div class="scenario" id="s3" data-scenario="3">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">3&nbsp;&middot;&nbsp;Look at one image</h3>
+            <div class="scenario-tags"><span class="tag">feature 2</span><span class="tag">feature 3</span><span class="tag">feature 12</span></div>
+          </div>
+          <button class="check-btn" data-target="3"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: see the one part of the app that's still on the heuristic mock — and understand why.</p>
+        <ol>
+          <li>Upload any optical satellite image (GeoTIFF, PNG, or JPEG) and ask <i>"What is visible in this image?"</i></li>
+          <li>Then ask <i>"Where is the water?"</i> — this exercises grounding (a highlighted box).</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>A real, pixel-derived answer (percentage of water/vegetation/built-up color signature) — but every response carries <code>demo_mode: true</code> and a "basis" note saying it's a color-threshold heuristic, not a trained vision-language model. That's InternVL3-1B's job, and you excluded it.</div>
+        <p class="tell-real">This is the control group: compare its confidence badge and phrasing against flight 4 or 5, which run genuinely trained models.</p>
+      </div>
+
+      <div class="scenario" id="s4" data-scenario="4">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">4&nbsp;&middot;&nbsp;Compare two dates</h3>
+            <div class="scenario-tags"><span class="tag">feature 4</span><span class="tag">feature 5</span><span class="tag">feature 13</span></div>
+          </div>
+          <button class="check-btn" data-target="4"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: run ChangeFormer for real and get a genuine change mask with an area estimate.</p>
+        <ol>
+          <li>Start a new analysis, attach <b>two</b> optical images of the same area from different dates (before/after).</li>
+          <li>Ask: <i>"What changed between these two images, and by how much?"</i></li>
+          <li>Wait a few seconds — this one is fast, no CPU LLM bottleneck.</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>A highlighted change mask overlaid on the image, a changed-area percentage, and <code>"basis": "ChangeFormer (LEVIR-CD pretrained checkpoint) segmentation head"</code> with <code>demo_mode: false</code> in the trace.</div>
+        <p class="tell-real">If the two images have different pixel dimensions after alignment, you should get a clear rejection message, not a guessed answer — try it once to see the honest failure path too.</p>
+      </div>
+
+      <div class="scenario" id="s5" data-scenario="5">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">5&nbsp;&middot;&nbsp;Fuse optical + radar</h3>
+            <div class="scenario-tags"><span class="tag">feature 6</span></div>
+          </div>
+          <button class="check-btn" data-target="5"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: see CROMA combine two very different sensor types into one judgment.</p>
+        <ol>
+          <li>Attach one optical/multispectral image <b>and</b> one SAR (radar) image of the same area.</li>
+          <li>Ask: <i>"Compare optical and SAR imagery for this area."</i></li>
+        </ol>
+        <div class="expect"><b>What you should see</b>An "agree" / "disagree" verdict between the two sensors, backed by <code>"basis": "CROMA-base joint encoder cosine similarity..."</code>. If your images have fewer than 12 optical or 2 SAR bands, expect a clear validation error explaining exactly why — CROMA was pretrained on that exact band count and can't be guessed around.</div>
+        <p class="tell-real">This is the heaviest of the five models — if your machine is short on free RAM, this is the flight most likely to feel sluggish.</p>
+      </div>
+
+      <div class="scenario" id="s6" data-scenario="6">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">6&nbsp;&middot;&nbsp;Fetch imagery yourself</h3>
+            <div class="scenario-tags"><span class="tag">feature 9</span><span class="tag">feature 10</span><span class="tag">feature 11</span></div>
+          </div>
+          <button class="check-btn" data-target="6"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: ask for imagery without uploading anything and let the app find it.</p>
+        <ol>
+          <li>Start a new analysis with <b>no attachments</b>.</li>
+          <li>Ask: <i>"Find satellite imagery of Chennai from last year."</i></li>
+        </ol>
+        <div class="expect"><b>What you should see</b>The app searches its configured satellite catalogues (demo/mock provider by default — check the Models page for live Copernicus/Bhoonidhi/USGS credential status) and either returns a scene or explains clearly that no credentialed provider is configured.</div>
+        <p class="tell-real">The Models page's "Satellite Providers" panel shows each provider as <code>healthy</code>, <code>unavailable_no_credentials</code>, or <code>unavailable_error</code> — this is real status, not decoration.</p>
+      </div>
+
+      <div class="scenario" id="s7" data-scenario="7">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">7&nbsp;&middot;&nbsp;Trust the answer</h3>
+            <div class="scenario-tags"><span class="tag">feature 8</span><span class="tag">feature 14</span><span class="tag">feature 15</span><span class="tag">feature 16</span></div>
+          </div>
+          <button class="check-btn" data-target="7"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: check the app explains itself instead of just handing you an answer.</p>
+        <ol>
+          <li>On any completed analysis (e.g. from flight 4), find the confidence badge next to the answer.</li>
+          <li>Click <b>"How was this analyzed?"</b> to open the transparency panel.</li>
+          <li>Try uploading an unsupported file (e.g. a <code>.txt</code> file) to see input validation reject it up front.</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>A confidence label that's explicitly qualified (not a bare fabricated "94%"), and a step-by-step trace of which model ran, in what order, with what parameters — real execution metadata, not marketing copy.</div>
+        <p class="tell-real">The rejected <code>.txt</code> upload should name the exact problem (wrong format) rather than fail silently.</p>
+      </div>
+
+      <div class="scenario" id="s8" data-scenario="8">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">8&nbsp;&middot;&nbsp;Export, revisit, and clean up</h3>
+            <div class="scenario-tags"><span class="tag">feature 18</span><span class="tag">feature 19</span><span class="tag">feature 25</span><span class="tag">feature 26</span><span class="tag">feature 27</span></div>
+          </div>
+          <button class="check-btn" data-target="8"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: prove the session survives — you can leave, come back, ask a follow-up, and export.</p>
+        <ol>
+          <li>On flight 4's result, click the map icon to open the interactive before/after viewer, then download <b>GeoJSON</b> and <b>PDF</b> from the header.</li>
+          <li>Ask a follow-up in the same chat: <i>"was that mostly in the northern part?"</i> — no need to re-upload.</li>
+          <li>In the sidebar, hover your session, click the <b>&hellip;</b> menu, rename it, then delete a different old one.</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>A real downloadable PDF and GeoJSON file; the follow-up question resolved using earlier context (Qwen3 now receives your last few messages, not just the new one); the rename/delete actually persist after a page refresh — they're wired to the backend now, not just local UI state.</div>
+        <p class="tell-real">Refresh the whole page after renaming — if the new name is still there, it saved for real.</p>
+      </div>
+
+      <div class="scenario" id="s9" data-scenario="9">
+        <div class="scenario-top">
+          <div>
+            <h3 class="scenario-title">9&nbsp;&middot;&nbsp;Open the model registry</h3>
+            <div class="scenario-tags"><span class="tag">feature 20</span><span class="tag">feature 21</span></div>
+          </div>
+          <button class="check-btn" data-target="9"><span class="box"></span>Mark flown</button>
+        </div>
+        <p class="scenario-goal">Goal: see all five models (plus one unreleased placeholder) listed with live health, in one place.</p>
+        <ol>
+          <li>Sidebar &rarr; profile menu &rarr; <b>Model Registry</b>.</li>
+          <li>Confirm <code>changeformer</code>, <code>prithvi</code>, <code>croma</code>, and <code>qwen_agent</code> show <b>healthy</b>, real version strings (e.g. <code>Prithvi-EO-2.0-300M</code>), and <code>is_mock: false</code>.</li>
+          <li>Confirm <code>internvl_rs</code> still shows a <code>-mock</code> version.</li>
+        </ol>
+        <div class="expect"><b>What you should see</b>Exactly the split above. If you ever stop the backend and remove a <code>*_MODEL_PATH</code> line from <code>.env</code>, that one model flips back to mock automatically on restart — nothing else in the app needs to change.</div>
+        <p class="tell-real">This page is reading the same registry the orchestrator uses to route every request — what it says is what's actually running.</p>
+      </div>
+    </section>
+
+    <section id="feature-map">
+      <div class="section-head"><span class="section-num">03</span><h2>All 27 features, at a glance</h2></div>
+      <p class="section-intro">The original roadmap had 27 numbered rows (skipping 24). Here's where every one of
+      them stands after today, and which test flight above proves it.</p>
+      <div class="table-wrap">
+        <table class="fmap">
+          <thead><tr><th>#</th><th>Feature</th><th>Status</th><th>Model</th><th>Proven by</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="feat">Natural-language query understanding</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Qwen3-4B</td><td>Flight 1</td></tr>
+            <tr><td class="num">2</td><td class="feat">Single-image VQA</td><td><span class="chip mock"><span class="dot"></span>Mock</span></td><td>InternVL3-1B (excluded)</td><td>Flight 3</td></tr>
+            <tr><td class="num">3</td><td class="feat">Captioning + grounding</td><td><span class="chip mock"><span class="dot"></span>Mock</span></td><td>InternVL3-1B (excluded)</td><td>Flight 3</td></tr>
+            <tr><td class="num">4</td><td class="feat">Bi-temporal change detection</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>ChangeFormer</td><td>Flight 4</td></tr>
+            <tr><td class="num">5</td><td class="feat">Change Q&amp;A + quantification</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>ChangeFormer + area calc</td><td>Flight 4</td></tr>
+            <tr><td class="num">6</td><td class="feat">Optical + SAR fusion</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>CROMA-base</td><td>Flight 5</td></tr>
+            <tr><td class="num">7</td><td class="feat">Agentic orchestration</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Qwen3-4B + policy validator</td><td>Flight 1</td></tr>
+            <tr><td class="num">8</td><td class="feat">Input validation &amp; error handling</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 7</td></tr>
+            <tr><td class="num">9</td><td class="feat">Satellite data retrieval</td><td><span class="chip real"><span class="dot"></span>Real (demo provider)</span></td><td>&mdash;</td><td>Flight 6</td></tr>
+            <tr><td class="num">10</td><td class="feat">Smart modality selection</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Qwen3-4B</td><td>Flights 1, 6</td></tr>
+            <tr><td class="num">11</td><td class="feat">Temporal scene selection</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 6</td></tr>
+            <tr><td class="num">12</td><td class="feat">Multispectral processing</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Prithvi-EO-2.0</td><td>Flight 3</td></tr>
+            <tr><td class="num">13</td><td class="feat">Evidence-grounded visual output</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 4</td></tr>
+            <tr><td class="num">14</td><td class="feat">Confidence + evidence quality</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 7</td></tr>
+            <tr><td class="num">15</td><td class="feat">Explainable execution / audit trail</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 7</td></tr>
+            <tr><td class="num">16</td><td class="feat">"How was this analyzed?" view</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 7</td></tr>
+            <tr><td class="num">17</td><td class="feat">Multilingual interface (En/Hi/Hinglish)</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Qwen3-4B + UI translations</td><td>Flight 2</td></tr>
+            <tr><td class="num">18</td><td class="feat">Interactive map / before-after viewer</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 8</td></tr>
+            <tr><td class="num">19</td><td class="feat">Reports &amp; GeoJSON export</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 8</td></tr>
+            <tr><td class="num">20</td><td class="feat">Pluggable model registry</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 9</td></tr>
+            <tr><td class="num">21</td><td class="feat">Fallback &amp; versioned models</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 9</td></tr>
+            <tr><td class="num">22</td><td class="feat">End-to-end web app</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>All flights</td></tr>
+            <tr><td class="num">23</td><td class="feat">Benchmark &amp; ISRO/SAC evaluation</td><td><span class="chip scaffold"><span class="dot"></span>Pluggable, awaiting data</span></td><td>&mdash;</td><td><span style="color:var(--text-faint)">Not user-facing</span></td></tr>
+            <tr><td class="num">25</td><td class="feat">Multi-turn session memory</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>Qwen3-4B</td><td>Flight 8</td></tr>
+            <tr><td class="num">26</td><td class="feat">Image persistence &amp; cross-questioning</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 8</td></tr>
+            <tr><td class="num">27</td><td class="feat">Chat history dashboard</td><td><span class="chip real"><span class="dot"></span>Real</span></td><td>&mdash;</td><td>Flight 8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Feature 23</strong> is a backend-only plumbing feature: <code>ml/datasets/isro_sac.py</code> now
+        accepts a manifest of real ISRO/SAC evaluation data and scores predictions against it exactly like the
+        VRSBench/RSVQA/CDVQA adapters do — but ISRO/SAC hasn't published a public dataset, so there's nothing to
+        click in the app until that data exists. It fails with a clear error rather than inventing a score.
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="section-head"><span class="section-num">04</span><h2>If something looks wrong</h2></div>
+
+      <details class="faq">
+        <summary>A question is taking forever and I don't know if it's stuck</summary>
+        <div class="faq-body">Normal, if it's the first step of understanding your question — Qwen3-4B runs on
+        CPU here and genuinely needs 60&ndash;100 seconds per query. Look at the terminal running <code>uvicorn</code>;
+        as long as you don't see a Python error/traceback, it's working. Give it up to 3 minutes before assuming
+        it's hung.</div>
+      </details>
+
+      <details class="faq">
+        <summary>I got a "too few bands" error on the SAR/multispectral flight</summary>
+        <div class="faq-body">That's correct behavior, not a bug. Prithvi-EO-2.0 needs exactly 6 real Sentinel-2
+        bands and CROMA needs 12 optical + 2 SAR bands — they were trained on those exact band counts and can't
+        meaningfully process a plain 3-band RGB photo. Use real multispectral/SAR source imagery for those two
+        flights specifically; ordinary images are fine for flights 3 and 4.</div>
+      </details>
+
+      <details class="faq">
+        <summary>The backend won't start / "port already in use"</summary>
+        <div class="faq-body">Something is already listening on 8000 — likely a previous <code>uvicorn</code> you
+        forgot to close. Close that terminal window, or start this one with <code>--port 8001</code> and change
+        <code>NEXT_PUBLIC_API_BASE_URL</code> in the frontend's environment to match.</div>
+      </details>
+
+      <details class="faq">
+        <summary>Everything feels slow / my computer fans spin up</summary>
+        <div class="faq-body">This machine has 16GB RAM and no GPU. Qwen3-4B alone holds ~8GB while loaded.
+        Close other heavy apps before flight 1, and avoid running flight 5 (CROMA, the heaviest model) at the
+        same time as a fresh Qwen3 query.</div>
+      </details>
+
+      <details class="faq">
+        <summary>I want to see the "before" mock behavior again, to compare</summary>
+        <div class="faq-body">Open <code>.env</code> at the project root, blank out (delete the value after the
+        <code>=</code>) any of <code>AGENT_MODEL_PATH</code>, <code>PRITHVI_MODEL_PATH</code>,
+        <code>CHANGE_MODEL_PATH</code>, <code>CROMA_MODEL_PATH</code>, save, and restart the backend terminal.
+        That one model instantly falls back to its heuristic mock — nothing else changes.</div>
+      </details>
+
+      <details class="faq">
+        <summary>Can I delete <code>models.zip</code> at the project root?</summary>
+        <div class="faq-body">Yes — it's the original 10GB upload and everything inside it has already been
+        extracted into <code>models/weights/</code>, which is what the app actually reads from. Deleting the zip
+        frees ~10GB and changes nothing about how the app runs.</div>
+      </details>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <span>SatQuery AI &middot; internal test flight guide</span>
+  <span>Progress saved locally in this browser only</span>
+</footer>
+
+<script>
+(function () {
+  var TOTAL = 9;
+  var STORAGE_KEY = "satquery-test-flight-v1";
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveState(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  var state = loadState();
+
+  function render() {
+    var done = 0;
+    document.querySelectorAll(".check-btn").forEach(function (btn) {
+      var id = btn.getAttribute("data-target");
+      var checked = !!state[id];
+      btn.classList.toggle("checked", checked);
+      btn.querySelector(".box").textContent = checked ? "\u2713" : "";
+      if (checked) done++;
+    });
+    document.querySelectorAll("nav.toc .dot[data-s]").forEach(function (dot) {
+      var id = dot.getAttribute("data-s");
+      dot.classList.toggle("done", !!state[id]);
+    });
+    document.getElementById("doneCount").textContent = done;
+    var pct = Math.round((done / TOTAL) * 100);
+    document.getElementById("progressFill").style.width = pct + "%";
+  }
+
+  document.querySelectorAll(".check-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-target");
+      state[id] = !state[id];
+      saveState(state);
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -22,14 +22,23 @@ class AgentController:
     def __init__(self) -> None:
         self._manager = get_model_manager()
 
-    def understand_query(self, query_text: str, image_count: int = 0) -> TaskPlan:
+    def understand_query(
+        self,
+        query_text: str,
+        image_count: int = 0,
+        conversation_history: list[dict] | None = None,
+    ) -> TaskPlan:
         adapter = self._manager.get_model("qwen_agent")
 
         errors = adapter.validate_input(query_text=query_text)
         if errors:
             raise TaskUnderstandingError(errors[0])
 
-        output = adapter.predict(query_text=query_text, image_count=image_count)
+        output = adapter.predict(
+            query_text=query_text,
+            image_count=image_count,
+            conversation_history=conversation_history,
+        )
         raw = output.get("raw_task_plan")
         if not raw:
             raise TaskUnderstandingError("The agent did not produce a task plan for this query.")

@@ -42,6 +42,10 @@ models/weights/
 *.ckpt
 *.pt
 *.safetensors
+*.zip
+
+# Debug/scratch artifacts
+what_model_sees.png
 
 # IDE
 .vscode/

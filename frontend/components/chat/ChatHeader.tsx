@@ -13,6 +13,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ export function ChatHeader({
   const resetConversationState = useAppStore((s) => s.resetConversationState);
   const setSessionId = useAppStore((s) => s.setSessionId);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const { t } = useT();
 
   function handleToggleTemporary() {
     if (!isTemporaryChat) {
@@ -96,7 +98,7 @@ export function ChatHeader({
           {isTemporaryChat && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-[#221f14] border border-[#443818] text-[#d4b152] font-medium">
               <ShieldAlert className="w-3 h-3" />
-              Temporary
+              {t("header.temporary")}
             </span>
           )}
         </div>
@@ -128,7 +130,7 @@ export function ChatHeader({
               isTemporaryChat ? "bg-white" : "bg-[#525252]"
             )}
           />
-          <span className="hidden sm:inline">Temporary</span>
+          <span className="hidden sm:inline">{t("header.temporary")}</span>
         </button>
 
         {/* Share Button */}
@@ -138,7 +140,7 @@ export function ChatHeader({
           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171717] hover:bg-[#212121] text-[#e5e5e5] hover:text-white border border-[#2e2e2e] rounded-xl text-xs font-medium transition-colors shadow-subtle"
         >
           <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Share</span>
+          <span className="hidden sm:inline">{t("header.share")}</span>
         </button>
 
         {/* More Options Menu */}
@@ -163,9 +165,13 @@ export function ChatHeader({
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
               >
                 <Globe className="h-4 w-4 text-neutral-400" />
-                <span>Inspect AOI Satellite Map</span>
+                <span>{t("header.inspectMap")}</span>
               </button>
 
+              {/* Export shortcuts if a completed execution exists. The backend
+                  itself refuses (409) a GeoJSON export for an execution with no
+                  real georeferenced geometry -- no need to duplicate that check
+                  here, just don't pretend export always succeeds silently. */}
               {lastResult?.execution_id && (
                 <>
                   <div className="border-t border-white/10 my-1" />
@@ -177,7 +183,7 @@ export function ChatHeader({
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
                   >
                     <FileJson className="h-4 w-4 text-neutral-400" />
-                    <span>Download GeoJSON</span>
+                    <span>{t("header.downloadGeojson")}</span>
                   </a>
                   <a
                     href={reportPdfUrl(lastResult.execution_id)}
@@ -187,7 +193,7 @@ export function ChatHeader({
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
                   >
                     <Download className="h-4 w-4 text-neutral-400" />
-                    <span>Download PDF Dossier</span>
+                    <span>{t("header.downloadPdf")}</span>
                   </a>
                 </>
               )}

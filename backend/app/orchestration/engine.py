@@ -24,6 +24,7 @@ from app.evidence.renderer import get_evidence_renderer
 from app.confidence.service import build_confidence_report
 from app.model_registry.registry import get_model_manager
 from app.models.execution import Execution
+from app.models.message import Message
 from app.models.query import Query
 from app.models.task_plan import TaskPlanRecord
 from app.orchestration.context import ImageContext, load_image_context
@@ -82,6 +83,22 @@ class WorkflowEngine:
         db.commit()
         return execution.id
 
+    def _recent_conversation_history(self, db: Session, session_id: str | None, limit: int = 6) -> list[dict]:
+        """Last `limit` messages for this session, oldest first -- feeds the
+        agent adapter so follow-up questions ("what about the water there?")
+        can be resolved without re-uploading context. Only matters once a
+        real LLM is configured (AGENT_MODEL_PATH); the mock parser ignores it."""
+        if not session_id:
+            return []
+        messages = (
+            db.query(Message)
+            .filter_by(session_id=session_id)
+            .order_by(Message.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        return [{"role": m.role, "content": m.content} for m in reversed(messages)]
+
     def run(
         self,
         db: Session,
@@ -111,8 +128,12 @@ class WorkflowEngine:
         db.add(query)
         db.commit()
 
+        conversation_history = self._recent_conversation_history(db, session_id)
+
         try:
-            plan = self.agent.understand_query(query_text, image_count=len(image_ids))
+            plan = self.agent.understand_query(
+                query_text, image_count=len(image_ids), conversation_history=conversation_history
+            )
         except TaskUnderstandingError as exc:
             return self._fail(db, execution, start, str(exc), status=ExecutionStatus.FAILED)
 
@@ -188,7 +209,11 @@ class WorkflowEngine:
         execution_id: str,
     ) -> ExecutionResult:
         if capability in ("vqa", "captioning", "grounding"):
-            return self._run_single_image_task(plan, contexts[0], audit, execution_id)
+            # Most recently attached image, not the first: a session can carry
+            # several images (an earlier upload plus the one this question is
+            # about), and answering about the oldest silently analyses the
+            # wrong picture. With a single image this is the same element.
+            return self._run_single_image_task(plan, contexts[-1], audit, execution_id)
         if capability == "change_detection":
             return self._run_change_task(plan, contexts[0], contexts[1], audit, execution_id)
         if capability == "optical_sar_fusion":

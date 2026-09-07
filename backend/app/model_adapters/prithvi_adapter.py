@@ -14,7 +14,10 @@ from typing import Any
 import numpy as np
 
 from app.core.config import get_settings
+from app.ml_bootstrap import ensure_ml_importable
 from app.model_adapters.base import AdapterOutput, BaseModelAdapter, ModelHealth
+
+ensure_ml_importable()
 
 
 class PrithviAdapter(BaseModelAdapter):
@@ -28,36 +31,58 @@ class PrithviAdapter(BaseModelAdapter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.version = "2.0-pretrained-mock"
         settings = get_settings()
         self._model_path = settings.prithvi_model_path
+        self.version = "Prithvi-EO-2.0-300M" if self._model_path else "2.0-pretrained-mock"
 
     @property
     def is_mock(self) -> bool:
         return not self._model_path
 
     def health_check(self) -> str:
-        return ModelHealth.HEALTHY if self.is_mock else ModelHealth.UNAVAILABLE
+        if self.is_mock:
+            return ModelHealth.HEALTHY
+        import os
+
+        return ModelHealth.HEALTHY if os.path.exists(self._model_path) else ModelHealth.UNAVAILABLE
 
     def validate_input(self, **kwargs: Any) -> list[str]:
         errors = []
         image_array = kwargs.get("image_array")
         if image_array is None:
             errors.append("A multispectral image is required.")
-        elif getattr(image_array, "ndim", 2) < 3 or image_array.shape[0] < 3:
-            errors.append(
-                "This task benefits from a multispectral image (3+ bands); "
-                "the provided image has too few bands for a meaningful representation."
-            )
+            return errors
+        min_bands = 6 if self._model_path else 3
+        if getattr(image_array, "ndim", 2) < 3 or image_array.shape[0] < min_bands:
+            if self._model_path:
+                errors.append(
+                    "Prithvi-EO-2.0 requires 6 Sentinel-2 bands (B02, B03, B04, B05, B06, B07); "
+                    "the provided image has too few bands to normalize against the pretrained checkpoint."
+                )
+            else:
+                errors.append(
+                    "This task benefits from a multispectral image (3+ bands); "
+                    "the provided image has too few bands for a meaningful representation."
+                )
         return errors
 
     def predict(self, **kwargs: Any) -> AdapterOutput:
         image_array: np.ndarray = kwargs["image_array"]
         if not self._model_path:
             return self._predict_mock(image_array)
-        raise NotImplementedError(
-            "Real Prithvi-EO-2.0 inference is not wired up yet. "
-            "Set PRITHVI_MODEL_PATH only once ml/inference support lands."
+        return self._predict_real(image_array)
+
+    def _predict_real(self, image_array: np.ndarray) -> AdapterOutput:
+        from ml.inference.prithvi_infer import get_prithvi
+
+        inference = get_prithvi(self._model_path)
+        result = inference.predict(image_array)
+        return AdapterOutput(
+            representation=result["representation"],
+            band_stats=result["band_stats"],
+            score=0.7,
+            demo_mode=False,
+            basis="Prithvi-EO-2.0-300M pretrained encoder, mean-pooled patch embeddings",
         )
 
     def _predict_mock(self, image_array: np.ndarray) -> AdapterOutput:

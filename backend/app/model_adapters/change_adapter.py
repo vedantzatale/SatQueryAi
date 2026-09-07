@@ -17,8 +17,11 @@ import cv2
 import numpy as np
 
 from app.core.config import get_settings
+from app.ml_bootstrap import ensure_ml_importable
 from app.model_adapters.base import AdapterOutput, BaseModelAdapter, ModelHealth
 from app.model_adapters.image_stats import to_uint8_bgr
+
+ensure_ml_importable()
 
 
 class ChangeDetectionAdapter(BaseModelAdapter):
@@ -32,16 +35,20 @@ class ChangeDetectionAdapter(BaseModelAdapter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.version = "0.1.0-mock"
         settings = get_settings()
         self._model_path = settings.change_model_path
+        self.version = "ChangeFormerV6-LEVIR" if self._model_path else "0.1.0-mock"
 
     @property
     def is_mock(self) -> bool:
         return not self._model_path
 
     def health_check(self) -> str:
-        return ModelHealth.HEALTHY if self.is_mock else ModelHealth.UNAVAILABLE
+        if self.is_mock:
+            return ModelHealth.HEALTHY
+        import os
+
+        return ModelHealth.HEALTHY if os.path.exists(self._model_path) else ModelHealth.UNAVAILABLE
 
     def validate_input(self, **kwargs: Any) -> list[str]:
         errors = []
@@ -65,9 +72,23 @@ class ChangeDetectionAdapter(BaseModelAdapter):
         after: np.ndarray = kwargs["image_array_after"]
         if not self._model_path:
             return self._predict_mock(before, after)
-        raise NotImplementedError(
-            "Real ChangeFormer inference is not wired up yet. "
-            "Set CHANGE_MODEL_PATH only once ml/inference support lands."
+        return self._predict_real(before, after)
+
+    def _predict_real(self, before: np.ndarray, after: np.ndarray) -> AdapterOutput:
+        from ml.inference.changeformer_infer import get_changeformer
+
+        bgr_before = to_uint8_bgr(before)
+        bgr_after = to_uint8_bgr(after)
+        inference = get_changeformer(self._model_path)
+        mask, confidence = inference.predict(bgr_before, bgr_after)
+        changed_fraction = float(np.count_nonzero(mask)) / float(mask.size) if mask.size else 0.0
+
+        return AdapterOutput(
+            mask=mask,
+            changed_fraction=changed_fraction,
+            score=confidence,
+            demo_mode=False,
+            basis="ChangeFormer (LEVIR-CD pretrained checkpoint) segmentation head",
         )
 
     def _predict_mock(self, before: np.ndarray, after: np.ndarray) -> AdapterOutput:

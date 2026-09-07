@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 
 from app.core.config import get_settings
+from app.ml_bootstrap import ensure_ml_importable
 from app.model_adapters.base import AdapterOutput, BaseModelAdapter, ModelHealth
 from app.model_adapters.image_stats import (
     coverage_fraction,
@@ -20,6 +21,8 @@ from app.model_adapters.image_stats import (
     to_uint8_bgr,
     water_vegetation_builtup_masks,
 )
+
+ensure_ml_importable()
 
 
 class RSVLMAdapter(BaseModelAdapter):
@@ -33,16 +36,20 @@ class RSVLMAdapter(BaseModelAdapter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.version = "0.1.0-mock"
         settings = get_settings()
         self._model_path = settings.internvl_model_path
+        self.version = "InternVL3-1B" if self._model_path else "0.1.0-mock"
 
     @property
     def is_mock(self) -> bool:
         return not self._model_path
 
     def health_check(self) -> str:
-        return ModelHealth.HEALTHY if self.is_mock else ModelHealth.UNAVAILABLE
+        if self.is_mock:
+            return ModelHealth.HEALTHY
+        import os
+
+        return ModelHealth.HEALTHY if os.path.exists(self._model_path) else ModelHealth.UNAVAILABLE
 
     def validate_input(self, **kwargs: Any) -> list[str]:
         errors = []
@@ -57,10 +64,23 @@ class RSVLMAdapter(BaseModelAdapter):
 
         if not self._model_path:
             return self._predict_mock(task, image_array, question)
+        return self._predict_real(task, image_array, question)
 
-        raise NotImplementedError(
-            "Real InternVL3-1B inference is not wired up yet. "
-            "Set INTERNVL_MODEL_PATH only once ml/inference support lands."
+    def _predict_real(self, task: str, image_array: np.ndarray, question: str) -> AdapterOutput:
+        from ml.inference.internvl_infer import get_internvl
+
+        inference = get_internvl(self._model_path)
+        result = inference.predict(task, image_array, question)
+
+        return AdapterOutput(
+            answer=result["answer"],
+            evidence=result["evidence"],
+            # InternVL exposes no calibrated confidence for its answers, so no
+            # score is reported rather than inventing one; the confidence
+            # service treats a missing score as "moderate, uncalibrated".
+            score=None,
+            demo_mode=False,
+            basis="InternVL3-1B vision-language model",
         )
 
     def _predict_mock(self, task: str, image_array: np.ndarray, question: str) -> AdapterOutput:

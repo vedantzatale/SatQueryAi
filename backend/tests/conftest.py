@@ -15,6 +15,21 @@ os.environ["DEMO_MODE"] = "true"
 os.environ["TASK_BACKEND"] = "inline"
 os.environ["STORAGE_BACKEND"] = "local"
 
+# Tests exercise the deterministic mock/heuristic adapters, never real
+# weights, regardless of what a developer's local .env points *_MODEL_PATH
+# at -- real inference is slow (real Qwen3 generation alone is ~1-2 minutes
+# on CPU) and multi-GB, neither of which belongs in the automated suite.
+for _model_path_var in (
+    "AGENT_MODEL_PATH",
+    "INTERNVL_MODEL_PATH",
+    "PRITHVI_MODEL_PATH",
+    "CHANGE_MODEL_PATH",
+    "CROMA_MODEL_PATH",
+    "SAR_MODEL_PATH",
+    "TERRAMIND_MODEL_PATH",
+):
+    os.environ[_model_path_var] = ""
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402

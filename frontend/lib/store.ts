@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { UILanguage } from "./i18n";
 import type { ExecutionResult } from "./types";
 
 export interface PendingAttachment {
@@ -28,7 +30,9 @@ interface AppState {
     image: string;
     metrics?: { label: string; value: string; change?: string }[];
   } | null;
+  uiLanguage: UILanguage;
 
+  setUiLanguage: (language: UILanguage) => void;
   setSessionId: (id: string | null) => void;
   setActiveSessionTitle: (title: string) => void;
   addImageId: (id: string) => void;
@@ -51,46 +55,54 @@ interface AppState {
   resetConversationState: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  sessionId: "session-new",
-  activeSessionTitle: "New Satellite Query",
-  imageIds: [],
-  pendingAttachments: [],
-  lastResult: null,
-  isTemporaryChat: false,
-  shareModalOpen: false,
-  mapModalOpen: false,
-  activeEvidenceImage: null,
-  evidenceModalData: null,
-
-  setSessionId: (id) => set({ sessionId: id }),
-  setActiveSessionTitle: (title) => set({ activeSessionTitle: title }),
-  addImageId: (id) => set((state) => ({ imageIds: [...state.imageIds, id] })),
-  clearImages: () => set({ imageIds: [] }),
-  addPendingAttachment: (attachment) =>
-    set((state) => ({
-      pendingAttachments: [...state.pendingAttachments, attachment],
-    })),
-  removePendingAttachment: (id) =>
-    set((state) => ({
-      pendingAttachments: state.pendingAttachments.filter((a) => a.id !== id),
-    })),
-  clearPendingAttachments: () => set({ pendingAttachments: [] }),
-  setLastResult: (result) => set({ lastResult: result }),
-  setIsTemporaryChat: (isTemp) => set({ isTemporaryChat: isTemp }),
-  setShareModalOpen: (open) => set({ shareModalOpen: open }),
-  setMapModalOpen: (open) => set({ mapModalOpen: open }),
-  setActiveEvidenceImage: (img) => set({ activeEvidenceImage: img }),
-  setEvidenceModalData: (data) => set({ evidenceModalData: data }),
-  resetConversationState: () =>
-    set({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
       sessionId: "session-new",
       activeSessionTitle: "New Satellite Query",
       imageIds: [],
       pendingAttachments: [],
       lastResult: null,
       isTemporaryChat: false,
+      shareModalOpen: false,
+      mapModalOpen: false,
+      activeEvidenceImage: null,
+      evidenceModalData: null,
+      uiLanguage: "en",
+
+      setUiLanguage: (language) => set({ uiLanguage: language }),
+      setSessionId: (id) => set({ sessionId: id }),
+      setActiveSessionTitle: (title) => set({ activeSessionTitle: title }),
+      addImageId: (id) => set((state) => ({ imageIds: [...state.imageIds, id] })),
+      clearImages: () => set({ imageIds: [] }),
+      addPendingAttachment: (attachment) =>
+        set((state) => ({
+          pendingAttachments: [...state.pendingAttachments, attachment],
+        })),
+      removePendingAttachment: (id) =>
+        set((state) => ({
+          pendingAttachments: state.pendingAttachments.filter((a) => a.id !== id),
+        })),
+      clearPendingAttachments: () => set({ pendingAttachments: [] }),
+      setLastResult: (result) => set({ lastResult: result }),
+      setIsTemporaryChat: (isTemp) => set({ isTemporaryChat: isTemp }),
+      setShareModalOpen: (open) => set({ shareModalOpen: open }),
+      setMapModalOpen: (open) => set({ mapModalOpen: open }),
+      setActiveEvidenceImage: (img) => set({ activeEvidenceImage: img }),
+      setEvidenceModalData: (data) => set({ evidenceModalData: data }),
+      resetConversationState: () =>
+        set({
+          sessionId: "session-new",
+          activeSessionTitle: "New Satellite Query",
+          imageIds: [],
+          pendingAttachments: [],
+          lastResult: null,
+          isTemporaryChat: false,
+        }),
     }),
-}));
-
-
+    {
+      name: "satquery-ui",
+      partialize: (state) => ({ uiLanguage: state.uiLanguage }),
+    }
+  )
+);

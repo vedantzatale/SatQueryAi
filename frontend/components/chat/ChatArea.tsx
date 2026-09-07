@@ -137,6 +137,17 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setIsLoading(true);
     setLoadingStatus("Inspecting GeoTIFF/image metadata...");
 
+    // A new upload REPLACES the active image set rather than growing it.
+    // Without this, image ids accumulated for the whole session and every
+    // query shipped all of them, so a single-image task ran against
+    // contexts[0] -- the first image ever attached -- instead of the one
+    // just uploaded. Follow-up questions with no new upload still reuse the
+    // existing set, which is what makes multi-turn Q&A on one image work.
+    clearImages();
+
+    // Attachment previews are added synchronously up front, then all
+    // uploads run in parallel rather than blocking one-by-one on each
+    // network round-trip.
     await Promise.all(
       files.map(async (file) => {
         const isSar = file.name.toLowerCase().includes("sar");

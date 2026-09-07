@@ -26,6 +26,15 @@ export async function getSession(sessionId: string): Promise<SessionDetail> {
   return data;
 }
 
+export async function renameSession(sessionId: string, title: string): Promise<SessionSummary> {
+  const { data } = await apiClient.patch<SessionSummary>(`/sessions/${sessionId}`, { title });
+  return data;
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  await apiClient.delete(`/sessions/${sessionId}`);
+}
+
 export async function uploadImage(sessionId: string, file: File): Promise<ImageUploadResponse> {
   const form = new FormData();
   form.append("file", file);

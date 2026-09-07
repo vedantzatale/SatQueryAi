@@ -298,8 +298,16 @@ export function EvidenceViewer({ evidence, executionId, onOpenModal }: EvidenceV
 
               <div className="mt-2.5 flex items-center justify-between font-mono text-[11px]">
                 <span className="text-neutral-300 truncate">{displayLabel}</span>
+                {/* This number is the fraction of image pixels the detector
+                    matched for this label -- it is coverage, NOT accuracy or
+                    confidence. Labelling it "score" read as an accuracy claim. */}
                 {ev.score != null && (
-                  <span className="text-neutral-400">{(ev.score * 100).toFixed(0)}% score</span>
+                  <span
+                    className="text-neutral-400"
+                    title="Share of the image matched for this label. This is coverage, not accuracy or confidence."
+                  >
+                    {(ev.score * 100).toFixed(0)}% of image
+                  </span>
                 )}
               </div>
             </div>

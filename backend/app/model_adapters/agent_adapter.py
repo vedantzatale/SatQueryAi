@@ -16,7 +16,10 @@ from datetime import date, timedelta
 from typing import Any
 
 from app.core.config import get_settings
+from app.ml_bootstrap import ensure_ml_importable
 from app.model_adapters.base import AdapterOutput, BaseModelAdapter, ModelHealth
+
+ensure_ml_importable()
 
 _HINDI_WORD_HINTS = [
     "hai", "kya", "kaise", "kahan", "pichle", "saal", "mein", "hua", "hui",
@@ -36,17 +39,21 @@ class AgentAdapter(BaseModelAdapter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.version = "0.1.0-mock"
         settings = get_settings()
         self._model_path = settings.agent_model_path
         self._model_name_configured = settings.agent_model_name
+        self.version = self._model_name_configured if self._model_path else "0.1.0-mock"
 
     @property
     def is_mock(self) -> bool:
         return not self._model_path
 
     def health_check(self) -> str:
-        return ModelHealth.HEALTHY if self.is_mock else ModelHealth.UNAVAILABLE
+        if self.is_mock:
+            return ModelHealth.HEALTHY
+        import os
+
+        return ModelHealth.HEALTHY if os.path.exists(self._model_path) else ModelHealth.UNAVAILABLE
 
     def validate_input(self, **kwargs: Any) -> list[str]:
         if not kwargs.get("query_text"):
@@ -56,11 +63,26 @@ class AgentAdapter(BaseModelAdapter):
     def predict(self, **kwargs: Any) -> AdapterOutput:
         query_text: str = kwargs["query_text"]
         image_count: int = kwargs.get("image_count", 0)
+        conversation_history: list[dict] | None = kwargs.get("conversation_history")
         if not self._model_path:
             return self._predict_mock(query_text, image_count)
-        raise NotImplementedError(
-            f"Real {self._model_name_configured} inference is not wired up yet. "
-            "Set AGENT_MODEL_PATH only once ml/inference support lands."
+        return self._predict_real(query_text, image_count, conversation_history)
+
+    def _predict_real(
+        self, query_text: str, image_count: int, conversation_history: list[dict] | None
+    ) -> AdapterOutput:
+        from ml.inference.qwen_agent_infer import get_qwen_agent
+
+        inference = get_qwen_agent(self._model_path)
+        raw_task_plan = inference.predict(
+            query_text, image_count, date.today().isoformat(), conversation_history=conversation_history
+        )
+        raw_task_plan.setdefault("raw_query", query_text)
+        return AdapterOutput(
+            raw_task_plan=raw_task_plan,
+            score=0.7,
+            demo_mode=False,
+            basis=f"{self._model_name_configured} structured-output generation",
         )
 
     def _predict_mock(self, query_text: str, image_count: int) -> AdapterOutput:

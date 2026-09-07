@@ -4,13 +4,12 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Check,
   ChevronDown,
   ChevronUp,
-  Compass,
   Edit2,
   Globe,
   LogOut,
-  MessageSquare,
   MoreHorizontal,
   PanelLeftClose,
   Plus,
@@ -20,7 +19,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-
+import { UI_LANGUAGES, useT } from "@/lib/i18n";
+import { useAppStore } from "@/lib/store";
 
 export interface ConversationSummaryItem {
   id: string;
@@ -76,6 +76,10 @@ export function ChatSidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+
+  const { language, t } = useT();
+  const setUiLanguage = useAppStore((s) => s.setUiLanguage);
 
   const filtered = conversations.filter((c) =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -87,6 +91,13 @@ export function ChatSidebar({
     "Previous 7 Days",
     "Older",
   ];
+
+  const categoryLabels: Record<(typeof categories)[number], string> = {
+    Today: t("sidebar.categoryToday"),
+    Yesterday: t("sidebar.categoryYesterday"),
+    "Previous 7 Days": t("sidebar.categoryPrevious7"),
+    Older: t("sidebar.categoryOlder"),
+  };
 
   function startEditing(c: ConversationSummaryItem) {
     setEditingId(c.id);
@@ -177,7 +188,7 @@ export function ChatSidebar({
           >
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-neutral-300 group-hover:text-white" />
-              <span>New Analysis</span>
+              <span>{t("sidebar.newAnalysis")}</span>
             </div>
             <kbd className="font-mono text-[10px] text-neutral-400 rounded bg-white/5 border border-white/10 px-1.5 py-0.5">⌘N</kbd>
           </button>
@@ -189,9 +200,39 @@ export function ChatSidebar({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conversations..."
+              placeholder={t("sidebar.searchPlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-[#141414] pl-9 pr-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:border-white/30 focus:outline-none font-sans"
             />
+          </div>
+
+          {/* Language Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setLangMenuOpen(!langMenuOpen)}
+              className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#141414] px-3.5 py-2 text-xs text-neutral-300 hover:border-white/30 hover:text-white transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                {UI_LANGUAGES.find((l) => l.code === language)?.label}
+              </span>
+            </button>
+            {langMenuOpen && (
+              <div className="absolute left-0 right-0 top-10 z-30 rounded-xl border border-white/15 bg-[#181818] p-1 shadow-2xl animate-fade-in text-xs">
+                {UI_LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setUiLanguage(l.code);
+                      setLangMenuOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
+                  >
+                    <span>{l.label}</span>
+                    {l.code === language && <Check className="h-3 w-3" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -204,7 +245,7 @@ export function ChatSidebar({
             return (
               <div key={cat} className="space-y-1">
                 <div className="px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-neutral-500 select-none">
-                  {cat}
+                  {categoryLabels[cat]}
                 </div>
 
                 {items.map((c) => {
@@ -284,7 +325,7 @@ export function ChatSidebar({
                               className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
                             >
                               <Edit2 className="h-3 w-3" />
-                              <span>Rename</span>
+                              <span>{t("sidebar.rename")}</span>
                             </button>
                             <button
                               onClick={() => {
@@ -294,7 +335,7 @@ export function ChatSidebar({
                               className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-red-400 hover:bg-red-500/10"
                             >
                               <Trash2 className="h-3 w-3" />
-                              <span>Delete</span>
+                              <span>{t("sidebar.delete")}</span>
                             </button>
                           </div>
                         )}
@@ -321,7 +362,7 @@ export function ChatSidebar({
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-white">Shivam</span>
-                <span className="text-[10px] text-neutral-400 font-normal">Research Workspace</span>
+                <span className="text-[10px] text-neutral-400 font-normal">{t("sidebar.researchWorkspace")}</span>
               </div>
             </div>
             <ChevronDown className="h-4 w-4 text-neutral-400" />
@@ -345,7 +386,7 @@ export function ChatSidebar({
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
                 >
                   <Settings className="h-4 w-4 text-neutral-400" />
-                  <span>Preferences & CRS Units</span>
+                  <span>{t("sidebar.preferences")}</span>
                 </button>
 
                 <Link
@@ -354,7 +395,7 @@ export function ChatSidebar({
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
                 >
                   <Globe className="h-4 w-4 text-neutral-400" />
-                  <span>STAC Data Catalog Connect</span>
+                  <span>{t("sidebar.stacCatalog")}</span>
                 </Link>
 
                 <button
@@ -362,7 +403,7 @@ export function ChatSidebar({
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-neutral-200 hover:bg-white/10 hover:text-white transition-colors text-left"
                 >
                   <Shield className="h-4 w-4 text-neutral-400" />
-                  <span>Privacy & Ephemeral Logs</span>
+                  <span>{t("sidebar.privacy")}</span>
                 </button>
               </div>
 
@@ -375,7 +416,7 @@ export function ChatSidebar({
                 className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors text-left"
               >
                 <LogOut className="h-4 w-4 text-rose-400" />
-                <span>Log out</span>
+                <span>{t("sidebar.logout")}</span>
               </Link>
             </div>
           )}

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.chat_session import ChatSession
 from app.models.message import Message
+from app.models.query import Query
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -14,6 +15,10 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 class CreateSessionRequest(BaseModel):
     title: str | None = None
     language: str = "en"
+
+
+class RenameSessionRequest(BaseModel):
+    title: str
 
 
 class SessionResponse(BaseModel):
@@ -58,8 +63,6 @@ def list_sessions(db: Session = Depends(get_db)) -> list[SessionResponse]:
 def get_session(session_id: str, db: Session = Depends(get_db)) -> SessionDetailResponse:
     session = db.get(ChatSession, session_id)
     if session is None:
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="Session not found.")
     messages = db.query(Message).filter_by(session_id=session_id).order_by(Message.created_at.asc()).all()
     return SessionDetailResponse(
@@ -78,3 +81,29 @@ def get_session(session_id: str, db: Session = Depends(get_db)) -> SessionDetail
             for m in messages
         ],
     )
+
+
+@router.patch("/{session_id}", response_model=SessionResponse)
+def rename_session(session_id: str, body: RenameSessionRequest, db: Session = Depends(get_db)) -> SessionResponse:
+    session = db.get(ChatSession, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=422, detail="Title cannot be empty.")
+    session.title = title[:300]
+    db.commit()
+    return SessionResponse(
+        id=session.id, title=session.title, language=session.language, created_at=session.created_at.isoformat()
+    )
+
+
+@router.delete("/{session_id}", status_code=204)
+def delete_session(session_id: str, db: Session = Depends(get_db)) -> None:
+    session = db.get(ChatSession, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    db.query(Message).filter_by(session_id=session_id).delete()
+    db.query(Query).filter_by(session_id=session_id).delete()
+    db.delete(session)
+    db.commit()

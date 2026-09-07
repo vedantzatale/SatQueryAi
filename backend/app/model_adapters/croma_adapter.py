@@ -16,7 +16,10 @@ from typing import Any
 import numpy as np
 
 from app.core.config import get_settings
+from app.ml_bootstrap import ensure_ml_importable
 from app.model_adapters.base import AdapterOutput, BaseModelAdapter, ModelHealth
+
+ensure_ml_importable()
 
 
 class CromaAdapter(BaseModelAdapter):
@@ -30,23 +33,38 @@ class CromaAdapter(BaseModelAdapter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.version = "0.1.0-mock"
         settings = get_settings()
         self._model_path = settings.croma_model_path
+        self.version = "CROMA-base" if self._model_path else "0.1.0-mock"
 
     @property
     def is_mock(self) -> bool:
         return not self._model_path
 
     def health_check(self) -> str:
-        return ModelHealth.HEALTHY if self.is_mock else ModelHealth.UNAVAILABLE
+        if self.is_mock:
+            return ModelHealth.HEALTHY
+        import os
+
+        return ModelHealth.HEALTHY if os.path.exists(self._model_path) else ModelHealth.UNAVAILABLE
 
     def validate_input(self, **kwargs: Any) -> list[str]:
         errors = []
-        if kwargs.get("optical_array") is None or kwargs.get("sar_array") is None:
+        optical = kwargs.get("optical_array")
+        sar = kwargs.get("sar_array")
+        if optical is None or sar is None:
             errors.append(
                 "This workflow requires one optical/multispectral image and one SAR image."
             )
+            return errors
+        if self._model_path:
+            opt_bands = optical if optical.ndim == 3 else optical[np.newaxis, ...]
+            sar_bands = sar if sar.ndim == 3 else sar[np.newaxis, ...]
+            if opt_bands.shape[0] < 12 or sar_bands.shape[0] < 2:
+                errors.append(
+                    "CROMA requires 12 Sentinel-2 optical bands and 2 Sentinel-1 SAR (VV/VH) bands; "
+                    "the provided imagery has too few bands to normalize against the pretrained checkpoint."
+                )
         return errors
 
     def predict(self, **kwargs: Any) -> AdapterOutput:
@@ -55,9 +73,34 @@ class CromaAdapter(BaseModelAdapter):
         question: str = kwargs.get("question", "")
         if not self._model_path:
             return self._predict_mock(optical, sar, question)
-        raise NotImplementedError(
-            "Real CROMA inference is not wired up yet. "
-            "Set CROMA_MODEL_PATH only once ml/inference support lands."
+        return self._predict_real(optical, sar)
+
+    def _predict_real(self, optical: np.ndarray, sar: np.ndarray) -> AdapterOutput:
+        from ml.inference.croma_infer import get_croma
+
+        inference = get_croma(self._model_path)
+        result = inference.predict(optical, sar)
+        agreement = "agree" if result["agreement_score"] > 0 else "disagree"
+        if agreement == "agree":
+            answer = (
+                "CROMA's joint optical-SAR representation shows consistent optical/SAR evidence "
+                "for this scene."
+            )
+        else:
+            answer = (
+                "CROMA's joint optical-SAR representation shows conflicting optical/SAR evidence "
+                "for this scene — result should be reviewed."
+            )
+
+        return AdapterOutput(
+            answer=answer,
+            representation=result["representation"],
+            optical_representation=result["optical_representation"],
+            sar_representation=result["sar_representation"],
+            agreement=agreement,
+            score=max(0.0, min(1.0, (result["agreement_score"] + 1) / 2)),
+            demo_mode=False,
+            basis="CROMA-base joint encoder cosine similarity between optical and SAR global representations",
         )
 
     def _predict_mock(self, optical: np.ndarray, sar: np.ndarray, question: str) -> AdapterOutput:

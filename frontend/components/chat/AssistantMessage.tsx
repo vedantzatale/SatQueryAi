@@ -36,6 +36,12 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
   const answer = message?.content ?? result?.answer ?? content ?? "Analysis completed.";
   const trace = message?.analysisTrace;
   const confidence = result?.confidence;
+  // Only ever set on real completed executions (see confidence.notes in that
+  // case: "Confidence unavailable in demo mode -- not calibrated"). trace is
+  // never present alongside a real result -- it's exclusive to the offline
+  // canned-narrative fallback in ChatArea.tsx -- so this only affects the
+  // plain-text confidence branch below, never ConfidenceBadge.
+  const isDemo = result?.model_provenance?.demo_mode;
   const changeAnalysis = message?.changeAnalysis;
   const multimodal = message?.multimodal;
 
@@ -141,6 +147,17 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
               {result.model}
             </span>
           )}
+          {/* trace is exclusive to the offline canned-narrative fallback (see
+              ChatArea.tsx) and never present on a real completed execution,
+              so this can only ever fire for a genuine result. */}
+          {!trace && isDemo && (
+            <span
+              className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-300"
+              title="No trained model ran. This result came from a pixel-color heuristic stand-in, so it is not a reliable analysis."
+            >
+              DEMO — no trained model
+            </span>
+          )}
         </div>
 
         {trace && (
@@ -149,11 +166,20 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
             tier={trace.confidenceTier}
           />
         )}
+        {/* Real executions never carry a calibrated model_confidence in demo
+            mode (see confidence.notes from the backend) -- ConfidenceBadge's
+            `?? 0.9` fallback would fabricate a number here, so a real result
+            gets a plain-text label instead, exactly qualified per the
+            backend's own caveat, rather than routed through that component. */}
         {!trace && confidence && (
-          <ConfidenceBadge
-            confidence={confidence.model_confidence ?? 0.9}
-            tier={confidence.overall_level}
-          />
+          <span className="text-[11px] text-neutral-400 font-mono">
+            {confidence.overall_level} confidence
+            {isDemo
+              ? " (uncalibrated)"
+              : confidence.model_confidence != null
+                ? ` (${(confidence.model_confidence * 100).toFixed(0)}%)`
+                : ""}
+          </span>
         )}
       </div>
 

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Image as ImageIcon, Layers, Mic, Paperclip, Plus, Radio, X } from "lucide-react";
-import { useAppStore, type PendingAttachment } from "@/lib/store";
+import { useT } from "@/lib/i18n";
+import { useAppStore } from "@/lib/store";
 import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
 import { Attachment, SensorType } from "@/lib/types";
 import { AttachmentChip } from "./AttachmentChip";
@@ -39,6 +40,7 @@ export function Composer({
   const pendingAttachments = useAppStore((s) => s.pendingAttachments);
   const addPendingAttachment = useAppStore((s) => s.addPendingAttachment);
   const removePendingAttachment = useAppStore((s) => s.removePendingAttachment);
+  const { t } = useT();
 
   useEffect(() => {
     if (initialText) setText(initialText);
@@ -351,9 +353,7 @@ export function Composer({
           onKeyDown={handleKeyDown}
           placeholder={
             placeholder ??
-            (isCentered
-              ? "Ask anything"
-              : "Ask questions about Earth observation data, compare dates, or inspect features...")
+            (isCentered ? t("composer.placeholder") : t("composer.placeholderExpanded"))
           }
           className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[15px] sm:text-[16px] text-white placeholder:text-[#525252] focus:outline-none resize-none font-sans leading-relaxed font-normal"
         />
@@ -394,7 +394,7 @@ export function Composer({
 
       {/* Understated Disclaimer Text */}
       <p className="text-[10.5px] sm:text-[11px] text-center text-[#525252] font-mono mt-2.5 select-none">
-        SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
+        {t("composer.disclaimer")}
       </p>
     </div>
   );
