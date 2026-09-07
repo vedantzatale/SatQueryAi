@@ -1,15 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ArrowUp, Brain, Image as ImageIcon, Mic, Plus, X } from "lucide-react";
-import { useAppStore } from "@/lib/store";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Brain, Image as ImageIcon, Layers, Mic, Paperclip, Plus, Radio, X } from "lucide-react";
+import { useAppStore, type PendingAttachment } from "@/lib/store";
+import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
+import { Attachment, SensorType } from "@/lib/types";
+import { AttachmentChip } from "./AttachmentChip";
+import { cn } from "@/lib/utils";
 
 interface ComposerProps {
-  onSend: (text: string) => void;
-  onUploadFiles: (files: File[]) => void;
+  onSend: (text: string, attachments?: Attachment[]) => void;
+  onUploadFiles?: (files: File[]) => void;
   isLoading: boolean;
   placeholder?: string;
   isCentered?: boolean;
+  initialText?: string;
+  initialAttachments?: Attachment[];
 }
 
 export function Composer({
@@ -18,17 +24,53 @@ export function Composer({
   isLoading,
   placeholder,
   isCentered = false,
+  initialText = "",
+  initialAttachments = [],
 }: ComposerProps) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [thinkingMode, setThinkingMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const pendingAttachments = useAppStore((s) => s.pendingAttachments);
+  const addPendingAttachment = useAppStore((s) => s.addPendingAttachment);
   const removePendingAttachment = useAppStore((s) => s.removePendingAttachment);
+
+  useEffect(() => {
+    if (initialText) setText(initialText);
+  }, [initialText]);
+
+  useEffect(() => {
+    if (initialAttachments && initialAttachments.length > 0) {
+      initialAttachments.forEach((att) => {
+        addPendingAttachment({
+          id: att.id,
+          name: att.name,
+          previewUrl: att.url,
+          type: "optical",
+          sensor: typeof att.sensor === "string" ? att.sensor : undefined,
+          resolution: att.resolution,
+        });
+      });
+    }
+  }, [initialAttachments, addPendingAttachment]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   function toggleVoiceInput() {
     if (isListening) {
@@ -43,8 +85,11 @@ export function Composer({
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRec) {
-      // Fallback if browser doesn't have Web Speech API
-      setText((prev) => (prev ? `${prev} Analyze flood extent using Sentinel-1 SAR imagery.` : "Analyze flood extent using Sentinel-1 SAR imagery."));
+      setText((prev) =>
+        prev
+          ? `${prev} Analyze flood extent using Sentinel-1 SAR imagery.`
+          : "Analyze flood extent using Sentinel-1 SAR imagery."
+      );
       return;
     }
 
@@ -89,7 +134,18 @@ export function Composer({
 
   function handleSend() {
     if ((!text.trim() && pendingAttachments.length === 0) || isLoading) return;
-    onSend(text);
+
+    const mappedAttachments: Attachment[] = pendingAttachments.map((p) => ({
+      id: p.id,
+      name: p.name,
+      size: p.sizeBytes ? `${(p.sizeBytes / (1024 * 1024)).toFixed(1)} MB` : "14.2 MB",
+      type: "image/geotiff",
+      url: p.previewUrl,
+      sensor: p.sensor,
+      resolution: p.resolution,
+    }));
+
+    onSend(text, mappedAttachments);
     setText("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -99,21 +155,65 @@ export function Composer({
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    onUploadFiles(Array.from(files));
+
+    if (onUploadFiles) {
+      onUploadFiles(Array.from(files));
+    } else {
+      Array.from(files).forEach((file, idx) => {
+        addPendingAttachment({
+          id: `upload-${Date.now()}-${idx}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+          name: file.name,
+          sizeBytes: file.size,
+          type: "optical",
+          sensor: "Custom GeoTIFF",
+          resolution: "10m",
+        });
+      });
+    }
+    setMenuOpen(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleAddPreset(sensor: string, name: string, url: string) {
+    addPendingAttachment({
+      id: `preset-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      previewUrl: url,
+      name,
+      sizeBytes: 14 * 1024 * 1024,
+      type: sensor.includes("SAR") ? "sar" : "optical",
+      sensor,
+      resolution: "10m",
+    });
+    setMenuOpen(false);
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onUploadFiles(Array.from(e.dataTransfer.files));
+      if (onUploadFiles) {
+        onUploadFiles(Array.from(e.dataTransfer.files));
+      } else {
+        Array.from(e.dataTransfer.files).forEach((file, idx) => {
+          addPendingAttachment({
+            id: `drop-${Date.now()}-${idx}`,
+            file,
+            previewUrl: URL.createObjectURL(file),
+            name: file.name,
+            sizeBytes: file.size,
+            type: "optical",
+            sensor: "Custom GeoTIFF",
+            resolution: "10m",
+          });
+        });
+      }
     }
   }
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setText(e.target.value);
-    // Auto-expand textarea
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
   }
@@ -134,73 +234,114 @@ export function Composer({
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".tif,.tiff,.png,.jpg,.jpeg"
+        accept=".tif,.tiff,.geotiff,.png,.jpg,.jpeg"
         onChange={handleFileChange}
         className="hidden"
       />
 
-      {/* Attachment Previews Area (Single, Before/After, Optical/SAR) */}
+      {/* Attachment Chips Preview Bar */}
       {pendingAttachments.length > 0 && (
-        <div className="mb-2.5 flex flex-wrap gap-2.5 animate-fade-in">
-          {pendingAttachments.map((att, idx) => {
-            let roleLabel = att.role;
-            if (!roleLabel) {
-              if (pendingAttachments.length === 2) {
-                roleLabel = idx === 0 ? "before" : "after";
-              } else {
-                roleLabel = "single";
-              }
-            }
-
-            return (
-              <div
-                key={att.id}
-                className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-[#1e1e1e] p-2 pr-3 shadow-lg"
-              >
-                {att.previewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={att.previewUrl}
-                    alt={att.name}
-                    className="h-9 w-9 rounded-xl object-cover border border-white/10"
-                  />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-800 text-neutral-400">
-                    <ImageIcon className="h-4 w-4" />
-                  </div>
-                )}
-
-                <div className="flex flex-col font-mono text-[11px] max-w-[140px]">
-                  <span className="truncate text-white font-medium">{att.name}</span>
-                  <span className="uppercase text-[9px] text-neutral-400">
-                    {roleLabel} · {att.type}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => removePendingAttachment(att.id)}
-                  className="rounded-full p-1 text-neutral-400 hover:text-white transition-colors"
-                  aria-label="Remove Attachment"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            );
-          })}
+        <div className="mb-2.5 flex flex-wrap gap-2 animate-in fade-in zoom-in-95 duration-150">
+          {pendingAttachments.map((att) => (
+            <AttachmentChip
+              key={att.id}
+              attachment={{
+                id: att.id,
+                name: att.name,
+                size: att.sizeBytes ? `${(att.sizeBytes / (1024 * 1024)).toFixed(1)} MB` : "14.2 MB",
+                type: "image/geotiff",
+                url: att.previewUrl,
+                sensor: att.sensor,
+                resolution: att.resolution,
+              }}
+              onRemove={removePendingAttachment}
+            />
+          ))}
         </div>
       )}
 
-      {/* Main ChatGPT Style Pill Input Bar */}
-      <div className="relative flex items-center gap-3 rounded-[32px] border border-white/[0.14] bg-[#212121] px-4 py-3 sm:py-3.5 shadow-2xl focus-within:border-white/40 transition-all">
-        {/* Attachment + Button */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
-          title="Attach satellite imagery or GeoTIFF"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+      {/* Main Pill Input Bar */}
+      <div
+        className={cn(
+          "relative flex items-center gap-3 rounded-[32px] border bg-[#141414] dark:bg-[#141414] px-4 py-3 sm:py-3.5 shadow-2xl transition-all duration-200",
+          dragActive
+            ? "border-white bg-[#1a1a1a]"
+            : "border-[#2e2e2e] focus-within:border-[#4d4d4d]"
+        )}
+      >
+        {/* Attachment Dropdown Button */}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-colors border",
+              menuOpen || pendingAttachments.length > 0
+                ? "bg-[#212121] border-[#383838] text-white"
+                : "bg-[#171717] border-[#262626] text-[#737373] hover:text-white hover:bg-[#1f1f1f]"
+            )}
+            title="Attach satellite imagery or select sensor"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+
+          {/* Quick Attachment Dropdown Menu */}
+          {menuOpen && (
+            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#171717] border border-[#303030] rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+              <div className="px-2.5 py-1.5 text-[10px] uppercase font-mono text-[#737373] tracking-wider">
+                Select Imagery Source
+              </div>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#e5e5e5] hover:text-white hover:bg-[#262626] rounded-xl transition-colors text-left"
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-[#888888]" />
+                <div>
+                  <p className="font-medium">Upload File (GeoTIFF, PNG)</p>
+                  <p className="text-[10px] text-[#737373]">Single or multi-temporal raster</p>
+                </div>
+              </button>
+
+              <div className="h-[1px] bg-[#262626] my-1" />
+
+              <div className="px-2.5 py-1 text-[10px] font-mono text-[#525252]">
+                Preset Satellite Layers
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleAddPreset(
+                    "Sentinel-2",
+                    "sentinel2_pune_2025.tif",
+                    SATELLITE_IMAGES.puneAfter
+                  )
+                }
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#d4d4d4] hover:text-white hover:bg-[#262626] rounded-lg transition-colors text-left"
+              >
+                <Layers className="w-3 h-3 text-[#888888]" />
+                <span>Sentinel-2 MSI (10m Optical)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleAddPreset(
+                    "Sentinel-1 SAR",
+                    "sentinel1_sar_c_band.tif",
+                    SATELLITE_IMAGES.sarRadar
+                  )
+                }
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#d4d4d4] hover:text-white hover:bg-[#262626] rounded-lg transition-colors text-left"
+              >
+                <Radio className="w-3 h-3 text-[#888888]" />
+                <span>Sentinel-1 C-Band SAR (Radar)</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Textarea Input */}
         <textarea
@@ -209,8 +350,13 @@ export function Composer({
           value={text}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? "Ask anything"}
-          className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[16px] text-white placeholder:text-[16px] placeholder-neutral-400 focus:outline-none resize-none font-sans leading-relaxed"
+          placeholder={
+            placeholder ??
+            (isCentered
+              ? "Ask anything"
+              : "Ask questions about Earth observation data, compare dates, or inspect features...")
+          }
+          className="flex-1 max-h-48 min-h-[28px] bg-transparent py-1 text-[15px] sm:text-[16px] text-white placeholder:text-[#525252] focus:outline-none resize-none font-sans leading-relaxed font-normal"
         />
 
         {/* Right Action Icons: Think, Mic, Send */}
@@ -222,7 +368,7 @@ export function Composer({
             className={`hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-[13px] font-medium transition-colors ${
               thinkingMode
                 ? "bg-white/20 text-white"
-                : "text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.08]"
             }`}
             title="Toggle Deep Co-registration & Reasoning"
           >
@@ -237,11 +383,11 @@ export function Composer({
             className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
               isListening
                 ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
-                : "text-neutral-300 hover:text-white hover:bg-white/10"
+                : "text-neutral-400 hover:text-white hover:bg-white/10"
             }`}
             title={isListening ? "Listening... (click to stop)" : "Voice query"}
           >
-            <Mic className="h-5 w-5" />
+            <Mic className="h-4 w-4" />
           </button>
 
           {/* Submit / Send Button */}
@@ -249,26 +395,23 @@ export function Composer({
             type="button"
             onClick={handleSend}
             disabled={(!text.trim() && pendingAttachments.length === 0) || isLoading}
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
+            className={cn(
+              "w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0",
               (text.trim() || pendingAttachments.length > 0) && !isLoading
-                ? "bg-white text-black hover:bg-neutral-200 shadow-md scale-100"
-                : "bg-white/[0.08] text-neutral-500 cursor-not-allowed"
-            }`}
+                ? "bg-white text-black hover:bg-[#e5e5e5] shadow-md cursor-pointer"
+                : "bg-[#212121] text-[#525252] cursor-not-allowed"
+            )}
             aria-label="Send message"
           >
-            <ArrowUp className="h-5 w-5 stroke-[2.5]" />
+            <ArrowUp className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
       </div>
 
-      {!isCentered && (
-        <div className="mt-2 text-center font-sans text-[11.5px] text-neutral-400 select-none">
-          SatQuery AI can make mistakes. Check important info.
-        </div>
-      )}
+      {/* Understated Disclaimer Text */}
+      <p className="text-[10.5px] sm:text-[11px] text-center text-[#525252] font-mono mt-2.5 select-none">
+        SatQuery AI synthesizes spatial evidence and coregistered raster indices. Verify mission-critical metrics.
+      </p>
     </div>
   );
 }
-
-
-

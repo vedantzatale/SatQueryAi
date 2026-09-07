@@ -74,6 +74,56 @@ html.lenis body {
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* Strictly hide and remove all scrollbars / sliders in the chat section */
+.chat-workspace,
+.chat-workspace *,
+.no-scrollbar,
+.no-scrollbar *,
+.chat-scroll-container,
+.chat-scroll-container * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.chat-workspace::-webkit-scrollbar,
+.chat-workspace *::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar,
+.chat-scroll-container::-webkit-scrollbar,
+.chat-scroll-container *::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  max-width: 0px !important;
+  max-height: 0px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.chat-workspace::-webkit-scrollbar-thumb,
+.chat-workspace *::-webkit-scrollbar-thumb,
+.no-scrollbar::-webkit-scrollbar-thumb,
+.no-scrollbar *::-webkit-scrollbar-thumb,
+.chat-scroll-container::-webkit-scrollbar-thumb,
+.chat-scroll-container *::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+.chat-workspace::-webkit-scrollbar-track,
+.chat-workspace *::-webkit-scrollbar-track,
+.no-scrollbar::-webkit-scrollbar-track,
+.no-scrollbar *::-webkit-scrollbar-track,
+.chat-scroll-container::-webkit-scrollbar-track,
+.chat-scroll-container *::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 /* Technical background patterns */
 .bg-tech-grid {
   background-size: 32px 32px;

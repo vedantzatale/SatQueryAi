@@ -23,6 +23,11 @@ interface AppState {
   shareModalOpen: boolean;
   mapModalOpen: boolean;
   activeEvidenceImage: { url: string; label?: string } | null;
+  evidenceModalData: {
+    title: string;
+    image: string;
+    metrics?: { label: string; value: string; change?: string }[];
+  } | null;
 
   setSessionId: (id: string | null) => void;
   setActiveSessionTitle: (title: string) => void;
@@ -36,6 +41,13 @@ interface AppState {
   setShareModalOpen: (open: boolean) => void;
   setMapModalOpen: (open: boolean) => void;
   setActiveEvidenceImage: (img: { url: string; label?: string } | null) => void;
+  setEvidenceModalData: (
+    data: {
+      title: string;
+      image: string;
+      metrics?: { label: string; value: string; change?: string }[];
+    } | null
+  ) => void;
   resetConversationState: () => void;
 }
 
@@ -49,6 +61,7 @@ export const useAppStore = create<AppState>((set) => ({
   shareModalOpen: false,
   mapModalOpen: false,
   activeEvidenceImage: null,
+  evidenceModalData: null,
 
   setSessionId: (id) => set({ sessionId: id }),
   setActiveSessionTitle: (title) => set({ activeSessionTitle: title }),
@@ -68,6 +81,7 @@ export const useAppStore = create<AppState>((set) => ({
   setShareModalOpen: (open) => set({ shareModalOpen: open }),
   setMapModalOpen: (open) => set({ mapModalOpen: open }),
   setActiveEvidenceImage: (img) => set({ activeEvidenceImage: img }),
+  setEvidenceModalData: (data) => set({ evidenceModalData: data }),
   resetConversationState: () =>
     set({
       sessionId: "session-new",

@@ -2,28 +2,32 @@
 
 import { useState } from "react";
 import {
+  Cpu,
   Download,
   FileJson,
   Globe,
   Menu,
   MoreHorizontal,
+  PanelLeft,
   Share2,
-  Shield,
-  Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 interface ChatHeaderProps {
   onToggleMobileSidebar: () => void;
   isOpenDesktop?: boolean;
   onToggleDesktop?: () => void;
+  activeTask?: string;
 }
 
 export function ChatHeader({
   onToggleMobileSidebar,
   isOpenDesktop = true,
   onToggleDesktop,
+  activeTask,
 }: ChatHeaderProps) {
   const activeSessionTitle = useAppStore((s) => s.activeSessionTitle);
   const setActiveSessionTitle = useAppStore((s) => s.setActiveSessionTitle);
@@ -41,7 +45,7 @@ export function ChatHeader({
       resetConversationState();
       setIsTemporaryChat(true);
       setSessionId(`temp-${Date.now()}`);
-      setActiveSessionTitle("Temporary Chat");
+      setActiveSessionTitle("Temporary Analysis");
     } else {
       resetConversationState();
       setIsTemporaryChat(false);
@@ -51,84 +55,96 @@ export function ChatHeader({
   }
 
   return (
-    <header className="flex h-12 sm:h-14 w-full items-center justify-between bg-[#000000] px-4 sm:px-6 z-20">
-      <div className="flex items-center gap-3">
+    <header className="flex h-14 w-full items-center justify-between border-b border-[#1f1f1f] bg-[#000000]/80 backdrop-blur-md px-4 sm:px-6 sticky top-0 z-30 select-none">
+      {/* Left section */}
+      <div className="flex items-center gap-3 min-w-0">
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-white/5"
+          className="md:hidden p-1.5 text-[#737373] hover:text-white rounded-lg hover:bg-[#1a1a1a]"
           aria-label="Open Sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
 
         {/* Desktop Expand Button when sidebar is collapsed */}
-        {!isOpenDesktop && (
+        {!isOpenDesktop && onToggleDesktop && (
           <button
+            type="button"
             onClick={onToggleDesktop}
-            className="hidden md:flex p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+            className="hidden md:flex p-1.5 rounded-lg text-[#737373] hover:text-white hover:bg-[#1a1a1a] transition-colors shrink-0"
             aria-label="Open Sidebar (⌘B)"
             title="Open Sidebar (⌘B)"
           >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect width="18" height="18" x="3" y="3" rx="3.5" />
-              <line x1="8.5" y1="3" x2="8.5" y2="21" />
-              <path d="m11.5 9.5 2.5 2.5-2.5 2.5" />
-            </svg>
+            <PanelLeft className="w-4 h-4" />
           </button>
         )}
 
-        {/* Title / Model selector */}
-        <div className="flex items-center gap-2">
-          <h1 className="text-sm font-semibold text-white truncate max-w-xs sm:max-w-md select-none font-sans">
-            {activeSessionTitle || "SatQuery AI"}
+        {/* Title & Task Tag */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h1 className="text-xs sm:text-sm font-medium text-white truncate font-sans">
+            {activeSessionTitle || "New Satellite Query"}
           </h1>
+
+          {activeTask && (
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#171717] border border-[#2a2a2a] text-[#a3a3a3]">
+              {activeTask}
+            </span>
+          )}
+
           {isTemporaryChat && (
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-[#221f14] border border-[#443818] text-[#d4b152] font-medium">
+              <ShieldAlert className="w-3 h-3" />
+              Temporary
+            </span>
           )}
         </div>
       </div>
 
       {/* Right Controls */}
       <div className="relative flex items-center gap-2 text-xs font-sans">
+        {/* Model Tag */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121212] border border-[#262626] text-[11px] text-[#888888] font-mono shadow-subtle">
+          <Cpu className="w-3.5 h-3.5 text-[#888888]" />
+          <span>GeoChat • Sentinel Core</span>
+        </div>
+
         {/* Temporary Toggle Button */}
         <button
+          type="button"
           onClick={handleToggleTemporary}
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors border ${
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs transition-all font-medium border",
             isTemporaryChat
-              ? "border-amber-500/30 bg-amber-500/10 text-amber-300 font-medium shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-              : "border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-          }`}
+              ? "bg-[#262626] text-white border-[#444444] shadow-subtle"
+              : "bg-transparent text-[#737373] hover:text-white border-transparent hover:bg-[#171717]"
+          )}
           title={isTemporaryChat ? "Temporary chat enabled (will discard when switching)" : "Enable temporary chat"}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full transition-colors ${
-              isTemporaryChat ? "bg-amber-400 shadow-[0_0_6px_#f59e0b]" : "bg-neutral-500"
-            }`}
+            className={cn(
+              "w-1.5 h-1.5 rounded-full transition-colors",
+              isTemporaryChat ? "bg-white" : "bg-[#525252]"
+            )}
           />
-          <span>Temporary</span>
+          <span className="hidden sm:inline">Temporary</span>
         </button>
 
         {/* Share Button */}
         <button
+          type="button"
           onClick={() => setShareModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-neutral-300 hover:bg-white/10 hover:text-white transition-colors text-xs font-medium"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171717] hover:bg-[#212121] text-[#e5e5e5] hover:text-white border border-[#2e2e2e] rounded-xl text-xs font-medium transition-colors shadow-subtle"
         >
-          <Share2 className="h-4 w-4" />
-          <span>Share</span>
+          <Share2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Share</span>
         </button>
 
         {/* More Options Menu */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => setOptionsOpen(!optionsOpen)}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
             aria-label="More options"
@@ -137,8 +153,9 @@ export function ChatHeader({
           </button>
 
           {optionsOpen && (
-            <div className="absolute right-0 top-10 z-40 w-56 rounded-2xl border border-white/15 bg-[#181818] p-1.5 shadow-2xl animate-fade-in font-sans text-xs text-neutral-300">
+            <div className="absolute right-0 top-10 z-40 w-56 rounded-2xl border border-[#303030] bg-[#171717] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-100 font-sans text-xs text-neutral-300">
               <button
+                type="button"
                 onClick={() => {
                   setMapModalOpen(true);
                   setOptionsOpen(false);
@@ -181,4 +198,3 @@ export function ChatHeader({
     </header>
   );
 }
-

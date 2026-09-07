@@ -196,7 +196,7 @@ export function ChatSidebar({
         </div>
 
         {/* History Stream Grouped by Date */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-2 space-y-5 text-xs font-sans">
+        <div className="flex-1 overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-2.5 py-2 space-y-5 text-xs font-sans">
           {categories.map((cat) => {
             const items = filtered.filter((c) => c.category === cat);
             if (items.length === 0) return null;

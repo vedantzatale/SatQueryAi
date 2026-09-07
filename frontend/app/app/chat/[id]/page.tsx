@@ -7,6 +7,7 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatSidebar, type ConversationSummaryItem } from "@/components/chat/ChatSidebar";
 import { SatelliteMapModal } from "@/components/chat/SatelliteMapModal";
 import { ShareModal } from "@/components/chat/ShareModal";
+import { EvidenceModal } from "@/components/chat/EvidenceModal";
 import { listSessions } from "@/lib/api";
 import { MOCK_SESSIONS } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
@@ -77,7 +78,27 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#080808] text-neutral-100 font-sans selection:bg-white selection:text-black">
+    <div className="chat-workspace flex h-screen w-screen overflow-hidden bg-[#080808] text-neutral-100 font-sans selection:bg-white selection:text-black">
+      <style>{`
+        .chat-workspace ::-webkit-scrollbar,
+        .chat-workspace::-webkit-scrollbar,
+        .chat-workspace *::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        .chat-workspace ::-webkit-scrollbar-thumb,
+        .chat-workspace::-webkit-scrollbar-thumb,
+        .chat-workspace *::-webkit-scrollbar-thumb {
+          background: transparent !important;
+          display: none !important;
+        }
+        .chat-workspace,
+        .chat-workspace * {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+      `}</style>
       <ChatSidebar
         conversations={conversations}
         activeId={sessionId}
@@ -103,6 +124,7 @@ export default function ChatDetailPage() {
 
       <ShareModal />
       <SatelliteMapModal />
+      <EvidenceModal />
     </div>
   );
 }
