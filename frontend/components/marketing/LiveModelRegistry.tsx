@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getModelHealth, listModels, type ModelHealth, type ModelRegistryEntry } from "@/lib/api";
+import { useTheme } from "@/lib/theme";
 
 interface ModelCopy {
   name: string;
@@ -59,6 +60,8 @@ interface LiveEntry extends ModelRegistryEntry {
 export function LiveModelRegistry() {
   const [entries, setEntries] = useState<LiveEntry[] | null>(null);
   const [error, setError] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +90,13 @@ export function LiveModelRegistry() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-7 text-sm sm:text-[15px] font-sans text-neutral-300 leading-relaxed">
+      <div
+        className={`rounded-2xl border p-7 text-sm sm:text-[15px] font-sans leading-relaxed ${
+          isLight
+            ? "border-black/10 bg-[#fcfbf8] text-neutral-700 shadow-sm"
+            : "border-white/10 bg-[#0d0d0d] text-neutral-300"
+        }`}
+      >
         Live registry status is unavailable right now (backend unreachable) — showing no
         status rather than a guess.
       </div>
@@ -98,7 +107,12 @@ export function LiveModelRegistry() {
     return (
       <div className="space-y-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="tech-card rounded-2xl p-7 h-28 animate-pulse bg-white/[0.02]" />
+          <div
+            key={i}
+            className={`tech-card rounded-2xl p-7 h-28 animate-pulse ${
+              isLight ? "!bg-[#fcfbf8] !border-black/10 shadow-sm" : "bg-white/[0.02]"
+            }`}
+          />
         ))}
       </div>
     );
@@ -119,47 +133,101 @@ export function LiveModelRegistry() {
           ? entry.health.status
           : "Unknown";
         const statusColor = !entry.enabled
-          ? "text-neutral-400"
+          ? isLight ? "text-neutral-500" : "text-neutral-400"
           : entry.health?.status === "healthy" || entry.health?.status === "available"
-          ? "text-emerald-400"
+          ? isLight ? "text-emerald-700" : "text-emerald-400"
           : entry.health?.status
-          ? "text-amber-400"
-          : "text-neutral-400";
+          ? isLight ? "text-amber-700" : "text-amber-400"
+          : isLight ? "text-neutral-500" : "text-neutral-400";
+
+        const statusDotBg = !entry.enabled
+          ? isLight ? "bg-neutral-400" : "bg-neutral-400"
+          : entry.health?.status === "healthy" || entry.health?.status === "available"
+          ? isLight ? "bg-emerald-600" : "bg-emerald-400"
+          : entry.health?.status
+          ? isLight ? "bg-amber-600" : "bg-amber-400"
+          : isLight ? "bg-neutral-400" : "bg-neutral-400";
 
         return (
           <div
             key={entry.model_id}
-            className="tech-card rounded-2xl p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/10 bg-[#0c0c0c] hover:border-white/20 transition-all"
+            className={`tech-card rounded-2xl p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 border transition-all ${
+              isLight
+                ? "!bg-[#fcfbf8] !border-black/10 hover:!border-black/20 shadow-sm"
+                : "border-white/10 bg-[#0c0c0c] hover:border-white/20"
+            }`}
           >
             <div className="space-y-2.5 max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">
-                <h2 className="font-mono text-base sm:text-lg font-bold tracking-wide text-white">
+                <h2
+                  className={`font-mono text-base sm:text-lg font-bold tracking-wide ${
+                    isLight ? "text-neutral-900" : "text-white"
+                  }`}
+                >
                   {copy.name}
                 </h2>
-                <span className="font-mono text-xs text-neutral-300 border border-white/15 bg-white/5 px-2.5 py-0.5 rounded-md">
+                <span
+                  className={`font-mono text-xs px-2.5 py-0.5 rounded-md border ${
+                    isLight
+                      ? "border-black/10 bg-black/5 text-neutral-700 font-medium"
+                      : "border-white/15 bg-white/5 text-neutral-300"
+                  }`}
+                >
                   {copy.tag}
                 </span>
                 {entry.health?.is_mock && (
-                  <span className="font-mono text-xs text-neutral-400 border border-neutral-700 px-2 py-0.5 rounded-md">
+                  <span
+                    className={`font-mono text-xs px-2 py-0.5 rounded-md border ${
+                      isLight
+                        ? "border-black/10 bg-black/5 text-neutral-600"
+                        : "border-neutral-700 text-neutral-400"
+                    }`}
+                  >
                     mock mode
                   </span>
                 )}
               </div>
-              <p className="text-[15px] sm:text-[15.5px] text-neutral-200 leading-relaxed font-normal">{copy.role}</p>
-              <div className="font-mono text-xs sm:text-[13px] text-neutral-400">
-                Technology: <span className="text-neutral-200 font-medium">{copy.underlying}</span>
+              <p
+                className={`text-[15px] sm:text-[15.5px] leading-relaxed font-normal ${
+                  isLight ? "text-neutral-600" : "text-neutral-200"
+                }`}
+              >
+                {copy.role}
+              </p>
+              <div
+                className={`font-mono text-xs sm:text-[13px] ${
+                  isLight ? "text-neutral-500" : "text-neutral-400"
+                }`}
+              >
+                Technology:{" "}
+                <span
+                  className={`font-medium ${
+                    isLight ? "text-neutral-800" : "text-neutral-200"
+                  }`}
+                >
+                  {copy.underlying}
+                </span>
               </div>
             </div>
 
-            <div className="flex md:flex-col items-start md:items-end justify-between border-t md:border-t-0 border-white/10 pt-4 md:pt-0 font-mono text-xs text-neutral-300 shrink-0">
+            <div
+              className={`flex md:flex-col items-start md:items-end justify-between border-t md:border-t-0 pt-4 md:pt-0 font-mono text-xs shrink-0 ${
+                isLight ? "border-black/10 text-neutral-600" : "border-white/10 text-neutral-300"
+              }`}
+            >
               <div className={`flex items-center gap-2 font-medium ${statusColor}`}>
-                <span className={`h-2 w-2 rounded-full ${statusColor.replace("text-", "bg-")}`} />
+                <span className={`h-2 w-2 rounded-full ${statusDotBg}`} />
                 <span>{statusLabel}</span>
               </div>
-              <div className="mt-1 text-neutral-300 text-xs">
-                Fallback: <span className="text-neutral-200">{entry.fallback ?? "none registered"}</span>
+              <div className={`mt-1 text-xs ${isLight ? "text-neutral-500" : "text-neutral-300"}`}>
+                Fallback:{" "}
+                <span className={isLight ? "text-neutral-800 font-medium" : "text-neutral-200"}>
+                  {entry.fallback ?? "none registered"}
+                </span>
               </div>
-              <div className="mt-1 text-neutral-400 text-xs">v{entry.version}</div>
+              <div className={`mt-1 text-xs ${isLight ? "text-neutral-400" : "text-neutral-400"}`}>
+                v{entry.version}
+              </div>
             </div>
           </div>
         );

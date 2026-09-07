@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getProviderStatus, type ProviderStatus } from "@/lib/api";
+import { useTheme } from "@/lib/theme";
 
 const PROVIDER_LABEL: Record<string, string> = {
   copernicus: "Copernicus Data Space (Sentinel-1/2)",
@@ -13,6 +14,8 @@ const PROVIDER_LABEL: Record<string, string> = {
 export function LiveProviderStatus() {
   const [providers, setProviders] = useState<ProviderStatus[] | null>(null);
   const [error, setError] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     let cancelled = false;
@@ -30,14 +33,26 @@ export function LiveProviderStatus() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-7 text-sm sm:text-[15px] font-sans text-neutral-300 leading-relaxed">
+      <div
+        className={`rounded-2xl border p-7 text-sm sm:text-[15px] font-sans leading-relaxed ${
+          isLight
+            ? "border-black/10 bg-[#fcfbf8] text-neutral-700 shadow-sm"
+            : "border-white/10 bg-[#0d0d0d] text-neutral-300"
+        }`}
+      >
         Live provider status is unavailable right now (backend unreachable).
       </div>
     );
   }
 
   if (!providers) {
-    return <div className="tech-card rounded-2xl p-7 h-20 animate-pulse bg-white/[0.02]" />;
+    return (
+      <div
+        className={`tech-card rounded-2xl p-7 h-20 animate-pulse ${
+          isLight ? "!bg-[#fcfbf8] !border-black/10 shadow-sm" : "bg-white/[0.02]"
+        }`}
+      />
+    );
   }
 
   return (
@@ -47,22 +62,44 @@ export function LiveProviderStatus() {
         return (
           <div
             key={p.provider}
-            className="tech-card rounded-2xl p-6 flex items-start justify-between gap-4 border border-white/10 bg-[#0c0c0c] hover:border-white/20 transition-all"
+            className={`tech-card rounded-2xl p-6 flex items-start justify-between gap-4 border transition-all ${
+              isLight
+                ? "!bg-[#fcfbf8] !border-black/10 hover:!border-black/20 shadow-sm"
+                : "border-white/10 bg-[#0c0c0c] hover:border-white/20"
+            }`}
           >
             <div>
-              <div className="font-mono text-sm sm:text-[15px] text-white font-semibold">
+              <div
+                className={`font-mono text-sm sm:text-[15px] font-semibold ${
+                  isLight ? "text-neutral-900" : "text-white"
+                }`}
+              >
                 {PROVIDER_LABEL[p.provider] ?? p.provider}
               </div>
               {p.message && (
-                <div className="mt-1.5 text-xs sm:text-[13px] text-neutral-300 leading-relaxed font-sans">{p.message}</div>
+                <div
+                  className={`mt-1.5 text-xs sm:text-[13px] leading-relaxed font-sans ${
+                    isLight ? "text-neutral-600" : "text-neutral-300"
+                  }`}
+                >
+                  {p.message}
+                </div>
               )}
             </div>
             <div
               className={`flex items-center gap-1.5 shrink-0 font-mono text-xs uppercase font-medium ${
-                isHealthy ? "text-emerald-400" : "text-amber-400"
+                isHealthy
+                  ? isLight ? "text-emerald-700" : "text-emerald-400"
+                  : isLight ? "text-amber-700" : "text-amber-400"
               }`}
             >
-              <span className={`h-2 w-2 rounded-full ${isHealthy ? "bg-emerald-400" : "bg-amber-400"}`} />
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isHealthy
+                    ? isLight ? "bg-emerald-600" : "bg-emerald-400"
+                    : isLight ? "bg-amber-600" : "bg-amber-400"
+                }`}
+              />
               {p.status.replace(/_/g, " ")}
             </div>
           </div>

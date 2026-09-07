@@ -71,13 +71,33 @@
     border-top-color: rgba(0, 0, 0, 0.08) !important;
   }
 
-  /* Landing page surfaces */
+  /* Landing & marketing page surfaces */
+  html.light .bg-\[\#080808\] {
+    background-color: #f5f2eb !important;
+    color: #18181b !important;
+  }
   html.light .bg-\[\#0a0a0a\] {
     background-color: #ede8df !important;
   }
   html.light .bg-\[\#0e0e0e\] {
     background-color: #fcfbf8 !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  html.light .bg-\[\#0c0c0c\]:not(.airlock-section *) {
+    background-color: #fcfbf8 !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  html.light .bg-\[\#0d0d0d\]:not(.airlock-section *) {
+    background-color: #fcfbf8 !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  html.light .bg-\[\#121212\] {
+    background-color: #fcfbf8 !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #18181b !important;
+  }
+  html.light .bg-\[\#121212\]::placeholder {
+    color: #78716c !important;
   }
   html.light .bg-\[\#070707\] {
     background-color: #ede8df !important;
@@ -129,9 +149,12 @@
   html.light .bg-white\/5 {
     background-color: rgba(0, 0, 0, 0.04) !important;
   }
-  html.light .bg-white\/\[0\.03\] {
-    background-color: rgba(0, 0, 0, 0.03) !important;
+  html.light .bg-white\/\[0\.03\],
+  html.light .bg-white\/\[0\.04\] {
+    background-color: rgba(0, 0, 0, 0.04) !important;
   }
+
+
 
   /* FAQ section in light mode */
   html.light #faq,

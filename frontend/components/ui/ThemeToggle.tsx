@@ -67,6 +67,11 @@ export function ThemeToggle() {
                     : "text-neutral-400 hover:text-neutral-200"
               }
             `}
+            style={
+              isActive && isLight
+                ? { backgroundColor: "#ffffff", color: "#18181b" }
+                : undefined
+            }
           >
             {icon}
           </button>
@@ -103,6 +108,11 @@ export function ThemeToggleLabeled() {
                     : "border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
               }
             `}
+            style={
+              isActive && isLight
+                ? { backgroundColor: "#ffffff", color: "#18181b" }
+                : undefined
+            }
           >
             {icon}
             {label}
