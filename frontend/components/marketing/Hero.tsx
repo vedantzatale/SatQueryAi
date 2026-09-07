@@ -320,7 +320,7 @@ export function Hero() {
               <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 What changed between these two Sentinel-2 images of northern Pune?
               </div>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isLight ? "bg-[#e5ded3] text-neutral-800 border border-black/10 shadow-sm" : "bg-neutral-700 text-neutral-200"}`}>
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
@@ -355,7 +355,7 @@ export function Hero() {
               <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 Analyze the Mumbai coastal SAR data. Did flood inundation rise in August?
               </div>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isLight ? "bg-[#e5ded3] text-neutral-800 border border-black/10 shadow-sm" : "bg-neutral-700 text-neutral-200"}`}>
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
@@ -383,7 +383,7 @@ export function Hero() {
               <div className={`max-w-[80%] rounded-[15px] ${isLight ? "bg-[#ece6dc] text-[#18181b]" : "bg-[#1c1c1c] text-[#efefef]"} px-4 py-2.5 text-[clamp(0.85rem,1.1vw,1.05rem)] leading-[1.42] shadow-sm`}>
                 Quantify deforestation across Sector 4B and export a GeoJSON polygon mask for GIS
               </div>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-neutral-200">
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isLight ? "bg-[#e5ded3] text-neutral-800 border border-black/10 shadow-sm" : "bg-neutral-700 text-neutral-200"}`}>
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
