@@ -37,12 +37,18 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
   const isLight = resolvedTheme === "light";
 
   const answer = message?.content ?? result?.answer ?? content ?? "Analysis completed.";
+  // Only ever populated on the pre-written example conversations shown from
+  // the sidebar (see lib/mock-data.ts) -- a live query never sets this, so
+  // it can't be confused with a real result. (A prior version of ChatArea
+  // also used this to dress up a fabricated fallback as a real answer when
+  // a live query failed; that path is gone -- failures now render as a
+  // plain isError message instead, below.)
   const trace = message?.analysisTrace;
   const confidence = result?.confidence;
+  const isError = message?.isError === true;
   // Only ever set on real completed executions (see confidence.notes in that
   // case: "Confidence unavailable in demo mode -- not calibrated"). trace is
-  // never present alongside a real result -- it's exclusive to the offline
-  // canned-narrative fallback in ChatArea.tsx -- so this only affects the
+  // never present alongside a real result, so this only affects the
   // plain-text confidence branch below, never ConfidenceBadge.
   const isDemo = result?.model_provenance?.demo_mode;
   const changeAnalysis = message?.changeAnalysis;
@@ -169,6 +175,15 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
               DEMO — no trained model
             </span>
           )}
+          {isError && (
+            <span
+              className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
+                isLight ? "border-red-600/30 bg-red-500/15 text-red-800" : "border-red-500/30 bg-red-500/10 text-red-300"
+              }`}
+            >
+              Request failed
+            </span>
+          )}
         </div>
 
         {trace && (
@@ -195,9 +210,11 @@ export function AssistantMessage({ content, result, message, onOpenViewer, onReg
       </div>
 
       {/* Main Response Text */}
-      <div className={`w-full text-[15px] sm:text-[15.5px] leading-[1.65] whitespace-pre-wrap font-normal space-y-2 ${
-        isLight ? "text-[#18181b]" : "text-[#ececec]"
-      }`}>
+      <div
+        className={`w-full text-[15px] sm:text-[15.5px] leading-[1.65] whitespace-pre-wrap font-normal space-y-2 ${
+          isError ? (isLight ? "text-red-700" : "text-red-300/90") : isLight ? "text-[#18181b]" : "text-[#ececec]"
+        }`}
+      >
         {answer.split("\n\n").map((para, idx) => (
           <p key={idx}>{para}</p>
         ))}

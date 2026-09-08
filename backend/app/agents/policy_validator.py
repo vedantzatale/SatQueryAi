@@ -18,7 +18,8 @@ from app.validation.pair_compatibility import (
 )
 
 MISSING_IMAGE_MESSAGE = (
-    "I can analyze that, but I need remote-sensing imagery first."
+    "I can analyze that, but I need imagery first -- upload an image, or tell me a location "
+    "(a place name, or coordinates like '19.076, 72.877') and I'll fetch satellite imagery for that area."
 )
 MISSING_SAR_PAIR_MESSAGE = (
     "This workflow requires one optical/multispectral image and one SAR image."

@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.orchestration.context import ImageContext, load_image_context
 from app.satellite.provider_manager import get_provider_manager
 from app.satellite.scene_ranker import rank_pairs, rank_single
+from app.schemas.location import LocationRequest
 from app.schemas.satellite import SceneCandidate
 from app.schemas.task_plan import TaskPlan
 from app.services.image_ingestion import ingest_file
@@ -23,9 +24,11 @@ class RetrievalError(Exception):
     pass
 
 
-def _download_and_ingest(db: Session, scene: SceneCandidate, session_id: str | None) -> ImageContext:
+def _download_and_ingest(
+    db: Session, scene: SceneCandidate, session_id: str | None, aoi: LocationRequest
+) -> ImageContext:
     pm = get_provider_manager()
-    result = pm.download_scene(scene.provider, scene.scene_id, destination_dir=str(Path.cwd()))
+    result = pm.download_scene(scene, destination_dir=str(Path.cwd()), aoi=aoi)
     if not result.success or not result.local_path:
         raise RetrievalError(result.error or "Scene download failed.")
 
@@ -70,8 +73,8 @@ def retrieve_images_for_plan(db: Session, plan: TaskPlan, session_id: str | None
             )
         before_scene, after_scene = pair
         return [
-            _download_and_ingest(db, before_scene, session_id),
-            _download_and_ingest(db, after_scene, session_id),
+            _download_and_ingest(db, before_scene, session_id, plan.location),
+            _download_and_ingest(db, after_scene, session_id, plan.location),
         ]
 
     if plan.task == "optical_sar_analysis":
@@ -86,8 +89,8 @@ def retrieve_images_for_plan(db: Session, plan: TaskPlan, session_id: str | None
                 "area and date range."
             )
         return [
-            _download_and_ingest(db, optical_ranked[0], session_id),
-            _download_and_ingest(db, sar_ranked[0], session_id),
+            _download_and_ingest(db, optical_ranked[0], session_id, plan.location),
+            _download_and_ingest(db, sar_ranked[0], session_id, plan.location),
         ]
 
     date_range = plan.date_range or (date.today() - timedelta(days=90), date.today())
@@ -96,4 +99,4 @@ def retrieve_images_for_plan(db: Session, plan: TaskPlan, session_id: str | None
     ranked = rank_single(candidates, modality)
     if not ranked:
         raise RetrievalError("No suitable scene was found for this area, date range, and modality.")
-    return [_download_and_ingest(db, ranked[0], session_id)]
+    return [_download_and_ingest(db, ranked[0], session_id, plan.location)]

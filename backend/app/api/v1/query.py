@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.models.chat_session import ChatSession
 from app.models.query import Query
 from app.services.analysis_service import submit_analysis
 
@@ -32,6 +33,18 @@ class QueryDetailResponse(BaseModel):
 @router.post("", response_model=SubmitQueryResponse)
 def submit_query(body: SubmitQueryRequest, db: Session = Depends(get_db)) -> SubmitQueryResponse:
     from app.models.execution import Execution
+
+    # A client-only placeholder session_id (the frontend's pre-session-
+    # creation default, or a stale/offline fallback id) has no matching row
+    # -- inserting a message/query against it would violate a foreign key.
+    # SQLite silently allowed the resulting orphaned rows; a real
+    # FK-enforcing database (Postgres/Neon) doesn't, and failed this with an
+    # opaque 500 IntegrityError instead of a clear, actionable error.
+    if db.get(ChatSession, body.session_id) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Session '{body.session_id}' does not exist. Create a session before submitting a query.",
+        )
 
     execution_id = submit_analysis(db, body.session_id, body.text, body.image_ids)
     execution = db.get(Execution, execution_id)

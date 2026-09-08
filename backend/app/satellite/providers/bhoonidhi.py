@@ -42,5 +42,5 @@ class BhoonidhiProvider(SatelliteDataProvider):
     def get_metadata(self, scene_id: str) -> SceneCandidate | None:
         return None
 
-    def download_scene(self, scene_id: str, destination_dir: str) -> DownloadResult:
+    def download_scene(self, scene: SceneCandidate, destination_dir: str, aoi: LocationRequest) -> DownloadResult:
         return DownloadResult(success=False, error="Bhoonidhi is not configured in this deployment.")

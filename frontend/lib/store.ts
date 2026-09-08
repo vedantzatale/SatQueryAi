@@ -102,7 +102,20 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "satquery-ui",
-      partialize: (state) => ({ uiLanguage: state.uiLanguage }),
+      // sessionId/activeSessionTitle are only persisted for a real (non-
+      // temporary) session -- without this, refreshing /app forgot which
+      // conversation was open (it wasn't in localStorage, only uiLanguage
+      // was), so the UI fell back to a placeholder id that fetches nothing
+      // and the visible chat went blank even though it was safe in the
+      // database the whole time. A temporary chat must NOT survive a
+      // refresh -- that's the point of "temporary" -- so it's excluded here
+      // rather than persisted and cleaned up later.
+      partialize: (state) => ({
+        uiLanguage: state.uiLanguage,
+        ...(state.isTemporaryChat
+          ? {}
+          : { sessionId: state.sessionId, activeSessionTitle: state.activeSessionTitle }),
+      }),
     }
   )
 );

@@ -221,6 +221,10 @@ export interface Message {
   changeAnalysis?: ChangeAnalysisData;
   multimodal?: MultimodalData;
   execution_id?: string | null;
+  /** True only for a client-synthesized "the request failed" bubble -- never
+   * set on a real model result. Lets the UI style/filter these distinctly
+   * instead of presenting a failure as if it were a genuine analysis. */
+  isError?: boolean;
 }
 
 export interface Conversation {

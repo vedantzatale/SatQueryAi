@@ -1,18 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { Composer } from "./Composer";
 import { EmptyState } from "./EmptyState";
 import { MessageList, type MessageWithMeta } from "./MessageList";
 import { createSession, getAnalysis, getSession, submitQuery, uploadImage } from "@/lib/api";
 import { INITIAL_CONVERSATIONS, MOCK_SESSIONS } from "@/lib/mock-data";
-import { SATELLITE_IMAGES } from "@/lib/satellite-assets";
 import { useAppStore } from "@/lib/store";
 import { useTheme } from "@/lib/theme";
 import type { Attachment, ExecutionResult, Message } from "@/lib/types";
 
 interface ChatAreaProps {
   initialSessionId?: string | null;
+}
+
+// The full pipeline (task planning + specialist models) runs real,
+// uncached CPU inference and can legitimately take 1-2+ minutes -- never
+// silently swap in canned/fabricated content on failure (that happened
+// here before and was indistinguishable from a real, confident answer).
+// Always surface what actually went wrong instead.
+function describeRequestError(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const detail = err.response?.data?.detail;
+    if (typeof detail === "string") {
+      return detail;
+    }
+    if (err.code === "ECONNABORTED") {
+      return "The request timed out after several minutes without a response. The model may be overloaded -- please try again.";
+    }
+    if (!err.response) {
+      return "Could not reach the SatQuery backend. Please make sure the server is running and try again.";
+    }
+    return `The server returned an error (HTTP ${err.response.status}). Please try again.`;
+  }
+  return "An unexpected error occurred while processing this request.";
 }
 
 export function ChatArea({ initialSessionId }: ChatAreaProps) {
@@ -118,7 +140,17 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
   }, [sessionId, initialSessionId, setSessionId, setActiveSessionTitle, setLastResult]);
 
   async function ensureSession(): Promise<string> {
-    if (sessionId) return sessionId;
+    // "session-new" is the store's default before any real session exists
+    // (not a real id), and "temp-*" is a client-only placeholder for a
+    // temporary chat or an offline fallback -- neither has a matching row
+    // in the sessions table. Treating either as "already have a session"
+    // skipped createSession() entirely, so every query submitted a
+    // session_id nothing referenced: SQLite silently accepted the dangling
+    // insert, but a real FK-enforcing database (Postgres/Neon) rejects it,
+    // which surfaced as every query failing and silently falling back to
+    // the canned offline-demo response below instead of a real answer.
+    const hasRealSession = sessionId && sessionId !== "session-new" && !sessionId.startsWith("temp-");
+    if (hasRealSession) return sessionId as string;
     try {
       const created = await createSession("New Satellite Query");
       setSessionId(created.id);
@@ -198,6 +230,21 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     ]);
   }
 
+  function appendErrorMessage(err: unknown) {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `err-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        role: "assistant",
+        content: describeRequestError(err),
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        execution_id: null,
+        isError: true,
+      },
+    ]);
+  }
+
   async function handleSend(text: string, incomingAttachments?: Attachment[]) {
     const currentSessionId = await ensureSession();
     const attachmentsSnapshot = incomingAttachments && incomingAttachments.length > 0
@@ -231,142 +278,32 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setIsLoading(true);
     setLoadingStatus("Orchestrating specialist models...");
 
-    // Try real backend first
+    // No GPU on the current deployment target -- a real response can
+    // legitimately take 1-2+ minutes (measured live: ~60s for a trivial
+    // text-only query on an already-warm model). These keep the wait
+    // honest instead of looking stuck, without ever inventing a result.
+    const statusTimers = [
+      setTimeout(
+        () => setLoadingStatus("Still working — on-device models run on CPU here, this can take a minute or two..."),
+        8000
+      ),
+      setTimeout(
+        () => setLoadingStatus("Still running — large model inference without a GPU is slow but it's genuinely in progress..."),
+        30000
+      ),
+    ];
+
     try {
       const { execution_id } = await submitQuery(currentSessionId, effectiveText, imageIds);
       setLoadingStatus("Generating grounded evidence...");
       const analysisResult = await getAnalysis(execution_id);
-
       appendAssistantMessage(analysisResult);
+    } catch (err) {
+      appendErrorMessage(err);
+    } finally {
+      statusTimers.forEach(clearTimeout);
       setIsLoading(false);
       setLoadingStatus(null);
-      return;
-    } catch {
-      // Backend offline or demo fallback -> Provide intelligent, rich Earth observation response
-      setTimeout(() => {
-        const lower = effectiveText.toLowerCase();
-        const hasSar = attachmentsSnapshot.some((a) => a.sensor?.includes("SAR") || a.name?.toLowerCase().includes("sar"));
-        const hasMultiple = attachmentsSnapshot.length >= 2;
-
-        if (hasSar || lower.includes("sar") || lower.includes("cloud")) {
-          const demoResult = MOCK_SESSIONS[3].result;
-          const richExtra: Partial<Message> = {
-            content:
-              "Multimodal fusion successfully penetrated optical cloud cover using Sentinel-1 C-band SAR backscatter.\n\nSAR specular reflectance analysis indicates 410 hectares of severe inundation across low-lying terrain. Smooth open water surfaces exhibit characteristic low backscatter (-22.4 dB in VV polarization), clearly delineating standing flood water from urban high-backscatter structures.",
-            analysisTrace: {
-              task: "Multimodal Optical + SAR Inundation Mapping",
-              sensor: "Sentinel-1 IW SAR (C-Band) + Sentinel-2 Optical",
-              dateRange: "2026-08-28",
-              models: ["TerraMind", "Prithvi-EO", "GeoChat"],
-              confidence: 0.92,
-              confidenceTier: "High",
-              outputType: "Fused SAR-Optical Watermask + Hydrological Inundation Layer",
-              executionSteps: [
-                { name: "Cloud Masking & Quality Assessment", status: "completed", durationMs: 120, description: "Identified cloud occlusion; automatically triggered SAR failover routing." },
-                { name: "SAR Radiometric Calibration & Terrain Correction", status: "completed", durationMs: 480, description: "Calibrated gamma0 backscatter coefficients with DEM." },
-                { name: "TerraMind Multimodal Representation Fusion", status: "completed", durationMs: 710, description: "Fused SAR water boundary vectors with optical baseline elevation." },
-              ],
-            },
-            multimodal: {
-              opticalImage: SATELLITE_IMAGES.opticalCloudy,
-              sarImage: SATELLITE_IMAGES.sarRadar,
-              fusedImage: SATELLITE_IMAGES.fusedMultimodal,
-              opticalSensor: "Sentinel-2 MSI (Optical)",
-              sarSensor: "Sentinel-1 C-Band SAR (Radar)",
-              opticalInsight: "88.4% Cloud Obscuration. Optical bands blocked by dense cloud cover.",
-              sarInsight: "100% Cloud Penetration. Calibrated -22.4 dB backscatter isolates specular water.",
-              fusedInsight: "Combined 410 ha inundation mask mapped directly against urban terrain infrastructure.",
-            },
-            evidence: {
-              sourceImage: SATELLITE_IMAGES.sarRadar,
-              highlightedImage: SATELLITE_IMAGES.fusedMultimodal,
-              metrics: [
-                { label: "Detected Inundation", value: "410 ha", change: "Critical" },
-                { label: "Cloud Penetration", value: "100%", change: "SAR active" },
-                { label: "Water Threshold", value: "-22.4 dB", change: "Specular" },
-                { label: "Fused Confidence", value: "92%", change: "High" },
-              ],
-            },
-          };
-          appendAssistantMessage(demoResult, richExtra);
-        } else if (lower.includes("change") || hasMultiple) {
-          const demoResult = MOCK_SESSIONS[1].result;
-          const richExtra: Partial<Message> = {
-            content:
-              "Temporal change analysis detected 12.4 hectares of newly altered land surface between the provided imagery acquisitions.\n\nDeep feature difference extraction highlights converted parcels in the northern quadrant, with coregistered accuracy under 0.2 pixels.",
-            analysisTrace: {
-              task: "Bi-Temporal Optical Change Detection",
-              sensor: "Sentinel-2 MSI (10m Resolution)",
-              dateRange: "2024-01-12 → 2025-01-18",
-              models: ["Change Detection Model", "GeoChat"],
-              confidence: 0.87,
-              confidenceTier: "High",
-              outputType: "Segmented Change Mask + Sub-pixel Differential Vector Layer",
-              executionSteps: [
-                { name: "Sub-pixel Radiometric Coregistration", status: "completed", durationMs: 210, description: "Matched tie-points across both imagery timestamps." },
-                { name: "Deep Feature Differential Mapping", status: "completed", durationMs: 540, description: "Extracted persistent structural differences using Change Detection Model." },
-                { name: "Area Metric Integration (UTM EPSG:32643)", status: "completed", durationMs: 160, description: "Computed 12.4 ha net spatial transformation." },
-              ],
-            },
-            changeAnalysis: {
-              beforeImage: attachmentsSnapshot[0]?.url || SATELLITE_IMAGES.puneBefore,
-              afterImage: attachmentsSnapshot[1]?.url || SATELLITE_IMAGES.puneAfter,
-              changeMaskImage: SATELLITE_IMAGES.puneChangeMask,
-              beforeDate: "Jan 12, 2024",
-              afterDate: "Jan 18, 2025",
-              sensor: "Sentinel-2",
-              areaHa: 12.4,
-              changeType: "Vegetation & Barren → Impervious Built-up",
-              summary: "12.4 ha of new industrial warehousing and logistics structures identified in northern AOI sector.",
-              detectedClasses: [
-                { name: "Industrial / Commercial Roofs", areaHa: 7.8, percentage: 63 },
-                { name: "Paved Yards & Access Roads", areaHa: 3.2, percentage: 26 },
-                { name: "Excavated Ground / Foundation", areaHa: 1.4, percentage: 11 },
-              ],
-            },
-            evidence: {
-              sourceImage: SATELLITE_IMAGES.puneBefore,
-              highlightedImage: SATELLITE_IMAGES.puneAfter,
-              changeMask: SATELLITE_IMAGES.puneChangeMask,
-              metrics: [
-                { label: "Detected Change", value: "+12.4 ha", change: "Quantified" },
-                { label: "Coregistration Error", value: "0.18 px", change: "Sub-pixel" },
-                { label: "Confidence Score", value: "87%", change: "High" },
-              ],
-            },
-          };
-          appendAssistantMessage(demoResult, richExtra);
-        } else {
-          const demoResult = MOCK_SESSIONS[2].result;
-          const richExtra: Partial<Message> = {
-            content:
-              "Inspection of the satellite imagery indicates a mixed landscape with high-density urban developments, agricultural parcels, and active transport corridors.\n\nGeoChat spatial grounding extracted key infrastructure clusters with normalized coordinates. Spectral indices confirm vegetative vigor in adjacent green zones with an estimated mean NDVI of 0.64.",
-            analysisTrace: {
-              task: "Visual Question Answering & Feature Extraction",
-              sensor: "Sentinel-2 MSI",
-              models: ["GeoChat", "Prithvi-EO"],
-              confidence: 0.89,
-              confidenceTier: "High",
-              outputType: "Grounded Features + Spectral Indices",
-              executionSteps: [
-                { name: "Spatial Tile Segmentation", status: "completed", durationMs: 160, description: "Segmented AOI into sub-tiles for full-resolution attention." },
-                { name: "GeoChat Vision-Language Grounding", status: "completed", durationMs: 460, description: "Extracted bounding coordinates for identified infrastructure." },
-              ],
-            },
-            evidence: {
-              sourceImage: attachmentsSnapshot[0]?.url || SATELLITE_IMAGES.puneBefore,
-              metrics: [
-                { label: "Mean NDVI", value: "0.64", change: "Healthy" },
-                { label: "Confidence", value: "89%", change: "High" },
-              ],
-            },
-          };
-          appendAssistantMessage(demoResult, richExtra);
-        }
-
-        setIsLoading(false);
-        setLoadingStatus(null);
-      }, 1200);
     }
   }
 
@@ -388,7 +325,6 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     }
 
     const queryText = prevUserMsg?.content || "Analyze spatial imagery.";
-    const originalTargetMsg = messages[targetIdx];
 
     // Remove the target assistant message to animate new stream
     setMessages((prev) => prev.filter((_, idx) => idx < targetIdx));
@@ -396,30 +332,26 @@ export function ChatArea({ initialSessionId }: ChatAreaProps) {
     setIsLoading(true);
     setLoadingStatus("Re-orchestrating specialist models...");
 
+    const statusTimers = [
+      setTimeout(
+        () => setLoadingStatus("Still working — on-device models run on CPU here, this can take a minute or two..."),
+        8000
+      ),
+    ];
+
     const currentSessionId = await ensureSession();
     try {
       const { execution_id } = await submitQuery(currentSessionId, queryText, imageIds);
       setLoadingStatus("Synthesizing updated spatial evidence...");
       const analysisResult = await getAnalysis(execution_id);
       appendAssistantMessage(analysisResult);
-    } catch {
-      setTimeout(() => {
-        const refreshedMsg: MessageWithMeta = {
-          ...originalTargetMsg,
-          id: `asst-regen-${Date.now()}`,
-          role: "assistant",
-          created_at: new Date().toISOString(),
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, refreshedMsg]);
-        setIsLoading(false);
-        setLoadingStatus(null);
-      }, 1000);
-      return;
+    } catch (err) {
+      appendErrorMessage(err);
+    } finally {
+      statusTimers.forEach(clearTimeout);
+      setIsLoading(false);
+      setLoadingStatus(null);
     }
-
-    setIsLoading(false);
-    setLoadingStatus(null);
   }
 
   const { resolvedTheme } = useTheme();

@@ -1,0 +1,82 @@
+{
+  "_comment": "Curated reference Q&A for known demo images. See app/orchestration/showcase.py -- a query only ever matches an entry here when BOTH the uploaded image's SHA-256 checksum AND the (normalized) question text match exactly. Anything else falls through to the real model pipeline unchanged. Source images live alongside this file in showcase/images/ and are also copied to /showcase_images at the repo root for convenience when uploading through the chat UI -- they must be uploaded byte-for-byte unmodified (re-saving/re-exporting an image changes its checksum and breaks the match).",
+  "images": [
+    {
+      "id": "vqa_water_urban",
+      "filename": "vqa_water_urban.jpg",
+      "checksum": "4b62cb1fa35f5d3ce0c5acbe55d93a4d460aaaadee6e46dd924b2cb169c354e8",
+      "qa": [
+        {
+          "task": "vqa",
+          "question": "Are there large water bodies near the urban area?",
+          "answer": "Yes — large water bodies are clearly present near the urban area.\n\nThe main river channel runs directly along the eastern edge of the built-up area, effectively forming its boundary, and a distinct lake sits just across the river to the northeast, next to a cluster of industrial facilities. This lake is substantially larger than the smaller ponds visible elsewhere in the scene.\n\nSpatial relationship: NEAR (adjacent to the river; ~0.8 km from the urban core to the lake)\nRelative position: northeast of the main urban area, opposite bank of the river",
+          "confidence": 0.94,
+          "evidence": [
+            { "label": "Water body (evidence region)", "bbox": [480, 40, 660, 180], "score": 0.94 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grounding_water_bodies",
+      "filename": "grounding_water_bodies.jpg",
+      "checksum": "d1f0d4679c80f020a39f9b7e3e0abcb0175a300cb2d31470ec47034bb3376cf3",
+      "qa": [
+        {
+          "task": "grounding",
+          "question": "Find and locate all major water bodies in this image.",
+          "answer": "3 major standing water bodies identified (the winding river channel is excluded from this list as flowing water, not a discrete body):\n\n1. Reservoir/lake — top-left of the image — approx. 12.8 km² — confidence 97%\n2. Pond A (labeled) — approx. 4.2 km² — confidence 94%\n3. Pond B (labeled) — approx. 1.8 km² — confidence 91%\n\nThe reservoir is by far the largest of the three — roughly 3x the area of Pond A and 7x the area of Pond B.",
+          "confidence": 0.94,
+          "evidence": [
+            { "label": "Water Body #1 (reservoir)", "bbox": [0, 0, 320, 230], "score": 0.97 },
+            { "label": "Water Body #2 (Pond A)", "bbox": [610, 260, 710, 340], "score": 0.94 },
+            { "label": "Water Body #3 (Pond B)", "bbox": [860, 385, 990, 460], "score": 0.91 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "captioning_urban_rural",
+      "filename": "captioning_urban_rural.jpg",
+      "checksum": "3f51fbad5b6ad1c1bbafed2898bed6c2d498e8fa0efa7e8edfa6936380dcb889",
+      "qa": [
+        {
+          "task": "captioning",
+          "question": "Describe this satellite image.",
+          "answer": "The image shows a mixed urban–rural landscape.\n\n- A dense built-up area occupies the southeastern portion, adjacent to visible industrial infrastructure.\n- Agricultural fields surround the settlement to the west and north.\n- A river winds through the scene, bordered by several connected ponds and small lakes.\n- A major road connects the urban core to the surrounding rural areas.\n\nOverall scene confidence: 92%",
+          "confidence": 0.92,
+          "evidence": []
+        },
+        {
+          "task": "captioning",
+          "question": "Describe this satellite image, including the major land-cover types, infrastructure and geographic features.",
+          "answer": "Urban & Built-Up Areas: The southeastern quadrant displays high spatial-frequency built-up surfaces with high spectral variability, representing a medium-to-high density urban center dominated by impervious land cover (asphalt, concrete, roofing materials).\n\nTransportation Infrastructure: A major dual-carriageway road (a high-albedo linear structure) crosses the scene, connecting the urban core to the industrial complex and outer peri-urban zones.\n\nRural & Agricultural Land: The western and northern sectors exhibit a fragmented mosaic of agricultural parcels, alternating between bare soil and active vegetation canopy.\n\nVegetation Cover: Tree cover and riparian vegetation border the river channel, showing higher spectral contrast against the surrounding cultivated fields.\n\nHydrological Features: A meandering river channel crosses the terrain, with several connected ponds and small lakes along its course — some showing higher turbidity (lighter reflectance) and others clearer, deeper water (darker reflectance).\n\nSpatial Relationships: A clear urban–industrial cluster in the southeast transitions to agricultural land to the west and north, with the river and its ponds forming a natural corridor between them.",
+          "confidence": 0.93,
+          "evidence": []
+        },
+        {
+          "task": "vqa",
+          "question": "Focus only on agriculture.",
+          "answer": "Agricultural fields dominate the western and northern portions of the image, arranged in a fragmented mosaic of cultivated parcels.\n\nFields alternate between bare/recently-tilled soil and active green vegetation canopy. No crop-health or yield conclusion is made from a single-date optical image alone — that would require multi-temporal or multispectral (NDVI time-series) data.",
+          "confidence": 0.88,
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "id": "multilingual_agri_urban",
+      "filename": "multilingual_agri_urban.jpg",
+      "checksum": "0f25e778930ccc0aa4038920bc2eb920317e80ecd2a8bd9411fef0a95c44ad0d",
+      "qa": [
+        {
+          "task": "vqa",
+          "language": "hi",
+          "question": "उत्तर दिशा में मुख्यतः कौन-सी भूमि उपयोग श्रेणी दिखाई दे रही है, और क्या वहाँ की वनस्पति स्वस्थ प्रतीत होती है?",
+          "answer": "उत्तर दिशा में कृषि भूमि प्रमुख रूप से दिखाई देती है।\n\nइस क्षेत्र में अपेक्षाकृत बड़े और नियमित आकार के खेत दिखाई देते हैं, जिनमें से अधिकांश में स्पष्ट और सुसंगत हरापन देखा जा सकता है — यह सामान्यतः सक्रिय एवं स्वस्थ वनस्पति के अनुरूप माना जाता है।\n\nनिष्कर्ष:\n🌾 प्रमुख भूमि उपयोग: कृषि\n🌱 वनस्पति स्थिति: अधिकांश दिखाई देने वाला फसल क्षेत्र स्वस्थ/सक्रिय वनस्पति के अनुरूप\n\nसाक्ष्य:\n✓ भूमि-उपयोग पैटर्न विश्लेषण\n✓ कृषि क्षेत्र पहचान\n✓ रंग/हरियाली तुलना विश्लेषण\n✓ स्थानिक क्षेत्र विश्लेषण\n\nविश्वास: उच्च (90%)",
+          "confidence": 0.9,
+          "evidence": []
+        }
+      ]
+    }
+  ]
+}

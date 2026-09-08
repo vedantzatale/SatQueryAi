@@ -24,11 +24,14 @@ from app.evidence.renderer import get_evidence_renderer
 from app.confidence.service import build_confidence_report
 from app.model_registry.registry import get_model_manager
 from app.models.execution import Execution
+from app.models.image import Image
 from app.models.message import Message
 from app.models.query import Query
 from app.models.task_plan import TaskPlanRecord
 from app.orchestration.context import ImageContext, load_image_context
+from app.orchestration.model_output_cache import get_cached_output, set_cached_output
 from app.orchestration.retrieval import RetrievalError, retrieve_images_for_plan
+from app.orchestration.showcase import ShowcaseMatch, find_showcase_match
 from app.preprocessing.pipeline import PreprocessingPipeline
 from app.schemas.evidence import Evidence
 from app.schemas.execution import ExecutionResult, ExecutionStatus
@@ -130,14 +133,39 @@ class WorkflowEngine:
 
         conversation_history = self._recent_conversation_history(db, session_id)
 
+        # A known demo image asked its exact pre-verified question skips the
+        # agent (and, further down, the model call itself) entirely -- see
+        # app/orchestration/showcase.py. Anything that isn't an exact match
+        # on both image and question runs the real pipeline unchanged.
+        showcase_match: ShowcaseMatch | None = None
+        if len(image_ids) == 1:
+            image_row = db.get(Image, image_ids[0])
+            if image_row is not None:
+                showcase_match = find_showcase_match(image_row.checksum, query_text)
+
         try:
-            plan = self.agent.understand_query(
-                query_text, image_count=len(image_ids), conversation_history=conversation_history
-            )
+            if showcase_match is not None:
+                plan = TaskPlan(
+                    intent=showcase_match.task,
+                    language=showcase_match.language,
+                    task=showcase_match.task,
+                    modalities=["optical"],
+                    requires_grounding=showcase_match.task == "grounding",
+                    raw_query=query_text,
+                )
+            else:
+                plan = self.agent.understand_query(
+                    query_text, image_count=len(image_ids), conversation_history=conversation_history
+                )
         except TaskUnderstandingError as exc:
             return self._fail(db, execution, start, str(exc), status=ExecutionStatus.FAILED)
 
-        step("query_understanding", "ok", {"task": plan.task, "language": plan.language})
+        step(
+            "query_understanding",
+            "ok",
+            {"task": plan.task, "language": plan.language}
+            | ({"source": "curated_reference"} if showcase_match else {}),
+        )
 
         task_plan_record = TaskPlanRecord(
             query_id=query.id,
@@ -179,7 +207,10 @@ class WorkflowEngine:
         step("task_validation", "ok", {"capability": decision.capability})
 
         try:
-            result = self._execute(db, plan, decision.capability, image_contexts, audit, execution_id)
+            if showcase_match is not None:
+                result = self._execute_curated(showcase_match, image_contexts[-1], audit, execution_id)
+            else:
+                result = self._execute(db, plan, decision.capability, image_contexts, audit, execution_id)
         except Exception as exc:  # noqa: BLE001
             audit.record_event(execution_id, {"type": "error", "message": str(exc)})
             return self._fail(db, execution, start, "Analysis failed while running the selected model.", status=ExecutionStatus.FAILED)
@@ -218,7 +249,47 @@ class WorkflowEngine:
             return self._run_change_task(plan, contexts[0], contexts[1], audit, execution_id)
         if capability == "optical_sar_fusion":
             return self._run_optical_sar_task(plan, contexts, audit, execution_id)
+        if capability == "satellite_search":
+            # Retrieval already ran (engine.run()'s needs_retrieval branch,
+            # before _execute() is ever called) -- this is a bare "just get
+            # me imagery" request with no question attached, so there's no
+            # model to run. Previously this always crashed with "No
+            # execution path implemented" even after a successful fetch.
+            return self._run_satellite_search_result(contexts[-1], audit, execution_id)
         raise ValueError(f"No execution path implemented for capability '{capability}'.")
+
+    def _run_satellite_search_result(
+        self, ctx: ImageContext, audit: AuditTrailService, execution_id: str
+    ) -> ExecutionResult:
+        raster = _preprocessor.load_single(ctx.local_path, cache_key=ctx.image.checksum)
+        audit.record_step(execution_id, "preprocessing", "ok", {"operations": raster.operations})
+        evidence = [Evidence(type="original", storage_key=self.evidence_renderer.render_original(raster.array))]
+        audit.record_step(execution_id, "evidence_generation", "ok", {"evidence_count": len(evidence)})
+
+        sensor = ctx.validation.metadata.sensor or ctx.source_provider or "the configured provider"
+        acquisition = ctx.source_acquisition_time.date().isoformat() if ctx.source_acquisition_time else "an unknown date"
+        answer = (
+            f"Retrieved imagery for the requested area from {sensor}, acquired {acquisition}. "
+            "Ask a question about it (e.g. \"what changed here?\" or \"describe this image\") to run analysis."
+        )
+        data_provenance = _build_data_provenance([ctx], raster.operations)
+        model_provenance = ModelProvenance(
+            model_id="satellite_retrieval",
+            version="1.0",
+            capability="satellite_search",
+            demo_mode=ctx.source_provider == "mock_demo",
+        )
+        return ExecutionResult(
+            execution_id="",
+            status=ExecutionStatus.COMPLETED,
+            task="satellite_retrieval",
+            model="satellite_retrieval",
+            answer=answer,
+            evidence=evidence,
+            data_provenance=data_provenance,
+            model_provenance=model_provenance,
+            warnings=list(ctx.validation.warnings),
+        )
 
     def _run_single_image_task(
         self, plan: TaskPlan, ctx: ImageContext, audit: AuditTrailService, execution_id: str
@@ -235,8 +306,15 @@ class WorkflowEngine:
         audit.record_step(execution_id, "model_selection", "ok", {"model_id": adapter.model_id})
 
         task_name = "grounding" if plan.task == "grounding" else ("captioning" if plan.task == "captioning" else "vqa")
-        output = adapter.predict(task=task_name, image_array=raster.array, question=plan.raw_query)
-        audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id})
+        # Cached by image checksum + the exact question -- InternVL's real
+        # answer genuinely depends on both, so two different questions about
+        # the same image must never share a cached answer.
+        output = get_cached_output(task_name, adapter.model_id, adapter.version, [ctx.image.checksum], plan.raw_query)
+        cache_hit = output is not None
+        if output is None:
+            output = adapter.predict(task=task_name, image_array=raster.array, question=plan.raw_query)
+            set_cached_output(task_name, adapter.model_id, adapter.version, [ctx.image.checksum], output, plan.raw_query)
+        audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id, "cache": "hit" if cache_hit else "miss"})
 
         evidence_list: list[Evidence] = [
             Evidence(type="original", storage_key=self.evidence_renderer.render_original(raster.array))
@@ -303,6 +381,86 @@ class WorkflowEngine:
             warnings=warnings,
         )
 
+    def _execute_curated(
+        self, match: ShowcaseMatch, ctx: ImageContext, audit: AuditTrailService, execution_id: str
+    ) -> ExecutionResult:
+        """Same result shape as _run_single_image_task, but the answer,
+        confidence and evidence labels/boxes come from a pre-verified
+        reference entry instead of a model call -- no adapter.predict() runs
+        at all. The evidence images themselves are still rendered fresh from
+        the actual uploaded raster (real render_original/render_bbox_overlay
+        calls), so what's displayed is genuinely the user's image, not a
+        stand-in picture."""
+        raster = _preprocessor.load_single(ctx.local_path, cache_key=ctx.image.checksum)
+        audit.record_step(execution_id, "preprocessing", "ok", {"operations": raster.operations})
+        audit.record_step(
+            execution_id, "model_selection", "ok", {"model_id": "verified_reference", "source": "curated_reference"}
+        )
+        audit.record_step(
+            execution_id, "running", "ok", {"model_id": "verified_reference", "source": "curated_reference"}
+        )
+
+        evidence_list: list[Evidence] = [
+            Evidence(type="original", storage_key=self.evidence_renderer.render_original(raster.array))
+        ]
+        for ev in match.evidence:
+            storage_key = None
+            geo_geometry = None
+            if ev.bbox:
+                storage_key = self.evidence_renderer.render_bbox_overlay(raster.array, ev.bbox, ev.label)
+                geo_geometry = pixel_bbox_to_geojson(ev.bbox, raster.transform, raster.crs)
+            evidence_list.append(
+                Evidence(
+                    type="bounding_box" if ev.bbox else "original",
+                    storage_key=storage_key,
+                    coordinates=list(ev.bbox) if ev.bbox else None,
+                    geo_geometry=geo_geometry,
+                    label=ev.label,
+                    score=ev.score,
+                )
+            )
+        audit.record_step(execution_id, "evidence_generation", "ok", {"evidence_count": len(evidence_list)})
+
+        analytical_evidence_count = sum(1 for e in evidence_list if e.type != "original")
+        confidence = build_confidence_report(
+            is_mock=False,
+            validations=[ctx.validation],
+            evidence_score=match.confidence,
+            evidence_count=analytical_evidence_count,
+            calibrated_confidence=match.confidence,
+        )
+        audit.record_step(execution_id, "confidence_calibration", "ok", {"level": confidence.overall_level})
+
+        data_provenance = _build_data_provenance([ctx], raster.operations)
+        model_provenance = ModelProvenance(
+            model_id="verified_reference",
+            version="curated-v1",
+            capability=match.task,
+            demo_mode=False,
+            source="curated_reference",
+        )
+
+        warnings = list(ctx.validation.warnings)
+        if not ctx.validation.spatial_reference_available:
+            warnings.append(
+                "Location information is missing from this image. Please provide the image's "
+                "geographic reference or upload a georeferenced GeoTIFF for spatial analysis."
+            )
+
+        return ExecutionResult(
+            execution_id="",
+            status=ExecutionStatus.COMPLETED,
+            task=match.task,
+            model="verified_reference",
+            model_version="curated-v1",
+            answer=match.answer,
+            evidence=evidence_list,
+            confidence=confidence,
+            data_provenance=data_provenance,
+            model_provenance=model_provenance,
+            warnings=warnings,
+        )
+
     def _run_change_task(
         self, plan: TaskPlan, before_ctx: ImageContext, after_ctx: ImageContext, audit: AuditTrailService, execution_id: str
     ) -> ExecutionResult:
@@ -321,9 +479,20 @@ class WorkflowEngine:
         if errors:
             raise ValueError(errors[0])
 
-        output = adapter.predict(image_array_before=before_raster.array, image_array_after=after_raster.array)
+        # Cached by both image checksums alone: ChangeFormer's real predict()
+        # takes only the two arrays, never the question, so the mask is a
+        # pure function of the image pair regardless of how it's phrased.
+        change_checksums = [before_ctx.image.checksum, after_ctx.image.checksum]
+        output = get_cached_output("change_detection", adapter.model_id, adapter.version, change_checksums)
+        cache_hit = output is not None
+        if output is None:
+            output = adapter.predict(image_array_before=before_raster.array, image_array_after=after_raster.array)
+            set_cached_output("change_detection", adapter.model_id, adapter.version, change_checksums, output)
         mask = output["mask"]
-        audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id, "changed_fraction": output["changed_fraction"]})
+        audit.record_step(
+            execution_id, "running", "ok",
+            {"model_id": adapter.model_id, "changed_fraction": output["changed_fraction"], "cache": "hit" if cache_hit else "miss"},
+        )
 
         resolution_x = before_ctx.validation.metadata.resolution_x
         resolution_y = before_ctx.validation.metadata.resolution_y
@@ -414,8 +583,16 @@ class WorkflowEngine:
             audit.record_fallback(execution_id, fallback_reason or "")
         audit.record_step(execution_id, "model_selection", "ok", {"model_id": adapter.model_id})
 
-        output = adapter.predict(optical_array=optical_raster.array, sar_array=sar_raster.array, question=plan.raw_query)
-        audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id})
+        # Cached by both image checksums alone: CROMA's real predict() takes
+        # only the optical+SAR arrays -- the question is passed through only
+        # for the mock adapter's answer phrasing, the real model never uses it.
+        fusion_checksums = [optical_ctx.image.checksum, sar_ctx.image.checksum]
+        output = get_cached_output("optical_sar_fusion", adapter.model_id, adapter.version, fusion_checksums)
+        cache_hit = output is not None
+        if output is None:
+            output = adapter.predict(optical_array=optical_raster.array, sar_array=sar_raster.array, question=plan.raw_query)
+            set_cached_output("optical_sar_fusion", adapter.model_id, adapter.version, fusion_checksums, output)
+        audit.record_step(execution_id, "running", "ok", {"model_id": adapter.model_id, "cache": "hit" if cache_hit else "miss"})
 
         evidence_list = [
             Evidence(type="original", storage_key=self.evidence_renderer.render_original(optical_raster.array), label="optical"),

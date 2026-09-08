@@ -33,7 +33,7 @@ JSON object (no prose, no markdown fences) with exactly these fields:
   "requires_two_images": boolean,
   "requires_grounding": boolean,
   "requires_quantification": boolean,
-  "location": {"place_name": string} or null,
+  "location": {"place_name": string} or {"latitude": number, "longitude": number} or null,
   "date_range": [start_ISO_date, end_ISO_date] or null,
   "output_type": array of "text" | "mask" | "report" | "geojson",
   "raw_query": string (the original query, verbatim)
@@ -55,6 +55,7 @@ Examples (input -> key output fields):
 - query: "What changed here?", 2 images attached -> {"task": "change_vqa", "requires_two_images": true}
 - query: "Hello, what can you do?", 0 images attached -> {"task": "unsupported"}
 - query: "Find imagery of Chennai from last year.", 0 images attached -> {"task": "satellite_retrieval"}
+- query: "What's near 19.076, 72.877?", 0 images attached -> {"task": "satellite_retrieval", "location": {"latitude": 19.076, "longitude": 72.877}}
 
 Other rules:
 - "requires_grounding" must be true IF AND ONLY IF "task" is "grounding" -- never set requires_grounding true for any other task, and never leave it false when task is "grounding".

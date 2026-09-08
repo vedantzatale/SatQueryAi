@@ -171,8 +171,20 @@ class AgentAdapter(BaseModelAdapter):
             return ["sar"]
         return ["optical"]
 
-    @staticmethod
-    def _extract_location(q: str) -> dict | None:
+    _COORD_PAIR_RE = re.compile(r"(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)")
+
+    @classmethod
+    def _extract_location(cls, q: str) -> dict | None:
+        # A bare "lat, lon" pair (e.g. "19.076, 72.877") takes priority over
+        # a place name -- checked first since it's an unambiguous, specific
+        # pattern, and range-validated so an unrelated number pair (e.g. two
+        # area figures) is never misread as coordinates.
+        coord_match = cls._COORD_PAIR_RE.search(q)
+        if coord_match:
+            lat, lon = float(coord_match.group(1)), float(coord_match.group(2))
+            if -90 <= lat <= 90 and -180 <= lon <= 180:
+                return {"latitude": lat, "longitude": lon}
+
         match = re.search(r"(?:around|near|in|of)\s+([A-Za-z][A-Za-z\s]{2,30})", q)
         if match:
             place = match.group(1).strip().rstrip(".,?!")

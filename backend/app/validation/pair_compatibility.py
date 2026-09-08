@@ -10,8 +10,8 @@ from app.schemas.validation import ValidationResult
 
 MISSING_SECOND_IMAGE_MESSAGE = (
     "This analysis requires two images of the same area from different dates. "
-    "Please upload a before and after image, or allow SatQuery AI to retrieve "
-    "suitable scenes."
+    "Please upload a before and after image, or give me a location (a place name or "
+    "coordinates) and a date range and I'll retrieve suitable scenes."
 )
 
 

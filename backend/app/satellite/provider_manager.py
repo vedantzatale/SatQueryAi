@@ -10,7 +10,7 @@ from datetime import date
 
 from app.core.config import get_settings
 from app.schemas.location import LocationRequest
-from app.schemas.satellite import ProviderStatus, SceneCandidate
+from app.schemas.satellite import DownloadResult, ProviderStatus, SceneCandidate
 from app.satellite.providers.base import SatelliteDataProvider
 from app.satellite.providers.bhoonidhi import BhoonidhiProvider
 from app.satellite.providers.copernicus import CopernicusProvider
@@ -61,13 +61,15 @@ class ProviderManager:
 
         return [], statuses, False
 
-    def download_scene(self, provider_id: str, scene_id: str, destination_dir: str):
-        provider = self._providers.get(provider_id) or (
-            self._mock_provider if provider_id == self._mock_provider.provider_id else None
+    def download_scene(
+        self, scene: SceneCandidate, destination_dir: str, aoi: LocationRequest
+    ) -> DownloadResult:
+        provider = self._providers.get(scene.provider) or (
+            self._mock_provider if scene.provider == self._mock_provider.provider_id else None
         )
         if provider is None:
-            raise ValueError(f"Unknown provider '{provider_id}'.")
-        return provider.download_scene(scene_id, destination_dir)
+            raise ValueError(f"Unknown provider '{scene.provider}'.")
+        return provider.download_scene(scene, destination_dir, aoi)
 
 
 _manager = ProviderManager()

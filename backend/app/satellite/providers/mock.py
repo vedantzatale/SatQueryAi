@@ -75,11 +75,11 @@ class MockSatelliteProvider(SatelliteDataProvider):
                 )
         return None
 
-    def download_scene(self, scene_id: str, destination_dir: str) -> DownloadResult:
+    def download_scene(self, scene: SceneCandidate, destination_dir: str, aoi: LocationRequest) -> DownloadResult:
         for entry in self._load_manifest():
-            if entry["scene_id"] == scene_id:
+            if entry["scene_id"] == scene.scene_id:
                 source_path = _REPO_ROOT / entry["file_path"]
                 if not source_path.exists():
                     return DownloadResult(success=False, error="Demo scene file missing on disk.")
                 return DownloadResult(success=True, local_path=str(source_path))
-        return DownloadResult(success=False, error=f"Unknown demo scene_id '{scene_id}'.")
+        return DownloadResult(success=False, error=f"Unknown demo scene_id '{scene.scene_id}'.")

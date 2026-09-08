@@ -14,6 +14,13 @@ os.environ["LOCAL_STORAGE_ROOT"] = str(_TEST_DIR / "storage")
 os.environ["DEMO_MODE"] = "true"
 os.environ["TASK_BACKEND"] = "inline"
 os.environ["STORAGE_BACKEND"] = "local"
+# Cleared, not just left pointed at a developer's real Redis: the model
+# output/raster caches are content-addressed by checksum+question, and the
+# test suite's fixture images/questions are fixed strings, so a real Redis
+# retains entries across runs (30-day TTL) and later runs silently see
+# "already cached" instead of the fresh miss they assert on. get_cache_backend()
+# falls back to a fresh in-memory cache per test process when this is unset.
+os.environ["REDIS_URL"] = ""
 
 # Tests exercise the deterministic mock/heuristic adapters, never real
 # weights, regardless of what a developer's local .env points *_MODEL_PATH

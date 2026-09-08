@@ -95,27 +95,23 @@ export default function WorkspacePage() {
   }
 
   function handleNewChat() {
+    // Reset to "session-new" -- the same not-yet-created placeholder the
+    // app starts on -- and let ensureSession() (ChatArea.tsx) lazily create
+    // the real backend session on the first actual message/upload, exactly
+    // like the initial landing state already does correctly.
+    //
+    // This used to fabricate its own `session-${Date.now()}` id and store
+    // it as the active session directly. ensureSession()'s "already have a
+    // real session" check only excludes the literal "session-new" and
+    // "temp-*" placeholders, so that fabricated id slipped past it as if
+    // it were real, skipping createSession() entirely -- every subsequent
+    // upload/query then submitted a session_id nothing in the database
+    // matched, surfacing as "Session '...' does not exist."
     if (useAppStore.getState().isTemporaryChat) {
-      resetConversationState();
       useAppStore.getState().setIsTemporaryChat(false);
     }
-    // If the top session is already an empty/untouched "New Satellite Query", reuse it
-    if (conversations.length > 0 && conversations[0].title === "New Satellite Query" && sessionId === conversations[0].id) {
-      resetConversationState();
-      setActiveSessionTitle("New Satellite Query");
-      setMobileSidebarOpen(false);
-      return;
-    }
-
-    const newId = `session-${Date.now()}`;
-    const newTitle = "New Satellite Query";
     resetConversationState();
-    setSessionId(newId);
-    setActiveSessionTitle(newTitle);
-    setConversations((prev) => [
-      { id: newId, title: newTitle, category: "Today" },
-      ...prev.filter((c) => c.id !== "session-new" && !(c.title === "New Satellite Query" && c.id.startsWith("session-"))),
-    ]);
+    setActiveSessionTitle("New Satellite Query");
     setMobileSidebarOpen(false);
   }
 

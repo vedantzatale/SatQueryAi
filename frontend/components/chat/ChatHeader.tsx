@@ -12,7 +12,7 @@ import {
   Share2,
   ShieldAlert,
 } from "lucide-react";
-import { reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
+import { deleteSession, reportGeoJsonUrl, reportPdfUrl } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ export function ChatHeader({
   onToggleDesktop,
   activeTask,
 }: ChatHeaderProps) {
+  const sessionId = useAppStore((s) => s.sessionId);
   const activeSessionTitle = useAppStore((s) => s.activeSessionTitle);
   const setActiveSessionTitle = useAppStore((s) => s.setActiveSessionTitle);
   const isTemporaryChat = useAppStore((s) => s.isTemporaryChat);
@@ -53,6 +54,17 @@ export function ChatHeader({
       setSessionId(`temp-${Date.now()}`);
       setActiveSessionTitle("Temporary chat");
     } else {
+      // A temporary chat still creates a real backend session under the
+      // hood the moment a message is sent (the query pipeline requires one
+      // to attach messages/executions to) -- "won't be saved... discarded
+      // when closed" only holds true if leaving temporary mode actually
+      // deletes it, rather than leaving it orphaned in the database.
+      const hadRealSession = sessionId && sessionId !== "session-new" && !sessionId.startsWith("temp-");
+      if (hadRealSession) {
+        deleteSession(sessionId as string).catch(() => {
+          // Best-effort cleanup -- nothing actionable to show the user here.
+        });
+      }
       resetConversationState();
       setIsTemporaryChat(false);
       setSessionId("session-new");

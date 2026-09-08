@@ -9,7 +9,12 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
-export const apiClient = axios.create({ baseURL: API_BASE_URL });
+// The agent/model pipeline runs real CPU inference with no GPU on the
+// current deployment target -- a single query can legitimately take 1-2+
+// minutes (measured: ~60s for a trivial text-only query on a warm model).
+// No timeout at all risks a genuinely hung request spinning forever, so
+// this caps it generously rather than leaving it unbounded.
+export const apiClient = axios.create({ baseURL: API_BASE_URL, timeout: 6 * 60 * 1000 });
 
 export async function createSession(title?: string): Promise<SessionSummary> {
   const { data } = await apiClient.post<SessionSummary>("/sessions", { title });

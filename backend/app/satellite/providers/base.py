@@ -26,4 +26,9 @@ class SatelliteDataProvider(ABC):
     def get_metadata(self, scene_id: str) -> SceneCandidate | None: ...
 
     @abstractmethod
-    def download_scene(self, scene_id: str, destination_dir: str) -> DownloadResult: ...
+    def download_scene(self, scene: SceneCandidate, destination_dir: str, aoi: LocationRequest) -> DownloadResult:
+        """`aoi` is the original request location, not the scene's own (much
+        larger) footprint -- an on-demand-rendering provider (e.g.
+        Copernicus's Process API) downloads imagery cropped to the area the
+        user actually asked about, not the whole underlying satellite tile."""
+        ...
