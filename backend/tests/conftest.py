@@ -21,6 +21,14 @@ os.environ["STORAGE_BACKEND"] = "local"
 # "already cached" instead of the fresh miss they assert on. get_cache_backend()
 # falls back to a fresh in-memory cache per test process when this is unset.
 os.environ["REDIS_URL"] = ""
+# Cleared for the same reason: with real credentials configured, the
+# location-retrieval tests silently switched from the deterministic mock
+# provider to a live Copernicus search+download (confirmed working when
+# this surfaced -- a real scene really was found and downloaded), which
+# both burns real API quota on every test run and makes the "falls back to
+# the mock provider" assertions depend on real-world data availability.
+os.environ["COPERNICUS_CLIENT_ID"] = ""
+os.environ["COPERNICUS_CLIENT_SECRET"] = ""
 
 # Tests exercise the deterministic mock/heuristic adapters, never real
 # weights, regardless of what a developer's local .env points *_MODEL_PATH

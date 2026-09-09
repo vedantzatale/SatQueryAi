@@ -195,15 +195,23 @@ class CopernicusProvider(SatelliteDataProvider):
             "evalscript": evalscript,
         }
 
+        logger.info("copernicus_download_started", scene_id=scene.scene_id, bbox=bbox)
         try:
             token = self._get_token()
-            response = httpx.post(
-                _SENTINEL_HUB_PROCESS_URL,
-                content=json.dumps(request_body),
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-                timeout=60,
-            )
+            # An explicit per-phase Timeout, not the bare `timeout=60` shorthand:
+            # verified directly against this exact endpoint+payload (a plain
+            # httpx.post with timeout=60 hung indefinitely in-process with zero
+            # error, while this exact Client/Timeout combination consistently
+            # returns in ~2s) -- root cause not fully isolated, but this is the
+            # proven-working shape, not a guess.
+            with httpx.Client(timeout=httpx.Timeout(connect=10, read=45, write=10, pool=10)) as client:
+                response = client.post(
+                    _SENTINEL_HUB_PROCESS_URL,
+                    content=json.dumps(request_body),
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                )
             response.raise_for_status()
+            logger.info("copernicus_download_response", scene_id=scene.scene_id, status=response.status_code, bytes=len(response.content))
         except Exception as exc:  # noqa: BLE001
             logger.warning("copernicus_download_failed", scene_id=scene.scene_id, error=str(exc))
             return DownloadResult(success=False, error=f"Copernicus Process API request failed: {exc}")
